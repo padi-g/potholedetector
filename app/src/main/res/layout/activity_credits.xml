@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_credits"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="org.reapbenefit.gautam.intern.potholedetectorbeta.CreditsActivity">
+
+    <include
+        layout="@layout/toolbar_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/include" />
+
+    <TextView
+        android:text="Built by Gautam Padiyar and Aniruddha Mysore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/include"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="114dp"
+        android:id="@+id/textView" />
+
+    <TextView
+        android:text="Copyright 2017"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="73dp"
+        android:id="@+id/textView2" />
+
+</RelativeLayout>

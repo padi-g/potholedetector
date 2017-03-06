@@ -1,0 +1,44 @@
+<resources>
+    <string name="app_name">Road Quality Audit</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Detecting motion</string>
+    <string name="menu_about">About</string>
+    <string name="menu_credits">Credits</string>
+
+    <string name="dialog_question">Do you want to start a trip?</string>
+    <string name="dialog_positive">Yes, start it</string>
+    <string name="dialog_negative">No, let it be</string>
+    <string name="detecting">Let us do all the work. We are detecting potholes</string>
+
+    <string name="about">
+        Why are we doing this?\n\n
+        Potholes are a major source of a lot of problems we see on Indian roads. High Traffic,
+        slow moving traffic, blocked lanes, injuries and deaths, all of these issues are
+        linked to potholes and bad roads in a major way.\n\n
+        We at Reap Benefit believe, that all of the biggest problems in our world can be solved using
+        technology. This app intends to do just that by putting the power to change our roads in everyone\'s hands.\n\n
+        The technology used here is something that is present on all smartphones and this means that anyone can contribute
+        to this effort simply by using this app and helping us collect data.\n\n
+        Using the data we collect, we will be able to do multiple things\n
+        1. Train machine learning models that will help us correctly classify a bump as a pothole or a patch
+        of bad road. We will publish these results online.\n
+        2. Analyse driver behaviour to detect bad driving habits and helping you correct them.\n
+        3. Analyse your car\'s route and give you feedback on how you can get the best out of your car and the route in terms of fuel efficiency
+        and time spend on the road.\n
+    </string>
+    <string name="title_activity_maps">Map</string>
+    <string name="icons_home"><a href="https://icons8.com/web-app/5572/Home">Home icon credits</a></string>
+    <string name="icons_settings"><a href="https://icons8.com/web-app/5590/Settings">Settings icon credits</a></string>
+
+    <string name="trips">All your trips</string>
+    <string name="low">Lower Value</string>
+    <string name="up">Upper Value</string>
+    <string name="Thresholds">Thresholds</string>
+    <string name="add_car">Please add a car</string>
+    <string name="edit_high">Edit High</string>
+    <string name="edit_low">Edit Low</string>
+    <string name="submit">Submit</string>
+    <string name="carname">Car Name</string>
+    <string name="carmodel">Car Model</string>
+</resources>
