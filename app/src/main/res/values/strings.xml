@@ -7,8 +7,8 @@
     <string name="menu_credits">Credits</string>
 
     <string name="dialog_question">Do you want to start a trip?</string>
-    <string name="dialog_positive">Yes, start it</string>
-    <string name="dialog_negative">No, let it be</string>
+    <string name="dialog_positive">Yes</string>
+    <string name="dialog_negative">No</string>
     <string name="detecting">Let us do all the work. We are detecting potholes</string>
 
     <string name="about">

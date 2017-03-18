@@ -8,6 +8,7 @@ import android.widget.Switch;
 
 public class CreditsActivity extends AppCompatActivity {
 
+    Switch StartsStop;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -15,6 +16,11 @@ public class CreditsActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
 
+        getSupportActionBar().setTitle("Credits");
+
+        StartsStop = (Switch) findViewById(R.id.stopSwitch);
+        StartsStop.setVisibility(View.GONE);
     }
 }

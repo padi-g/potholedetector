@@ -30,9 +30,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.Switch;
-import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -63,10 +61,7 @@ public class MainActivity extends AppCompatActivity
         , com.google.android.gms.location.LocationListener, com.google.android.gms.location.ActivityRecognitionApi,
         EasyPermissions.PermissionCallbacks {
 
-    //This is our tablayout
     private TabLayout tabLayout;
-
-    //This is our viewPager
     private ViewPager viewPager;
 
     protected GoogleApiClient mGoogleApiClient;
@@ -102,7 +97,7 @@ public class MainActivity extends AppCompatActivity
     private String GyroZvalue;
     protected String LocData;
 
-    protected String mLastUpdateTime, e1, e2;
+    protected String mLastUpdateTime, e1, e2, Marks;
 
     static Switch StartsStop;
 
@@ -116,13 +111,15 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.d("Activity Lifecycles", "Inside onCreate");
+
         setContentView(R.layout.activity_main);
 
         //Adding toolbar to the activity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-
         getSupportActionBar().setTitle("Road Quality Audit");
 
         StartsStop = (Switch) findViewById(R.id.stopSwitch);
@@ -140,7 +137,7 @@ public class MainActivity extends AppCompatActivity
         } else {
             StartsStop.setChecked(true);
             // start logging
-
+            setupLogFile();
             mRequestingLocationUpdates = true;
             startLocationUpdates();
         }
@@ -159,13 +156,8 @@ public class MainActivity extends AppCompatActivity
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
 
-        //Initializing viewPager
         viewPager = (ViewPager) findViewById(R.id.pager);
-
-        //Creating our pager adapter
         Pager adapter = new Pager(getSupportFragmentManager(), tabLayout.getTabCount());
-
-        //Adding adapter to pager
         viewPager.setAdapter(adapter);
 
         //Adding onTabSelectedListener to swipe views
@@ -184,7 +176,7 @@ public class MainActivity extends AppCompatActivity
 
         updateValuesFromBundle(savedInstanceState);
 
-        setupLogFile();
+
 
 
         // fire LocalBroadcast to updateUI
@@ -203,20 +195,18 @@ public class MainActivity extends AppCompatActivity
         StartsStop.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {  // sorcery, it's ulta
-                    compoundButton.setChecked(true);
-                    tripStarted = false;
-                    startService();
-                    mRequestingLocationUpdates = false;
-                    stopLocationUpdates();
-                    stopTrip();
-                    // stop trip
-                    Log.i("MainActivity", "Trip is false");
-                } else {
-                    compoundButton.setChecked(false);
+                if (b) {
+                    setupLogFile();
                     tripStarted = true;
                     mRequestingLocationUpdates = true;
                     startLocationUpdates();
+                    Log.i("MainActivity", "Trip is false");
+                } else {
+                    tripStarted = false;
+                    startService();
+                    stopTrip();
+                    stopLocationUpdates();
+                    mRequestingLocationUpdates = false;
                 }
             }
         });
@@ -237,6 +227,7 @@ public class MainActivity extends AppCompatActivity
                     public void onClick(DialogInterface dialog, int which) {
                         StartsStop.setChecked(true);
                         // Start logging
+                        setupLogFile();
                     }
                 });
         builder.setNegativeButton(R.string.dialog_negative,
@@ -323,6 +314,8 @@ public class MainActivity extends AppCompatActivity
     protected void onStart() {
         super.onStart();
         mGoogleApiClient.connect();
+        Log.d("Activity Lifecycles", "Inside onStart");
+
     }
 
     @Override
@@ -331,7 +324,9 @@ public class MainActivity extends AppCompatActivity
         if (mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
         }
+        Log.d("Activity Lifecycles", "Inside onStop");
     }
+
 
     protected void onResume() {
         super.onResume();
@@ -339,14 +334,13 @@ public class MainActivity extends AppCompatActivity
         mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_UI);
         mSensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_UI);
         getFromPrefs();
-
-        //getFromPrefs();
+        Log.d("Activity Lifecycles", "Inside onResume");
     }
 
     protected void onPause() {
         super.onPause();
-        mRequestingLocationUpdates = false;
         mSensorManager.unregisterListener(this);
+        Log.d("Activity Lifecycles", "Inside onPause");
     }
 
     @Override
@@ -357,6 +351,8 @@ public class MainActivity extends AppCompatActivity
 
             if (sensorEvent.values[0] < 5) {
                 mp.start();
+                Marks = " 1 , ";
+                // and Marks = " , 1 ";  for audio marking
             }
         }
 
@@ -408,13 +404,14 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (mRequestingLocationUpdates)
-            writeToFile(e1, e2, LocData);
+            writeToFile(e1, e2, LocData, Marks);
 
 
     }
 
-    protected void writeToFile(String Acc, String Gyr, String LocationData) {
-        String data = Acc + Gyr + LocationData + "\n";
+    protected void writeToFile(String Acc, String Gyr, String LocationData, String MarkingData) {
+        String data = Acc + Gyr + LocationData + ", " + Marks + "\n";
+        Marks = null;
         try {
             out = new FileOutputStream(file, true);
             out.write(data.getBytes());
@@ -574,7 +571,7 @@ public class MainActivity extends AppCompatActivity
         // Write first header line to file
         // Accx, Acc y, Axxz, variable(x,y,z), isbump, Threshold high, Threshold low, Gyrx, gyry, gyrz, lat, long, timestamp, accuracy
 
-        String data = "AccX, AccY, AccZ, variable(xyz), isBump, Threshold High, Threshold Low, Car, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy (m)\n";
+        String data = "AccX, AccY, AccZ, variable(xyz), isBump, Threshold High, Threshold Low, Car, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy (m), proximity marking, voice marking\n";
 
         try {
             out = new FileOutputStream(file, true);
@@ -677,8 +674,6 @@ public class MainActivity extends AppCompatActivity
 
     private void getFromPrefs() {
 
-        // get thresholds from the shared prefs
-
         SharedPreferences sharedPref = getSharedPreferences("Profiles", Context.MODE_PRIVATE);
         curcar = sharedPref.getString("CurrentCar", "None");
         curmodel = sharedPref.getString("CurrentModel", "None");
@@ -696,6 +691,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void stopTrip() {
+
+        // Makes the file available to file managers and the android system
+
         MediaScannerConnection.scanFile(this,
                 new String[]{file.toString()}, null,
                 new MediaScannerConnection.OnScanCompletedListener() {
@@ -708,4 +706,12 @@ public class MainActivity extends AppCompatActivity
     }
 }
 
+// there is no check whether location enabled or not
+// logging stops when goes out of activity but does not resume when it comes back but switch is still on   =======
+// Switch goes off when back button is pressed and onCreate is started when it comes back   ======  Doesnt matter
+// file is created as soon as app is opened regardless of yes or no   ======
+// new file is not created when start stop is pressed in the same session, it just appends to the old file   ========
 
+
+// Make file names based on start-end location
+// eg koramangala to indiranagar

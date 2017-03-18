@@ -37,8 +37,10 @@ public class MyAdapter extends ArrayAdapter<File> {
         View rowView = inflater.inflate(R.layout.trip_list_item, parent, false);
         TextView date = (TextView) rowView.findViewById(R.id.date);
         TextView time = (TextView) rowView.findViewById(R.id.start_time);
+        TextView size = (TextView) rowView.findViewById(R.id.size);
         date.setText(d);
         time.setText(t);
+        size.setText(Long.toString(values[position].length()/1000)+" kB");
 
         return rowView;
     }
