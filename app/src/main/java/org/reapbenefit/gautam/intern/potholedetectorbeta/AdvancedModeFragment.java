@@ -19,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -52,6 +53,7 @@ public class AdvancedModeFragment extends Fragment {
     File[] logfiles;
     ListView l;
     Button submitButton;
+    ImageButton refreshButton;
 
     String CarName, ModelName;
     TextView CarNameTextView, ModelNameTextView;
@@ -91,13 +93,33 @@ public class AdvancedModeFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
-        dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS + "/PotholeApp/");
-        logfiles = dir.listFiles();
-        int n = logfiles.length;
+        getListofLogFiles();
+        int n;
+        if(logfiles != null)
+            n = logfiles.length;
+        else n =0;
         for(int i=0; i<n; i++){
             Log.i("File "+String.valueOf(i), logfiles[i].getName());
 
         }
+    }
+
+    private void getListofLogFiles(){
+        dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS + "/PotholeApp/");
+        logfiles = dir.listFiles();
+    }
+
+    private void createListView(){
+        if(logfiles!=null) {
+            l.setAdapter(new MyAdapter(getActivity(), logfiles));
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS + "/PotholeApp/");
+        logfiles = dir.listFiles();
     }
 
     @Override
@@ -106,7 +128,7 @@ public class AdvancedModeFragment extends Fragment {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_advanced_mode, container, false);
         submitButton = (Button) v.findViewById(R.id.submit);
-
+        refreshButton = (ImageButton) v.findViewById(R.id.refreshButton);
         CarNameTextView = (TextView) v.findViewById(R.id.car_text);
         ModelNameTextView = (TextView) v.findViewById(R.id.model_text);
 
@@ -159,9 +181,17 @@ public class AdvancedModeFragment extends Fragment {
             }
         });
 
+        refreshButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getListofLogFiles();
+                createListView();
+            }
+        });
+
 
         l = (ListView) v.findViewById(R.id.trips_list);
-        l.setAdapter(new MyAdapter(getActivity(), logfiles));
+        createListView();
         l.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
@@ -176,16 +206,21 @@ public class AdvancedModeFragment extends Fragment {
                 // Start a map activity that plots the locations
 
                 // Upload the related file to google drive
+               /*
                 String your_file_path = logfiles[i].getPath();
                 Intent intent = new Intent(android.content.Intent.ACTION_SEND);
                 intent.setType("text/plain");
                 intent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + your_file_path));
                 startActivity(Intent.createChooser(intent, ""));
+                */
 
+                // Open a detailed activity with a maps fragment
             }
         });
         return v;
     }
+
+
 
     void buildDialog(){
 

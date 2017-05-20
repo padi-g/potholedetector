@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -86,6 +87,24 @@
         android:id="@+id/inputLowThreshold"
         android:hint="@string/edit_low" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_row="4"
+            android:layout_column="0"
+            android:text="@string/trips"
+            android:textColor="#000"
+            android:textSize="30dp"
+            android:paddingLeft="@dimen/activity_horizontal_margin"/>
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_row="4"
+            android:layout_column="2"
+            app:srcCompat="@drawable/quantum_ic_refresh_white_24"
+            android:id="@+id/refreshButton" />
+
 
     <LinearLayout
 
@@ -124,13 +143,7 @@
 
     </GridLayout>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/trips"
-        android:textColor="#000"
-        android:textSize="30dp"
-        android:paddingLeft="@dimen/activity_horizontal_margin"/>
+
 
     <ListView
         android:layout_width="match_parent"
