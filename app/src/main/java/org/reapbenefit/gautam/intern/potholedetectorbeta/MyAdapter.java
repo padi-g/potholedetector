@@ -35,7 +35,7 @@ public class MyAdapter extends ArrayAdapter<File> {
 
         if(values != null) {
             String filename = values[position].getName().replaceFirst("AM.csv|PM.csv", "");
-            String d = filename.substring(0, 2) + " " + filename.substring(3, 6) + " " + filename.substring(7, 11);
+            String d = filename.substring(0, 3) + " " + filename.substring(3, 5) + " " + filename.substring(5, 9);
             String t = "ID : " + filename.substring(9);
 
             View rowView = inflater.inflate(R.layout.trip_list_item, parent, false);

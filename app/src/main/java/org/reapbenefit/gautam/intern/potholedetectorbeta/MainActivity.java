@@ -57,6 +57,7 @@ import java.io.OutputStream;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -574,7 +575,7 @@ public class MainActivity extends AppCompatActivity
         logFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS + "/PotholeApp/");
         logFile.mkdir();
         Log.d(TAG, logFile.getPath());
-        String time = DateFormat.getDateTimeInstance().format(new Date()).replace(":", "");
+        String time = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.US).format(new Date()).replace(":", "");
         String t1 = time.replaceFirst(",", "");
         String t2 = t1.replace(" ", "") + ".csv";
         file = new File(logFile.getPath(), t2);
@@ -747,3 +748,5 @@ public class MainActivity extends AppCompatActivity
 
 // Make file names based on start-end location
 // eg koramangala to indiranagar
+
+//  https://coolors.co/6da34d-c9cba3-202030-39304a-52528c  for colours
