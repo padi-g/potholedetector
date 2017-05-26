@@ -16,11 +16,9 @@ public class CreditsActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        getSupportActionBar().setTitle("Credits");
-
-        StartsStop = (Switch) findViewById(R.id.stopSwitch);
-        StartsStop.setVisibility(View.GONE);
+        getSupportActionBar().setTitle(R.string.menu_about);
+        Switch s = (Switch) toolbar.findViewById(R.id.stopSwitch);
+        s.setVisibility(View.GONE);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 }

@@ -59,8 +59,8 @@ public class ActivityRecognizedService extends IntentService {
                         builder.setSmallIcon( R.mipmap.ic_launcher );
                         builder.setContentTitle( getString( R.string.app_name ) );
                         builder.setAutoCancel(true);
-                        Intent resultIntent = new Intent(this, MainActivity.class);
 
+                        Intent resultIntent = new Intent(this, MainActivity.class);
                         resultIntent.putExtra("CarMode", true);
                         resultIntent.putExtra("ActivityType", activity.getType());
                         resultIntent.putExtra("Confidence", activity.getConfidence());

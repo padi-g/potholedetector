@@ -9,14 +9,13 @@
     <include
         layout="@layout/toolbar_main"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/include" />
+        android:layout_height="wrap_content"/>
 
     <TextView
         android:text="Built by Gautam Padiyar and Aniruddha Mysore"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/include"
+        android:layout_below="@+id/toolbar"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="114dp"
         android:id="@+id/textView" />

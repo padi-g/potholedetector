@@ -132,6 +132,8 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setTitle("Road Quality Audit");
 
+
+
         StartsStop = (Switch) findViewById(R.id.stopSwitch);
         StartsStop.setChecked(false);
         Intent intentFromService = getIntent();
@@ -139,6 +141,7 @@ public class MainActivity extends AppCompatActivity
         tripStarted = intentFromService.getBooleanExtra("CarMode", false); // false is default
         activityType = intentFromService.getIntExtra("ActivityType", -2);  // -2 is random.
         confidence = intentFromService.getIntExtra("Confidence", 0); // 0 is default
+
 
         if (!tripStarted) {
             // this did not come from intent service
@@ -213,7 +216,7 @@ public class MainActivity extends AppCompatActivity
                     Log.i("MainActivity", "Trip is false");
                 } else {
                     tripStarted = false;
-                    startService();
+                    //startService();
                     stopTrip();
                     stopLocationUpdates();
                     mRequestingLocationUpdates = false;
@@ -444,7 +447,9 @@ public class MainActivity extends AppCompatActivity
     public void onConnected(@Nullable Bundle bundle) {
         Log.i(TAG, "Connected to GoogleApiClient");
 
-        startService();
+        // put into bundle
+
+        //startService();
 
         // If the initial location was never previously requested, we use
         // FusedLocationApi.getLastLocation() to get it. If it was previously requested, we store
@@ -604,11 +609,11 @@ public class MainActivity extends AppCompatActivity
                 .addApi(ActivityRecognition.API)
                 .build();
 
-        createLocationRequest();
-
         if (mGoogleApiClient != null) {
             mGoogleApiClient.connect();
         }
+
+        createLocationRequest();
     }
 
     protected void createLocationRequest() {
