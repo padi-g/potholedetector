@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.location.DetectedActivity;
@@ -40,15 +41,9 @@ public class EasyModeFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    public TextView dummy;
-   static public boolean tripStarted;
-    static public  int activityType, confidence;
-    DetectedActivity activity;
-    Button tripStopper;
-
-    FrameLayout f;
-    TextView t;
-
+    static public boolean tripStatus;
+    View bgframe;
+    TextView statusIndicatorText;
 
     public EasyModeFragment() {
         // Required empty public constructor
@@ -93,13 +88,16 @@ public class EasyModeFragment extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
         // How to access the outside variables here?
-            tripStarted = intent.getBooleanExtra("CarMode", false);
-            activityType = intent.getIntExtra("ActivityType", -2);
-            confidence = intent.getIntExtra("Confidence", 0);
-            Log.i("EasyFragment", "Recieved in fragment");
-            Log.i("EasyFragment", String.valueOf(tripStarted));
-            Log.i("EasyFragment", String.valueOf(activityType));
-            Log.i("EasyFragment", String.valueOf(confidence));
+            tripStatus = intent.getBooleanExtra("LoggingStatus", false);
+
+            if(tripStatus == true){
+                bgframe.setBackgroundResource(R.drawable.logging_bg);
+                statusIndicatorText.setText(getResources().getString(R.string.detecting));
+            }else {
+                bgframe.setBackgroundResource(R.drawable.notlogging_bg);
+                statusIndicatorText.setText(getResources().getString(R.string.not_detecting));
+            }
+
 
         }
     };
@@ -109,16 +107,14 @@ public class EasyModeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        Log.i("EasyFragment oCV", "Recieved in fragment");
-        Log.i("EasyFragment oCV", String.valueOf(tripStarted));
-        Log.i("EasyFragment oCV", String.valueOf(activityType));
-        Log.i("EasyFragment oCV", String.valueOf(confidence));
 
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(getActivity());
-        l.registerReceiver(b,new IntentFilter("thisit"));
+        l.registerReceiver(b, new IntentFilter("tripstatus"));
 
         View v = inflater.inflate(R.layout.fragment_easy_mode, container, false);
 
+        bgframe = (RelativeLayout) v.findViewById(R.id.easyframe);
+        statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
             return v;
     }
 

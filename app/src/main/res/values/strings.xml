@@ -9,7 +9,8 @@
     <string name="dialog_question">Do you want to start a trip?</string>
     <string name="dialog_positive">Yes</string>
     <string name="dialog_negative">No</string>
-    <string name="detecting">Let us do all the work. We are detecting potholes</string>
+    <string name="not_detecting">Press on the toggle to start your trip</string>
+    <string name="detecting">Sit tight and drive safe! We are detecting potholes</string>
 
     <string name="about">
         Why are we doing this?\n\n

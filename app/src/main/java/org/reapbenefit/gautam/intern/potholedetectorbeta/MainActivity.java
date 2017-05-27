@@ -193,6 +193,7 @@ public class MainActivity extends AppCompatActivity
 
 
         // fire LocalBroadcast to updateUI
+        /*
         Intent iTemp = new Intent("thisit");
 
         iTemp.putExtra("CarMode", true);
@@ -201,6 +202,7 @@ public class MainActivity extends AppCompatActivity
 
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
         l.sendBroadcast(iTemp);
+        */
         Log.i("Main Activity", String.valueOf(intentFromService.getBooleanExtra("CarMode", false)));
 
         getFromPrefs();
@@ -213,6 +215,7 @@ public class MainActivity extends AppCompatActivity
                     tripStarted = true;
                     mRequestingLocationUpdates = true;
                     startLocationUpdates();
+                    sendTripLoggingBroadcast(true);
                     Log.i("MainActivity", "Trip is false");
                 } else {
                     tripStarted = false;
@@ -226,6 +229,15 @@ public class MainActivity extends AppCompatActivity
 
      mStorageRef = FirebaseStorage.getInstance().getReference();
 
+    }
+
+    void sendTripLoggingBroadcast(boolean status){
+        Intent iTemp = new Intent("tripstatus");
+
+        iTemp.putExtra("LoggingStatus", status);
+
+        LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
+        l.sendBroadcast(iTemp);
     }
 
 
@@ -740,6 +752,8 @@ public class MainActivity extends AppCompatActivity
                                 });
                     }
                 });
+
+        sendTripLoggingBroadcast(false);
 
     }
 }
