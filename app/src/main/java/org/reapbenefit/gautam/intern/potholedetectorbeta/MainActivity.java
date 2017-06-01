@@ -51,9 +51,13 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
@@ -64,7 +68,7 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
-        AdvancedModeFragment.OnFragmentInteractionListener, EasyModeFragment.OnFragmentInteractionListener,
+        TriplistFragment.OnFragmentInteractionListener, EasyModeFragment.OnFragmentInteractionListener,
         SensorEventListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener
         , com.google.android.gms.location.LocationListener, com.google.android.gms.location.ActivityRecognitionApi,
         EasyPermissions.PermissionCallbacks {
@@ -137,7 +141,6 @@ public class MainActivity extends AppCompatActivity
         StartsStop = (Switch) findViewById(R.id.stopSwitch);
         StartsStop.setChecked(false);
         Intent intentFromService = getIntent();
-        mp = MediaPlayer.create(getApplication(), R.raw.beep);
         tripStarted = intentFromService.getBooleanExtra("CarMode", false); // false is default
         activityType = intentFromService.getIntExtra("ActivityType", -2);  // -2 is random.
         confidence = intentFromService.getIntExtra("Confidence", 0); // 0 is default
@@ -153,6 +156,8 @@ public class MainActivity extends AppCompatActivity
             setupLogFile();
             mRequestingLocationUpdates = true;
             startLocationUpdates();
+            Toast toast = Toast.makeText(MainActivity.this, "Data Logging started", Toast.LENGTH_SHORT);
+            toast.show();
         }
 
         /*
@@ -217,6 +222,8 @@ public class MainActivity extends AppCompatActivity
                     startLocationUpdates();
                     sendTripLoggingBroadcast(true);
                     Log.i("MainActivity", "Trip is false");
+                    Toast toast = Toast.makeText(MainActivity.this, "Data Logging started", Toast.LENGTH_SHORT);
+                    toast.show();
                 } else {
                     tripStarted = false;
                     //startService();
@@ -377,7 +384,8 @@ public class MainActivity extends AppCompatActivity
             Log.w("Prox", String.valueOf(sensorEvent.values[0]));
 
             if (sensorEvent.values[0] < 5) {
-                mp.start();
+                if(tripStarted)
+                    mp.start();
                 Marks = " 1 , ";
                 // and Marks = " , 1 ";  for audio marking
             }
@@ -431,12 +439,12 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (mRequestingLocationUpdates)
-            writeToFile(e1, e2, LocData, Marks);
+            writeToFile(e1, e2, LocData);
 
 
     }
 
-    protected void writeToFile(String Acc, String Gyr, String LocationData, String MarkingData) {
+    protected void writeToFile(String Acc, String Gyr, String LocationData) {
         String data = Acc + Gyr + LocationData + ", " + Marks + "\n";
         Marks = null;
         try {
@@ -589,13 +597,16 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setupLogFile() {
-        logFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS + "/PotholeApp/");
-        logFile.mkdir();
-        Log.d(TAG, logFile.getPath());
-        String time = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.US).format(new Date()).replace(":", "");
+        mp = MediaPlayer.create(getApplication(), R.raw.beep);
+        String time = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.UK).format(new Date()).replace(":", "");
         String t1 = time.replaceFirst(",", "");
         String t2 = t1.replace(" ", "") + ".csv";
-        file = new File(logFile.getPath(), t2);
+        String path = "logs/";
+        File temp = new File(getApplicationContext().getFilesDir()+path);
+        temp.mkdir();
+        file = new File(temp.getPath(), t2);
+
+        //file = new File(logFile.getPath(), t2);
 
         // Write first header line to file
         // Accx, Acc y, Axxz, variable(x,y,z), isbump, Threshold high, Threshold low, Gyrx, gyry, gyrz, lat, long, timestamp, accuracy
@@ -723,35 +734,28 @@ public class MainActivity extends AppCompatActivity
 
         // Makes the file available to file managers and the android system
 
-        MediaScannerConnection.scanFile(this,
-                new String[]{file.toString()}, null,
-                new MediaScannerConnection.OnScanCompletedListener() {
-                    public void onScanCompleted(String path, Uri uri) {
-                        Log.i("ExternalStorage", "Scanned " + path + ":");
-                        Log.i("ExternalStorage", "-> uri=" + uri);
+        StorageReference riversRef = mStorageRef.child("logs/"+file.getName());
 
-                        // Upload to firebase
+        try {
+            InputStream stream = new FileInputStream(file);
+            UploadTask uploadTask = riversRef.putStream(stream);
+            uploadTask.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    // Handle unsuccessful uploads
+                }
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                    Log.d("Uploaded", "Done");
+                }
+            });
+        }catch (FileNotFoundException e){
 
-                        StorageReference riversRef = mStorageRef.child("logs/"+file.getName());
+        }
 
-                        riversRef.putFile(uri)
-                                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                    @Override
-                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                        // Get a URL to the uploaded content
-                                        Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                                        // this is useful information
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception exception) {
-                                        // Handle unsuccessful uploads
-                                        // ...
-                                    }
-                                });
-                    }
-                });
 
         sendTripLoggingBroadcast(false);
 

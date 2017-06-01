@@ -25,7 +25,7 @@ public class Pager extends FragmentStatePagerAdapter {
                 EasyModeFragment tab1 = new EasyModeFragment();
                 return tab1;
             case 1:
-                AdvancedModeFragment tab2 = new AdvancedModeFragment();
+                TriplistFragment tab2 = new TriplistFragment();
                 return tab2;
             default:
                 return null;

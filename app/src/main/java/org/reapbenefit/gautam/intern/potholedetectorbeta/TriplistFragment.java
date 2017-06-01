@@ -1,43 +1,30 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Parcelable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import java.io.File;
-import java.util.ArrayList;
-
-import static android.content.Context.MODE_PRIVATE;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link AdvancedModeFragment.OnFragmentInteractionListener} interface
+ * {@link TriplistFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link AdvancedModeFragment#newInstance} factory method to
+ * Use the {@link TriplistFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class AdvancedModeFragment extends Fragment {
+public class TriplistFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -52,18 +39,9 @@ public class AdvancedModeFragment extends Fragment {
     File dir;
     File[] logfiles;
     ListView l;
-    Button submitButton;
     ImageButton refreshButton;
 
-    String CarName, ModelName;
-    TextView CarNameTextView, ModelNameTextView;
-
-    TextView curHigh, curLow;
-    double bumpHighThreshold = 12.5, bumpLowThreshold = 7.5;
-
-    EditText input_high_threshold, input_low_threshold ;
-
-    public AdvancedModeFragment() {
+    public TriplistFragment() {
         // Required empty public constructor
     }
 
@@ -73,11 +51,11 @@ public class AdvancedModeFragment extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment AdvancedModeFragment.
+     * @return A new instance of fragment TriplistFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static AdvancedModeFragment newInstance(String param1, String param2) {
-        AdvancedModeFragment fragment = new AdvancedModeFragment();
+    public static TriplistFragment newInstance(String param1, String param2) {
+        TriplistFragment fragment = new TriplistFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -105,8 +83,11 @@ public class AdvancedModeFragment extends Fragment {
     }
 
     private void getListofLogFiles(){
-        dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS + "/PotholeApp/");
-        logfiles = dir.listFiles();
+        dir = getContext().getFilesDir();
+        String path = dir.getPath() + "logs/";
+        File logdir = new File(path);
+       // file = new File(MainActivity.this.getFilesDir(), t2);
+        logfiles = logdir.listFiles();
     }
 
     private void createListView(){
@@ -126,61 +107,8 @@ public class AdvancedModeFragment extends Fragment {
     public View onCreateView(final LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_advanced_mode, container, false);
-        submitButton = (Button) v.findViewById(R.id.submit);
+        View v = inflater.inflate(R.layout.fragment_triplist, container, false);
         refreshButton = (ImageButton) v.findViewById(R.id.refreshButton);
-        CarNameTextView = (TextView) v.findViewById(R.id.car_text);
-        ModelNameTextView = (TextView) v.findViewById(R.id.model_text);
-
-        curHigh = (TextView) v.findViewById(R.id.curHighText);
-        curLow = (TextView) v.findViewById(R.id.curLowText);
-
-        input_high_threshold = (EditText) v.findViewById(R.id.inputHighThreshold);
-        input_low_threshold = (EditText) v.findViewById(R.id.inputLowThreshold);
-
-
-        SharedPreferences sharedPref = getActivity().getSharedPreferences("Profiles", MODE_PRIVATE);
-        CarName = sharedPref.getString("CurrentCar", "Please add a car");
-        CarNameTextView.setText(CarName);
-        ModelName = sharedPref.getString("CurrentModel", "None");
-        ModelNameTextView.setText(ModelName);
-        bumpHighThreshold = sharedPref.getFloat("High", 12.5f);
-        bumpLowThreshold = sharedPref.getFloat("Low", 7.5f);
-
-        curHigh.setText(Double.toString(bumpHighThreshold));
-        curLow.setText(Double.toString(bumpLowThreshold));
-
-
-        input_high_threshold = (EditText) v.findViewById(R.id.inputHighThreshold);
-        input_low_threshold = (EditText) v.findViewById(R.id.inputLowThreshold);
-        curHigh = (TextView) v.findViewById(R.id.curHighText);
-        curLow = (TextView) v.findViewById(R.id.curLowText);
-
-        submitButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String h = input_high_threshold.getText().toString();
-                if(h.isEmpty()) {
-                    // do nothing
-                }else bumpHighThreshold = Float.parseFloat(h);
-
-                String l = input_low_threshold.getText().toString();
-                if(l.isEmpty()) {
-                    // do nothing
-                }else bumpLowThreshold = Float.parseFloat(l);
-
-                curHigh.setText(String.valueOf(bumpHighThreshold));
-                curLow.setText(String.valueOf(bumpLowThreshold));
-
-                buildDialog();
-
-                saveToPrefs((float)bumpHighThreshold, (float)bumpLowThreshold, CarName, ModelName);
-
-                input_high_threshold.setText("");
-                input_low_threshold.setText("");
-            }
-        });
-
         refreshButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -220,50 +148,7 @@ public class AdvancedModeFragment extends Fragment {
         return v;
     }
 
-
-
-    void buildDialog(){
-
-        LayoutInflater inflater = getActivity().getLayoutInflater();
-        View dialoglayout = inflater.inflate(R.layout.profile_dialog_layout, null);
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-
-        final EditText carname = (EditText) dialoglayout.findViewById(R.id.car_name);
-        final EditText modelname = (EditText) dialoglayout.findViewById(R.id.model_name);
-
-        carname.setHint(CarName);
-        modelname.setHint(ModelName);
-
-        builder.setTitle("Car Profile");
-        builder.setPositiveButton("Save",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                        String c = carname.getText().toString();
-                        if(!c.isEmpty())
-                            CarName = c;
-
-                        String m = modelname.getText().toString();
-                        if(!m.isEmpty())
-                            ModelName = m;
-
-                        CarNameTextView.setText(CarName);
-                        ModelNameTextView.setText(ModelName);
-                        saveToPrefs((float)bumpHighThreshold, (float)bumpLowThreshold, CarName, ModelName);
-                    }
-                });
-        builder.setNegativeButton("Cancel",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                    }
-                });
-        builder.setView(dialoglayout);
-        builder.show();
-    }
-
+    /*
     public void saveToPrefs(Float h, float l, String car, String model){
         SharedPreferences.Editor editor = getActivity().getSharedPreferences("Profiles", MODE_PRIVATE).edit();
         editor.clear();
@@ -273,6 +158,7 @@ public class AdvancedModeFragment extends Fragment {
         editor.putFloat("Low", l);
         editor.commit();
     }
+    */
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
