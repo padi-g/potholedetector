@@ -1,23 +1,14 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.content.SharedPreferences;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.location.Location;
-import android.media.MediaPlayer;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.Environment;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
@@ -33,9 +24,8 @@ import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
-
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.ActivityRecognition;
@@ -43,25 +33,11 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
-import java.text.DateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -69,64 +45,29 @@ import pub.devrel.easypermissions.EasyPermissions;
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
         TriplistFragment.OnFragmentInteractionListener, EasyModeFragment.OnFragmentInteractionListener,
-        SensorEventListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener
-        , com.google.android.gms.location.LocationListener, com.google.android.gms.location.ActivityRecognitionApi,
         EasyPermissions.PermissionCallbacks {
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
     protected GoogleApiClient mGoogleApiClient;
-    protected LocationRequest mLocationRequest;
     protected Location mCurrentLocation;
 
-    private SensorManager mSensorManager;
-    private Sensor mAccelerometer;
-    private Sensor mGyroscope;
-    private Sensor mProximity;
-
-    protected boolean mRequestingLocationUpdates, tripStarted = false;
     int activityType, confidence;
-
-    MediaPlayer mp;
-    protected Boolean stopped, gAvailable = true;
-
-    File logFile, file;
-    OutputStream out;
-
-    Float bumpHighThreshold, bumpLowThreshold;
-    String curcar, curmodel;
-
-    int count = 0, isbump = 0;
-
-    int axisPressed = 2;
-
-    private String AccXvalue;
-    private String AccYvalue;
-    private String AccZvalue;
-    private String GyroXvalue;
-    private String GyroYvalue;
-    private String GyroZvalue;
-    protected String LocData;
-
-    protected String mLastUpdateTime, e1, e2, Marks;
 
     static Switch StartsStop;
 
     protected static final String TAG = "Main Activity";
-    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 0; // Fastest possible limited by hardware
-    public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 0;
-    protected final static String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
-    protected final static String LOCATION_KEY = "location-key";
-    protected final static String LAST_UPDATED_TIME_STRING_KEY = "last-updated-time-string-key";
+
 
     private StorageReference mStorageRef;
+    Intent i;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.d("Activity Lifecycles", "Inside onCreate");
+        Log.d(TAG, "Inside onCreate");
 
         setContentView(R.layout.activity_main);
 
@@ -136,28 +77,26 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setTitle("Road Quality Audit");
 
-
+        mGoogleApiClient = ApplicationClass.getGoogleApiHelper().getGoogleApiClient();
+        i = new Intent(MainActivity.this, LoggerService.class);
+        settingsrequest();
 
         StartsStop = (Switch) findViewById(R.id.stopSwitch);
         StartsStop.setChecked(false);
+        /*
         Intent intentFromService = getIntent();
         tripStarted = intentFromService.getBooleanExtra("CarMode", false); // false is default
         activityType = intentFromService.getIntExtra("ActivityType", -2);  // -2 is random.
         confidence = intentFromService.getIntExtra("Confidence", 0); // 0 is default
+        */
 
-
-        if (!tripStarted) {
+        if (!ApplicationClass.tripInProgress) {
             // this did not come from intent service
             // Show dialog asking to open
             buildDialog();
         } else {
             StartsStop.setChecked(true);
-            // start logging
-            setupLogFile();
-            mRequestingLocationUpdates = true;
-            startLocationUpdates();
-            Toast toast = Toast.makeText(MainActivity.this, "Data Logging started", Toast.LENGTH_SHORT);
-            toast.show();
+
         }
 
         /*
@@ -185,67 +124,103 @@ public class MainActivity extends AppCompatActivity
                 new TabLayout.TabLayoutOnPageChangeListener(tabLayout)
         );
 
-
         askPermissions();
 
-        setupSensors();
-
-        buildGoogleApiClient();
-
-        updateValuesFromBundle(savedInstanceState);
-
-
-
-
-        // fire LocalBroadcast to updateUI
-        /*
-        Intent iTemp = new Intent("thisit");
-
-        iTemp.putExtra("CarMode", true);
-        iTemp.putExtra("ActivityType", activityType);
-        iTemp.putExtra("Confidence", confidence);
-
-        LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
-        l.sendBroadcast(iTemp);
-        */
-        Log.i("Main Activity", String.valueOf(intentFromService.getBooleanExtra("CarMode", false)));
-
-        getFromPrefs();
+        // Log.i(TAG, String.valueOf(intentFromService.getBooleanExtra("CarMode", false)));
 
         StartsStop.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {
-                    setupLogFile();
-                    tripStarted = true;
-                    mRequestingLocationUpdates = true;
-                    startLocationUpdates();
-                    sendTripLoggingBroadcast(true);
-                    Log.i("MainActivity", "Trip is false");
-                    Toast toast = Toast.makeText(MainActivity.this, "Data Logging started", Toast.LENGTH_SHORT);
-                    toast.show();
+               if (b) {
+                   if(ApplicationClass.tripInProgress)
+                       // coming from dialog
+                       //do nothing
+                       ;
+                   else {
+                       ApplicationClass.tripInProgress = true;
+                       startLogger();
+                       sendTripLoggingBroadcast(true);
+                   }
+
                 } else {
-                    tripStarted = false;
-                    //startService();
-                    stopTrip();
-                    stopLocationUpdates();
-                    mRequestingLocationUpdates = false;
+                    ApplicationClass.tripInProgress = false;
+                    sendTripLoggingBroadcast(false);
+                    stopLogger();
+
+                    MainActivity.this.finish();
+                    System.exit(0);
+                    //startActivityService();
                 }
             }
         });
 
-     mStorageRef = FirebaseStorage.getInstance().getReference();
+        mStorageRef = FirebaseStorage.getInstance().getReference();
 
     }
 
-    void sendTripLoggingBroadcast(boolean status){
+    void sendTripLoggingBroadcast(boolean status) {
         Intent iTemp = new Intent("tripstatus");
-
         iTemp.putExtra("LoggingStatus", status);
-
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
         l.sendBroadcast(iTemp);
     }
+
+    public void settingsrequest()
+    {
+        LocationRequest locationRequest = LocationRequest.create();
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+        builder.setAlwaysShow(true); //this is the key ingredient
+
+        PendingResult<LocationSettingsResult> result =
+                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient, builder.build());
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult result) {
+                final Status status = result.getStatus();
+                final LocationSettingsStates state = result.getLocationSettingsStates();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        // All location settings are satisfied. The client can initialize location
+                        // requests here.
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        // Location settings are not satisfied. But could be fixed by showing the user
+                        // a dialog.
+                        try {
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            status.startResolutionForResult(MainActivity.this, 0x01);
+                        } catch (IntentSender.SendIntentException e) {
+                            // Ignore the error.
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        // Location settings are not satisfied. However, we have no way to fix the
+                        // settings so we won't show the dialog.
+                        break;
+                }
+            }
+        });
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+// Check for the integer request code originally supplied to startResolutionForResult().
+            case 0x01:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        // do nothing, continue
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        Toast.makeText(this, "The App needs your location to function properly", Toast.LENGTH_LONG).show();
+                        settingsrequest();//keep asking if imp or do whatever
+                        break;
+                }
+                break;
+        }
+    }
+
 
 
     void buildDialog() {
@@ -259,9 +234,10 @@ public class MainActivity extends AppCompatActivity
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        ApplicationClass.tripInProgress = true;
                         StartsStop.setChecked(true);
-                        // Start logging
-                        setupLogFile();
+                        sendTripLoggingBroadcast(true);
+                        startLogger();
                     }
                 });
         builder.setNegativeButton(R.string.dialog_negative,
@@ -273,32 +249,6 @@ public class MainActivity extends AppCompatActivity
                 });
         builder.setView(dialoglayout);
         builder.show();
-    }
-
-    private void updateValuesFromBundle(Bundle savedInstanceState) {
-        Log.i(TAG, "Updating values from bundle");
-        if (savedInstanceState != null) {
-            // Update the value of mRequestingLocationUpdates from the Bundle, and make sure that
-            // the Start Updates and Stop Updates buttons are correctly enabled or disabled.
-            if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
-                mRequestingLocationUpdates = savedInstanceState.getBoolean(
-                        REQUESTING_LOCATION_UPDATES_KEY);
-            }
-
-            // Update the value of mCurrentLocation from the Bundle and update the UI to show the
-            // correct latitude and longitude.
-            if (savedInstanceState.keySet().contains(LOCATION_KEY)) {
-                // Since LOCATION_KEY was found in the Bundle, we can be sure that mCurrentLocation
-                // is not null.
-                mCurrentLocation = savedInstanceState.getParcelable(LOCATION_KEY);
-            }
-
-            // Update the value of mLastUpdateTime from the Bundle and update the UI.
-            if (savedInstanceState.keySet().contains(LAST_UPDATED_TIME_STRING_KEY)) {
-                mLastUpdateTime = savedInstanceState.getString(LAST_UPDATED_TIME_STRING_KEY);
-            }
-            getLocData();
-        }
     }
 
     @Override
@@ -344,165 +294,8 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
-        Log.d("Activity Lifecycles", "Inside onStart");
-
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.disconnect();
-        }
-        Log.d("Activity Lifecycles", "Inside onStop");
-    }
-
-
-    protected void onResume() {
-        super.onResume();
-        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
-        mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_UI);
-        mSensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_UI);
-        getFromPrefs();
-        Log.d("Activity Lifecycles", "Inside onResume");
-    }
-
-    protected void onPause() {
-        super.onPause();
-        mSensorManager.unregisterListener(this);
-        Log.d("Activity Lifecycles", "Inside onPause");
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
-            Log.w("Prox", String.valueOf(sensorEvent.values[0]));
-
-            if (sensorEvent.values[0] < 5) {
-                if(tripStarted)
-                    mp.start();
-                Marks = " 1 , ";
-                // and Marks = " , 1 ";  for audio marking
-            }
-        }
-
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {  // or TYPE_ACCELEROMETER
-            AccXvalue = String.format("%.1f", sensorEvent.values[0]);
-            AccYvalue = String.format("%.1f", sensorEvent.values[1]);
-            AccZvalue = String.format("%.1f", sensorEvent.values[2]);
-
-            if (sensorEvent.values[axisPressed] > bumpHighThreshold) {
-                count++;
-                isbump = 1;
-            }
-            if (sensorEvent.values[axisPressed] < bumpLowThreshold) {
-                count++;
-                isbump = 1;
-            }
-            String curVar;
-            switch (axisPressed) {
-                case 0:
-                    curVar = "X";
-                    break;
-                case 1:
-                    curVar = "Y";
-                    break;
-                case 2:
-                    curVar = "Z";
-                    break;
-                default:
-                    curVar = "Z";
-
-            }
-
-            // AccX, AccY, AccZ, variable(x,y,z) isBump, Threshold High, Threshold Low, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy (m)
-            e1 = AccXvalue + ", " + AccYvalue + ", " + AccZvalue + ", " + curVar + ", " + String.valueOf(isbump) + ", " + String.valueOf(bumpHighThreshold) + ", " + String.valueOf(bumpLowThreshold) + ", " + curcar + " " + curmodel + ", ";
-
-        }
-
-        if (!gAvailable) {
-            e2 = "null" + ", " + "null" + ", " + "null" + ", ";
-        } else if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-
-            if (gAvailable) {
-                GyroXvalue = String.format("%.1f", sensorEvent.values[0]);
-                GyroYvalue = String.format("%.1f", sensorEvent.values[1]);
-                GyroZvalue = String.format("%.1f", sensorEvent.values[2]);
-
-                e2 = GyroXvalue + ", " + GyroYvalue + ", " + GyroZvalue + ", ";
-            }
-        }
-
-        if (mRequestingLocationUpdates)
-            writeToFile(e1, e2, LocData);
-
-
-    }
-
-    protected void writeToFile(String Acc, String Gyr, String LocationData) {
-        String data = Acc + Gyr + LocationData + ", " + Marks + "\n";
-        Marks = null;
-        try {
-            out = new FileOutputStream(file, true);
-            out.write(data.getBytes());
-            out.close();
-            Log.d(TAG, "Writing " + data);
-            //Log.d(TAG, "Writing to csv file at "+ logFile.getPath() );
-        } catch (IOException e) {
-            Log.d(TAG, "File write failed: " + e.toString());
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.i(TAG, "Connected to GoogleApiClient");
-
-        // put into bundle
-
-        //startService();
-
-        // If the initial location was never previously requested, we use
-        // FusedLocationApi.getLastLocation() to get it. If it was previously requested, we store
-        // its value in the Bundle and check for it in onCreate(). We
-        // do not request it again unless the user specifically requests location updates by pressing
-        // the Start Updates button.
-        //
-        // Because we cache the value of the initial location in the Bundle, it means that if the
-        // user launches the activity,
-        // moves to a new location, and then changes the device orientation, the original location
-        // is displayed as the activity is re-created.
-        if (mCurrentLocation == null) {
-            // retrieving .....
-            try {
-                mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            } catch (SecurityException e) {
-
-            }
-            mLastUpdateTime = DateFormat.getDateTimeInstance().format(new Date()).replaceFirst(",", "");
-            if (mCurrentLocation != null)
-                getLocData();
-        }
-
-        // If the user presses the Start Updates button before GoogleApiClient connects, we set
-        // mRequestingLocationUpdates to true (see startUpdatesButtonHandler()). Here, we check
-        // the value of mRequestingLocationUpdates and if it is true, we start location updates.
-        if (mRequestingLocationUpdates) {
-            startLocationUpdates();
-        }
-
-    }
-
-    public void startService() {
+    /*
+    public void startActivityService() {
         // fire only when trip started = false
         if (!tripStarted) {
             Intent intent = new Intent(this, ActivityRecognizedService.class);
@@ -510,36 +303,14 @@ public class MainActivity extends AppCompatActivity
             ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mGoogleApiClient, 5000, pendingIntent);
         }
     }
+    */
 
-    @Override
-    public void onLocationChanged(Location location) {
-        mCurrentLocation = location;
-        mLastUpdateTime = DateFormat.getDateTimeInstance().format(new Date()).replaceFirst(",", "");
-        getLocData();
-
+    public void startLogger(){
+        startService(i);
     }
 
-    @Override
-    public void onConnectionFailed(ConnectionResult result) {
-        // Refer to the javadoc for ConnectionResult to see what error codes might be returned in
-        // onConnectionFailed.
-        Log.i("MainActivity", "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
-    }
-
-
-    @Override
-    public void onConnectionSuspended(int cause) {
-        // The connection to Google Play services was lost for some reason. We call connect() to
-        // attempt to re-establish the connection.
-        Log.i("MainActivity", "Connection suspended");
-        mGoogleApiClient.connect();
-    }
-
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY, mRequestingLocationUpdates);
-        savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
-        savedInstanceState.putString(LAST_UPDATED_TIME_STRING_KEY, mLastUpdateTime);
-        super.onSaveInstanceState(savedInstanceState);
+    public void stopLogger(){
+        stopService(i);
     }
 
     @Override
@@ -574,199 +345,10 @@ public class MainActivity extends AppCompatActivity
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
-    private void setupSensors() {
 
-        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-
-        if (mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
-            mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        }
-
-        if (mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY) != null) {
-            mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-        }
-
-        if (mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
-            mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        } else {
-            // Gyro not available
-            gAvailable = false;
-        }
-
-        Log.i(TAG, "Sensors setup");
-    }
-
-    private void setupLogFile() {
-        mp = MediaPlayer.create(getApplication(), R.raw.beep);
-        String time = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.UK).format(new Date()).replace(":", "");
-        String t1 = time.replaceFirst(",", "");
-        String t2 = t1.replace(" ", "") + ".csv";
-        String path = "logs/";
-        File temp = new File(getApplicationContext().getFilesDir()+path);
-        temp.mkdir();
-        file = new File(temp.getPath(), t2);
-
-        //file = new File(logFile.getPath(), t2);
-
-        // Write first header line to file
-        // Accx, Acc y, Axxz, variable(x,y,z), isbump, Threshold high, Threshold low, Gyrx, gyry, gyrz, lat, long, timestamp, accuracy
-
-        String data = "AccX, AccY, AccZ, variable(xyz), isBump, Threshold High, Threshold Low, Car, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy (m), proximity marking, voice marking\n";
-
-        try {
-            out = new FileOutputStream(file, true);
-            out.write(data.getBytes());
-            out.close();
-
-        } catch (IOException e) {
-            Log.d(TAG, "File setup failed: " + e.toString());
-        }
-    }
-
-    protected synchronized void buildGoogleApiClient() {
-        Log.i(TAG, "Building GoogleApiClient");
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .addApi(ActivityRecognition.API)
-                .build();
-
-        if (mGoogleApiClient != null) {
-            mGoogleApiClient.connect();
-        }
-
-        createLocationRequest();
-    }
-
-    protected void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(mLocationRequest);
-        builder.setAlwaysShow(true);
-
-        com.google.android.gms.common.api.PendingResult<LocationSettingsResult> result = LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient, builder.build());
-        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-            @Override
-            public void onResult(LocationSettingsResult result) {
-                final Status status = result.getStatus();
-                switch (status.getStatusCode()) {
-                    case LocationSettingsStatusCodes.SUCCESS:
-                        Log.i(TAG, "All location settings are satisfied.");
-                        break;
-                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        Log.i(TAG, "Location settings are not satisfied. Show the user a dialog to upgrade location settings ");
-
-                        try {
-                            // Show the dialog by calling startResolutionForResult(), and check the result
-                            // in onActivityResult().
-                            status.startResolutionForResult(MainActivity.this, 0x01);
-                        } catch (IntentSender.SendIntentException e) {
-                            Log.i(TAG, "PendingIntent unable to execute request.");
-                        }
-                        break;
-                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        Log.i(TAG, "Location settings are inadequate, and cannot be fixed here. Dialog not created.");
-                        break;
-                }
-            }
-        });
-    }
-
-    protected void startLocationUpdates() {
-
-        try {
-            LocationServices.FusedLocationApi.requestLocationUpdates(
-                    mGoogleApiClient,
-                    mLocationRequest,
-                    this
-            ).setResultCallback(new ResultCallback<Status>() {
-                @Override
-                public void onResult(Status status) {
-                    mRequestingLocationUpdates = true;
-                }
-            });
-        } catch (SecurityException e) {
-
-        }
-    }
-
-    protected void stopLocationUpdates() {
-        // It is a good practice to remove location requests when the activity is in a paused or
-        // stopped state. Doing so helps battery performance and is especially
-        // recommended in applications that request frequent location updates.
-
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-    }
-
-    @Override
-    public com.google.android.gms.common.api.PendingResult<Status> requestActivityUpdates(GoogleApiClient googleApiClient, long l, PendingIntent pendingIntent) {
-        return null;
-    }
-
-    @Override
-    public com.google.android.gms.common.api.PendingResult<Status> removeActivityUpdates(GoogleApiClient googleApiClient, PendingIntent pendingIntent) {
-        return null;
-    }
-
-    private void getFromPrefs() {
-
-        SharedPreferences sharedPref = getSharedPreferences("Profiles", Context.MODE_PRIVATE);
-        curcar = sharedPref.getString("CurrentCar", "None");
-        curmodel = sharedPref.getString("CurrentModel", "None");
-        bumpHighThreshold = sharedPref.getFloat("High", 12.5f);
-        bumpLowThreshold = sharedPref.getFloat("Low", 7.5f);
-
-    }
-
-    public void getLocData() {
-
-        LocData = String.format("%f", mCurrentLocation.getLatitude()) + ", " +
-                String.format("%f", mCurrentLocation.getLongitude()) + ", " +
-                String.format("%s", mLastUpdateTime) + ", " +
-                String.format("%.1f", mCurrentLocation.getAccuracy());
-    }
-
-    public void stopTrip() {
-
-        // Makes the file available to file managers and the android system
-
-        StorageReference riversRef = mStorageRef.child("logs/"+file.getName());
-
-        try {
-            InputStream stream = new FileInputStream(file);
-            UploadTask uploadTask = riversRef.putStream(stream);
-            uploadTask.addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    // Handle unsuccessful uploads
-                }
-            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                    Log.d("Uploaded", "Done");
-                }
-            });
-        }catch (FileNotFoundException e){
-
-        }
-
-
-        sendTripLoggingBroadcast(false);
-
-    }
 }
 
 // there is no check whether location enabled or not
-// logging stops when goes out of activity but does not resume when it comes back but switch is still on   =======
-// Switch goes off when back button is pressed and onCreate is started when it comes back   ======  Doesnt matter
-// file is created as soon as app is opened regardless of yes or no   ======
-// new file is not created when start stop is pressed in the same session, it just appends to the old file   ========
 
 
 // Make file names based on start-end location

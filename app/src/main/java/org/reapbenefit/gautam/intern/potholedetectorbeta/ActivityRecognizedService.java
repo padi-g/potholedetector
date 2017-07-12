@@ -126,11 +126,3 @@ public class ActivityRecognizedService extends IntentService {
  *
  *      Create two different layouts
  */
-
-
-/**
- *  Put boolean and the activityRecognition result in the Intent
- *
- * Thumbs up and thumbs down icons for notification
- *
- * */

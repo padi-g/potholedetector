@@ -82,6 +82,7 @@ public class EasyModeFragment extends Fragment {
 
 
 
+
     }
 
     private final BroadcastReceiver b = new BroadcastReceiver() {
@@ -90,7 +91,7 @@ public class EasyModeFragment extends Fragment {
         // How to access the outside variables here?
             tripStatus = intent.getBooleanExtra("LoggingStatus", false);
 
-            if(tripStatus == true){
+            if(tripStatus){
                 bgframe.setBackgroundResource(R.drawable.logging_bg);
                 statusIndicatorText.setText(getResources().getString(R.string.detecting));
             }else {
@@ -115,7 +116,11 @@ public class EasyModeFragment extends Fragment {
 
         bgframe = (RelativeLayout) v.findViewById(R.id.easyframe);
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
-            return v;
+        if(ApplicationClass.tripInProgress){
+            bgframe.setBackgroundResource(R.drawable.logging_bg);
+            statusIndicatorText.setText(getResources().getString(R.string.detecting));
+        }
+        return v;
     }
 
     @Override
