@@ -30,5 +30,22 @@
         android:layout_centerHorizontal="true"
         android:layout_above="@+id/easytext" />
 
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_below="@+id/easytext"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/upload_progressbar" />
+
+    <Button
+        android:text="Restart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/upload_progressbar"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/restart"
+        android:visibility="invisible" />
+
 
 </RelativeLayout>

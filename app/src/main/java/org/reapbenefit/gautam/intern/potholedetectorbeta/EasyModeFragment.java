@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
@@ -15,10 +17,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnPausedListener;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 
 /**
@@ -42,8 +52,13 @@ public class EasyModeFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
 
     static public boolean tripStatus;
+    static public Uri uploadFileUri;
     View bgframe;
     TextView statusIndicatorText;
+    private StorageReference mStorageRef;
+    private Button restartButton;
+
+    ProgressBar progressBar;
 
     public EasyModeFragment() {
         // Required empty public constructor
@@ -80,7 +95,7 @@ public class EasyModeFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
-
+        mStorageRef = FirebaseStorage.getInstance().getReference();
 
 
     }
@@ -90,18 +105,62 @@ public class EasyModeFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
         // How to access the outside variables here?
             tripStatus = intent.getBooleanExtra("LoggingStatus", false);
-
+            uploadFileUri = intent.getParcelableExtra("filename");
+            Log.d("Upload", "file received is"+String.valueOf(uploadFileUri));
             if(tripStatus){
                 bgframe.setBackgroundResource(R.drawable.logging_bg);
                 statusIndicatorText.setText(getResources().getString(R.string.detecting));
             }else {
                 bgframe.setBackgroundResource(R.drawable.notlogging_bg);
                 statusIndicatorText.setText(getResources().getString(R.string.not_detecting));
+                progressBar.setVisibility(View.VISIBLE);
+                statusIndicatorText.setText(getResources().getString(R.string.uploading));
+                uploadFile(uploadFileUri);
+
             }
 
 
         }
     };
+
+    public void uploadFile(Uri uri){
+
+        StorageReference sRef = mStorageRef.child("logs/" + uri.toString());
+
+        UploadTask uploadTask = sRef.putFile(uri);
+
+        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                System.out.println("Upload is " + progress + "% done");
+                int currentprogress = (int) progress;
+                progressBar.setProgress(currentprogress);
+            }
+        }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
+                                   @Override
+                                   public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                                       System.out.println("Upload is paused");
+                                   }
+                               }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                statusIndicatorText.setText("Uploaded");
+                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                Log.d("Upload","Download file from "+downloadUrl.toString());
+                restartButton.setVisibility(View.VISIBLE);
+                restartButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        getActivity().finish();
+                        System.exit(0);
+                    }
+                });
+            }
+        });
+
+
+    }
 
 
     @Override
@@ -116,10 +175,17 @@ public class EasyModeFragment extends Fragment {
 
         bgframe = (RelativeLayout) v.findViewById(R.id.easyframe);
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
+        progressBar = (ProgressBar) v.findViewById(R.id.upload_progressbar);
+        restartButton = (Button) v.findViewById(R.id.restart);
         if(ApplicationClass.tripInProgress){
             bgframe.setBackgroundResource(R.drawable.logging_bg);
             statusIndicatorText.setText(getResources().getString(R.string.detecting));
         }
+
+        progressBar.setVisibility(View.GONE);
+        progressBar.setMax(100);
+        progressBar.setProgress(6);
+
         return v;
     }
 

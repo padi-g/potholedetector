@@ -251,10 +251,11 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         // extractTripDetails service + upload
 
-        StorageReference riversRef = mStorageRef.child("logs/" + file.getName());
+        //StorageReference sRef = mStorageRef.child("logs/" + file.getName());
 
         Uri fileuri = Uri.fromFile(new File(file.getPath()));
-        UploadTask uploadTask = riversRef.putFile(fileuri);
+        /*
+        UploadTask uploadTask = sRef.putFile(fileuri);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
@@ -268,14 +269,15 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                 Log.d("Uploaded", "Done");
             }
         });
-
-        sendTripLoggingBroadcast(false);
+*/
+        sendTripLoggingBroadcast(false, fileuri);
 
     }
 
-    void sendTripLoggingBroadcast(boolean status) {
+    void sendTripLoggingBroadcast(boolean status, Uri uploadFile) {
         Intent iTemp = new Intent("tripstatus");
         iTemp.putExtra("LoggingStatus", status);
+        iTemp.putExtra("filename", uploadFile);
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
         l.sendBroadcast(iTemp);
     }

@@ -144,11 +144,10 @@ public class MainActivity extends AppCompatActivity
 
                 } else {
                     ApplicationClass.tripInProgress = false;
-                    sendTripLoggingBroadcast(false);
+                    //sendTripLoggingBroadcast(false);   // already being sent from the loggerservice
                     stopLogger();
-
-                    MainActivity.this.finish();
-                    System.exit(0);
+                    StartsStop.setVisibility(View.GONE);
+                    //MainActivity.this.finish();
                     //startActivityService();
                 }
             }
@@ -269,6 +268,10 @@ public class MainActivity extends AppCompatActivity
         }
         if (id == R.id.actions_credits) {
             Intent intent = new Intent(this, CreditsActivity.class);
+            startActivity(intent);
+        }
+        if (id == R.id.actions_login) {
+            Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
         }
 
