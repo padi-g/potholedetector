@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.sql.Time;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -60,10 +61,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     boolean gAvailable;
     MediaPlayer mp;
 
-    Trip currentTrip;
-    boolean startFlag = false;
 
-    GoogleApiClient mGoogleApiClient;
     LocationRequest mLocationRequest;
     File file;
     OutputStream out;
@@ -73,6 +71,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     public final long UPDATE_INTERVAL_IN_MILLISECONDS = 0; // Fastest possible limited by hardware
     public final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 0;
+
 
 
     public LoggerService() {
@@ -98,7 +97,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     public void onCreate() {
         super.onCreate();
 
-        //mGoogleApiClient = ApplicationClass.getGoogleApiHelper().getGoogleApiClient();
+
         if (!ApplicationClass.getGoogleApiHelper().getGoogleApiClient().isConnected())
             ApplicationClass.getGoogleApiHelper().getGoogleApiClient().connect();
 
@@ -249,27 +248,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         mp.stop();
         mSensorManager.unregisterListener(this);
 
-        // extractTripDetails service + upload
-
-        //StorageReference sRef = mStorageRef.child("logs/" + file.getName());
-
         Uri fileuri = Uri.fromFile(new File(file.getPath()));
-        /*
-        UploadTask uploadTask = sRef.putFile(fileuri);
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                Log.d("Uploaded", "Done");
-            }
-        });
-*/
+
         sendTripLoggingBroadcast(false, fileuri);
 
     }

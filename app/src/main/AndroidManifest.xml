@@ -64,6 +64,16 @@
                 android:value="org.reapbenefit.gautam.intern.potholedetectorbeta.MainActivity" />
 
         </activity>
+
+        <activity
+            android:name="org.reapbenefit.gautam.intern.potholedetectorbeta.LoginActivity"
+            android:label="@string/title_activity_maps">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.reapbenefit.gautam.intern.potholedetectorbeta.MainActivity" />
+
+        </activity>
+
         <service
             android:name=".LoggerService"
             android:enabled="true" />

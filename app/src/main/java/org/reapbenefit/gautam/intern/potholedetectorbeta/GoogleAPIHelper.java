@@ -5,6 +5,8 @@ import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.ActivityRecognition;
@@ -58,6 +60,7 @@ public class GoogleApiHelper implements GoogleApiClient.ConnectionCallbacks, Goo
 
     private void buildGoogleApiClient() {
 
+
         Log.i(TAG, "Building GoogleApiClient");
         mGoogleApiClient = new GoogleApiClient.Builder(context)
                 .addConnectionCallbacks(this)
@@ -65,6 +68,8 @@ public class GoogleApiHelper implements GoogleApiClient.ConnectionCallbacks, Goo
                 .addApi(LocationServices.API)
                 .addApi(ActivityRecognition.API)
                 .build();
+
+
 
     }
 
