@@ -20,10 +20,12 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnPausedListener;
 import com.google.firebase.storage.OnProgressListener;
@@ -59,6 +61,9 @@ public class EasyModeFragment extends Fragment {
     private Button restartButton;
 
     ProgressBar progressBar;
+
+    private FirebaseAuth mAuth;
+
 
     public EasyModeFragment() {
         // Required empty public constructor
@@ -96,6 +101,7 @@ public class EasyModeFragment extends Fragment {
         }
 
         mStorageRef = FirebaseStorage.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
 
 
     }
@@ -125,7 +131,9 @@ public class EasyModeFragment extends Fragment {
 
     public void uploadFile(Uri uri){
 
-        StorageReference sRef = mStorageRef.child("logs/" + uri.toString());
+        String filename = uri.toString().substring(uri.toString().lastIndexOf('/')) ;
+
+        StorageReference sRef = mStorageRef.child("logs/" + mAuth.getCurrentUser().getUid() + filename);
 
         UploadTask uploadTask = sRef.putFile(uri);
 
@@ -148,6 +156,7 @@ public class EasyModeFragment extends Fragment {
                 statusIndicatorText.setText("Uploaded");
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 Log.d("Upload","Download file from "+downloadUrl.toString());
+                Toast.makeText(getActivity(), "Please restart the app to start a new trip", Toast.LENGTH_LONG).show();
                 restartButton.setVisibility(View.VISIBLE);
                 restartButton.setOnClickListener(new View.OnClickListener() {
                     @Override

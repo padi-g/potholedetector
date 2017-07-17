@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity
         TriplistFragment.OnFragmentInteractionListener, EasyModeFragment.OnFragmentInteractionListener,
         EasyPermissions.PermissionCallbacks {
 
+
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity
     Intent i;
 
     private FirebaseAuth mAuth;
+    Toolbar toolbar;
 
 
     @Override
@@ -73,7 +75,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         //Adding toolbar to the activity
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setTitle("Road Quality Audit");
@@ -158,7 +160,7 @@ public class MainActivity extends AppCompatActivity
                     //sendTripLoggingBroadcast(false);   // already being sent from the loggerservice
                     stopLogger();
                     StartsStop.setVisibility(View.GONE);
-                    //MainActivity.this.finish();
+                   //MainActivity.this.finish();
                     //startActivityService();
                 }
             }

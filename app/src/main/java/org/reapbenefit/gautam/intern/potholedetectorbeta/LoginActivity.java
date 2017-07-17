@@ -84,7 +84,10 @@ public class LoginActivity extends AppCompatActivity {
         if(mAuth.getCurrentUser() != null) {
             signedIn = true;
             SignIn.setVisibility(View.GONE);
-            SignOut.setVisibility(View.VISIBLE);
+            if(ApplicationClass.tripInProgress)
+                SignOut.setVisibility(View.INVISIBLE);
+            else    SignOut.setVisibility(View.VISIBLE);
+
         }
         else {
             signedIn = false;

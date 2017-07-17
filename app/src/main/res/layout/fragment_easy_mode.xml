@@ -39,7 +39,7 @@
         android:id="@+id/upload_progressbar" />
 
     <Button
-        android:text="Restart"
+        android:text="Exit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/upload_progressbar"
