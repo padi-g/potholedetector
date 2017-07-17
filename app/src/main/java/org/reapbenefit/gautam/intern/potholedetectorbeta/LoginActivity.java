@@ -5,9 +5,11 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,7 +18,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -33,15 +38,24 @@ public class LoginActivity extends AppCompatActivity {
 
     GoogleApiClient mGoogleApiClient;
     private static final int RC_SIGN_IN = 530;
-    Button SignIn, signOut;
-    TextView mStatusTextView;
+    TextView mStatusTextView, mUser_nameTextView;
 
+    SignInButton SignIn;
+    Button SignOut;
+    Boolean signedIn;
     private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(R.string.menu_about);
+        Switch s = (Switch) toolbar.findViewById(R.id.stopSwitch);
+        s.setVisibility(View.GONE);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mAuth = FirebaseAuth.getInstance();
 
@@ -61,22 +75,43 @@ public class LoginActivity extends AppCompatActivity {
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
+        mStatusTextView = (TextView) findViewById(R.id.login_details);
+        mUser_nameTextView = (TextView) findViewById(R.id.users_name);
+        SignIn = (SignInButton) findViewById(R.id.start_sign_in);
+        SignOut = (Button) findViewById(R.id.start_sign_out);
 
-        SignIn = (Button) findViewById(R.id.start_sign_in);
+
+        if(mAuth.getCurrentUser() != null) {
+            signedIn = true;
+            SignIn.setVisibility(View.GONE);
+            SignOut.setVisibility(View.VISIBLE);
+        }
+        else {
+            signedIn = false;
+            SignOut.setVisibility(View.GONE);
+            SignIn.setVisibility(View.VISIBLE);
+        }
+
+        if(signedIn) {
+            mUser_nameTextView.setText(mAuth.getCurrentUser().getDisplayName());
+            mStatusTextView.setText("You have been signed in using " + mAuth.getCurrentUser().getEmail());
+        }else{
+            mStatusTextView.setText("");
+        }
+
         SignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i("Sign in", "Clicked");
+                    signIn();
 
-                signIn();
             }
         });
 
-        signOut = (Button) findViewById(R.id.start_sign_out);
-        signOut.setOnClickListener(new View.OnClickListener() {
+        SignOut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 signOut();
+
             }
         });
 
@@ -84,8 +119,10 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void signIn() {
+        SignIn.setVisibility(View.GONE);
+        SignOut.setVisibility(View.VISIBLE);
         Log.i("Sign in", "Trying");
-
+        signedIn = true;
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
@@ -98,10 +135,9 @@ public class LoginActivity extends AppCompatActivity {
 
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
-            /*
-            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+
             handleSignInResult(result);
-            */
+
             GoogleSignInAccount account = result.getSignInAccount();
             firebaseAuthWithGoogle(account);
         }
@@ -113,50 +149,62 @@ public class LoginActivity extends AppCompatActivity {
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
             mStatusTextView.setText("You have been signed in using " + acct.getEmail());
+            mUser_nameTextView.setText(acct.getDisplayName());
+
         } else {
             // Signed out, show unauthenticated UI.
         }
     }
 
     private void signOut() {
-        /*
+
+        SignOut.setVisibility(View.GONE);
+        SignIn.setVisibility(View.VISIBLE);
+
         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
                         Log.i("Sign out", "yes");
-                        mStatusTextView.setText("Signed out ");
+                        mStatusTextView.setText("");
+                        mUser_nameTextView.setText("Please SIGN IN");
+
                     }
                 });
-                */
+
+        signedIn = false;
         FirebaseAuth.getInstance().signOut();
-        mStatusTextView.setText("Signed out ");
+
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
-        Log.d("firebase auth", "firebaseAuthWithGoogle:" + acct.getId());
+        if(acct != null) {
+            Log.d("firebase auth", "firebaseAuthWithGoogle:" + acct.getId());
 
-        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d("firebase auth", "signInWithCredential:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            //update UI
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w("firebase auth", "signInWithCredential:failure", task.getException());
-                            Toast.makeText(LoginActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                            //update UI
+            AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+            mAuth.signInWithCredential(credential)
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) {
+                                // Sign in success, update UI with the signed-in user's information
+                                Log.d("firebase auth", "signInWithCredential:success");
+                                FirebaseUser user = mAuth.getCurrentUser();
+                                //update UI
+                            } else {
+                                // If sign in fails, display a message to the user.
+                                Log.w("firebase auth", "signInWithCredential:failure", task.getException());
+                                Toast.makeText(LoginActivity.this, "Authentication failed.",
+                                        Toast.LENGTH_SHORT).show();
+                                //update UI
+                            }
+
+                            // ...
                         }
-
-                        // ...
-                    }
-                });
+                    });
+        }else {
+            signOut();
+        }
     }
 
 

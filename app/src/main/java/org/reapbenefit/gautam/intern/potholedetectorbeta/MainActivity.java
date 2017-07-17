@@ -2,8 +2,6 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 
 import android.app.Activity;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -28,13 +26,13 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import java.util.List;
@@ -62,6 +60,9 @@ public class MainActivity extends AppCompatActivity
 
     private StorageReference mStorageRef;
     Intent i;
+
+    private FirebaseAuth mAuth;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,6 +126,16 @@ public class MainActivity extends AppCompatActivity
         );
 
         askPermissions();
+
+        mAuth = FirebaseAuth.getInstance();
+        if(mAuth.getCurrentUser() == null){
+            // Toast
+            Toast.makeText(this, "Please login to start using the app", Toast.LENGTH_LONG).show();
+            // open login activity
+            Intent i = new Intent(this, LoginActivity.class);
+            startActivity(i);
+        }
+
 
         // Log.i(TAG, String.valueOf(intentFromService.getBooleanExtra("CarMode", false)));
 

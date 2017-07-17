@@ -6,6 +6,11 @@
     android:layout_height="match_parent"
     android:background="@drawable/notlogging_bg">
 
+    <include
+        layout="@layout/toolbar_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
     <ImageView
         android:layout_width="200dp"
         android:layout_height="200dp"
@@ -14,27 +19,49 @@
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
 
-    <Button
-        android:text="Sign In"
+    <TextView
+        android:text="Hello"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/imageView"
-        android:layout_alignLeft="@+id/imageView"
-        android:layout_alignStart="@+id/imageView"
-        android:layout_marginLeft="18dp"
-        android:layout_marginStart="18dp"
-        android:layout_marginTop="13dp"
-        android:id="@+id/start_sign_in" />
+        android:layout_alignBottom="@+id/users_name"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="45dp"
+        android:textSize="20dp"
+        android:id="@+id/textView5" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="40dp"
+        android:id="@+id/users_name"
+        android:text="Please sign-in"
+        android:layout_above="@+id/imageView"
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:text="Sign Out"
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:id="@+id/start_sign_out"
-        android:layout_alignBaseline="@+id/start_sign_in"
-        android:layout_alignBottom="@+id/start_sign_in"
-        android:layout_toRightOf="@+id/start_sign_in"
-        android:layout_toEndOf="@+id/start_sign_in" />
+        android:layout_below="@+id/login_details"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:id="@+id/login_details"
+        android:layout_below="@+id/imageView"
+        android:layout_centerHorizontal="true" />
+
+    <com.google.android.gms.common.SignInButton
+        android:text="Sign In"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/start_sign_in"
+        android:layout_below="@+id/login_details"
+        android:layout_centerHorizontal="true" />
 
 
 </RelativeLayout>
