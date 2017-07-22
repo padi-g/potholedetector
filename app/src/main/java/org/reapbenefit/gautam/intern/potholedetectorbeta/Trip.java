@@ -3,27 +3,22 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 import android.location.Location;
 import android.net.Uri;
 
+import java.util.UUID;
+
 /**
  * Created by gautam on 29/06/17.
  */
 
 public class Trip {
 
-    String startTime, endTime, vehicle, username;
+    String startTime, endTime, vehicle;
+    String firepath;  // path to firebase storage
+    String user_id;  // user who created this trip
     Location startLoc, endLoc;
+    float distance; // in km
+    UUID trip_id;  // unique id for trip and name for the file
     int duration; // in minutes
     Uri tripfile;
-
-    public Trip(String startTime, String endTime, String vehicle, String username, Location startLoc, Location endLoc, int duration, Uri tripfile) {
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.vehicle = vehicle;
-        this.username = username;
-        this.startLoc = startLoc;
-        this.endLoc = endLoc;
-        this.duration = duration;
-        this.tripfile = tripfile;
-    }
 
     public Trip(){}
 
@@ -40,7 +35,7 @@ public class Trip {
     }
 
     public String getUsername() {
-        return username;
+        return user_id;
     }
 
     public Location getStartLoc() {
@@ -67,8 +62,8 @@ public class Trip {
         this.startLoc = startLoc;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setUsername(String user_id) {
+        this.user_id = user_id;
     }
 
     public void setVehicle(String vehicle) {
@@ -92,4 +87,8 @@ public class Trip {
         return tripfile;
     }
 
+
+    void upload_file(){
+        // procedure to upload this.tripfile
+    }
 }
