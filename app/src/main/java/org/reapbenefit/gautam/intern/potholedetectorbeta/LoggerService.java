@@ -4,7 +4,6 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -12,37 +11,34 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.sql.Time;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by gautam on 04/06/17.
@@ -52,7 +48,6 @@ import java.util.Locale;
 public class LoggerService extends Service implements SensorEventListener, LocationListener {
 
     protected String TAG = "Logger Service";
-    private StorageReference mStorageRef;
     private SensorManager mSensorManager;
     private Sensor mAccelerometer, mGyroscope, mProximity;
 
@@ -61,6 +56,14 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     boolean gAvailable;
     MediaPlayer mp;
 
+    boolean startFlag = false;
+
+    int no_of_lines = 0, meansumx =0, meansumy =0, meansumz =0;
+    float meanx, meany, meanz, deviation;
+
+    Date d1, d2;
+
+    UUID fileid;
 
     LocationRequest mLocationRequest;
     File file;
@@ -72,7 +75,10 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     public final long UPDATE_INTERVAL_IN_MILLISECONDS = 0; // Fastest possible limited by hardware
     public final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 0;
 
-
+    Trip newtrip;
+    FirebaseAuth mAuth;
+    FirebaseDatabase db;
+    DatabaseReference ref;
 
     public LoggerService() {
         super();
@@ -81,6 +87,19 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+
+        newtrip = new Trip();
+        fileid = UUID.randomUUID();
+        newtrip.setTrip_id(fileid.toString());
+        mAuth = FirebaseAuth.getInstance();
+        newtrip.setUser_id(mAuth.getCurrentUser().toString());
+        db = FirebaseDatabase.getInstance();
+
+        ref = db.getReference(newtrip.getTrip_id().toString());
+
+        newtrip.setDevice(Build.MANUFACTURER + " " + Build.MODEL + " " + Build.PRODUCT);
+        newtrip.setUser_id(mAuth.getCurrentUser().getUid());
+
         setupLogFile();
         mp = MediaPlayer.create(getApplication(), R.raw.beep);
         mCurrentLocation = ApplicationClass.getGoogleApiHelper().mCurrentLocation;
@@ -88,7 +107,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             ApplicationClass.getGoogleApiHelper().getGoogleApiClient().connect();
         startLocationUpdates();
         setupSensors();
-        mStorageRef = FirebaseStorage.getInstance().getReference();
 
         return START_NOT_STICKY;
     }
@@ -174,6 +192,9 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             // AccX, AccY, AccZ, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy (m)
             e1 = AccXvalue + ", " + AccYvalue + ", " + AccZvalue + ", ";
 
+            meansumx += sensorEvent.values[0];
+            meansumy += sensorEvent.values[1];
+            meansumz += sensorEvent.values[2];
         }
 
         if (!gAvailable) {
@@ -188,24 +209,24 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                 e2 = GyroXvalue + ", " + GyroYvalue + ", " + GyroZvalue + ", ";
             }
         }
-/*
-        if (mCurrentLocation.getAccuracy() < 10) {
+
+        if (mCurrentLocation.getAccuracy() < 15) {
             if (!startFlag) {
-                currentTrip.setStartLoc(mCurrentLocation);
+                newtrip.setStartLoc(mCurrentLocation);
                 startFlag = true;
             }
-  */
-            writeToFile(e1, e2, LocData);
-    //    }
+
+        no_of_lines++;
+
+        writeToFile(e1, e2, LocData);
+        }
 
     }
 
     protected void writeToFile(String Acc, String Gyr, String LocationData) {
         String data = Acc + Gyr + LocationData + ", " + Marks + "\n";
         try {
-            out = new FileOutputStream(file, true);
             out.write(data.getBytes());
-            out.close();
             Log.d(TAG, "Writing " + data);
             //Log.d(TAG, "Writing to csv file at "+ logFile.getPath() );
         } catch (IOException e) {
@@ -221,21 +242,22 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     }
 
     private void setupLogFile() {
-        String time = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.UK).format(new Date()).replace(":", "");
-        String t1 = time.replaceFirst(",", "");
-        String t2 = t1.replace(" ", "") + ".csv";
+        String time = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.UK).format(new Date());
+
+        newtrip.setStartTime(time);
+        Log.i(" time", "end" + String.valueOf(newtrip.getEndTime()));
+
         String path = "logs/";
         File temp = new File(getApplicationContext().getFilesDir() + path);
         temp.mkdir();
-        file = new File(temp.getPath(), t2);
+        file = new File(temp.getPath(), fileid.toString());
 
         // Accx, Acc y, Axxz, Gyrx, gyry, gyrz, lat, long, timestamp, accuracy
-        String data = "AccX, AccY, AccZ, variable(xyz), GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy (m), proximity marking\n";
+        String data = "AccX, AccY, AccZ, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy, proximity\n";
 
         try {
             out = new FileOutputStream(file, true);
             out.write(data.getBytes());
-            out.close();
 
         } catch (IOException e) {
             Log.d(TAG, "File setup failed: " + e.toString());
@@ -244,9 +266,16 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     public void stopTrip() {
 
-        String time = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.UK).format(new Date()).replace(":", "");
+        newtrip.setNo_of_lines(no_of_lines);
+        String time = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.UK).format(new Date());
+        newtrip.setEndTime(time);
+
+        Log.i(" time", "start" + String.valueOf(newtrip.getStartTime()));
         mp.stop();
         mSensorManager.unregisterListener(this);
+
+        // WRITE TO DB HERE
+        ref.setValue(newtrip);
 
         Uri fileuri = Uri.fromFile(new File(file.getPath()));
 
@@ -265,6 +294,22 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     @Override
     public void onDestroy() {
+        meanx = (float)meansumx / no_of_lines;
+        meany = (float)meansumy / no_of_lines;
+        meanz = (float)meansumz / no_of_lines;
+
+        Log.i(" Means ", "x = " + String.valueOf(meanx));
+        Log.i(" Means ", "y = " + String.valueOf(meany));
+        Log.i(" Means ", "z = " + String.valueOf(meanz));
+
+        try {
+            out.close();
+        } catch (IOException e) {
+            Log.d(TAG, "File closing failed: " + e.toString());
+        }
+
+        newtrip.setEndLoc(mCurrentLocation);
+
         stopTrip();
         stopLocationUpdates();
         ApplicationClass.getGoogleApiHelper().getGoogleApiClient().disconnect();
