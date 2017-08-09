@@ -18,7 +18,7 @@ public class ApplicationClass extends Application {
     private static ApplicationClass mInstance;
     public Context mContext;
     protected static String TAG = "Application";
-    public static boolean tripInProgress;
+    public static boolean tripInProgress, tripEnded = false;  // ended is to make sure that only one trip per instance
 
     @Override
     public void onCreate() {

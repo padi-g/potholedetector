@@ -25,10 +25,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
+
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,7 +35,8 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+
+import static org.reapbenefit.gautam.intern.potholedetectorbeta.GoogleApiHelper.mGoogleApiClient;
 
 /**
  * Created by gautam on 04/06/17.
@@ -61,6 +59,10 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     int no_of_lines = 0, meansumx =0, meansumy =0, meansumz =0;
     float meanx, meany, meanz, deviation;
 
+    boolean locAccHit = false, locUpdating = false;
+    // Sometimes location is first taken from the last known location. When location starts updating
+    // the accuracy can get worse before getting better again
+
     Date d1, d2;
 
     UUID fileid;
@@ -77,8 +79,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     Trip newtrip;
     FirebaseAuth mAuth;
-    FirebaseDatabase db;
-    DatabaseReference ref;
 
     public LoggerService() {
         super();
@@ -93,19 +93,28 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         newtrip.setTrip_id(fileid.toString());
         mAuth = FirebaseAuth.getInstance();
         newtrip.setUser_id(mAuth.getCurrentUser().toString());
-        db = FirebaseDatabase.getInstance();
-
-        ref = db.getReference(newtrip.getTrip_id().toString());
 
         newtrip.setDevice(Build.MANUFACTURER + " " + Build.MODEL + " " + Build.PRODUCT);
         newtrip.setUser_id(mAuth.getCurrentUser().getUid());
 
+        mCurrentLocation = ApplicationClass.getGoogleApiHelper().mCurrentLocation;
+
+        if (mCurrentLocation == null) {
+            // retrieving .....
+            try {
+                mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                Log.d(TAG, "got initial location data");
+            } catch (SecurityException e) {
+                Log.d(TAG, "Permission not granted for gps");
+            }
+            mLastUpdateTime = DateFormat.getDateTimeInstance().format(new Date()).replaceFirst(",", "");
+            if (mCurrentLocation != null)
+                LocData = getLocData();
+        }
+        startLocationUpdates();
+
         setupLogFile();
         mp = MediaPlayer.create(getApplication(), R.raw.beep);
-        mCurrentLocation = ApplicationClass.getGoogleApiHelper().mCurrentLocation;
-        if (!ApplicationClass.getGoogleApiHelper().getGoogleApiClient().isConnected())
-            ApplicationClass.getGoogleApiHelper().getGoogleApiClient().connect();
-        startLocationUpdates();
         setupSensors();
 
         return START_NOT_STICKY;
@@ -209,8 +218,12 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                 e2 = GyroXvalue + ", " + GyroYvalue + ", " + GyroZvalue + ", ";
             }
         }
-
         if (mCurrentLocation.getAccuracy() < 15) {
+            if(!locAccHit && locUpdating) {
+                locAccHit = true;
+                Log.i("Logger Service", "Location accuracy hit");
+                // TODO Add analytics event here
+            }
             if (!startFlag) {
                 newtrip.setStartLoc(mCurrentLocation);
                 startFlag = true;
@@ -219,6 +232,9 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         no_of_lines++;
 
         writeToFile(e1, e2, LocData);
+        }
+        else{
+            Log.i("Logger Service", "Location accuracy not hit" + mCurrentLocation.getAccuracy());
         }
 
     }
@@ -274,19 +290,25 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         mp.stop();
         mSensorManager.unregisterListener(this);
 
-        // WRITE TO DB HERE
-        ref.setValue(newtrip);
-
+        newtrip.setFilesize(file.length());
+        newtrip.setUploaded(false);
         Uri fileuri = Uri.fromFile(new File(file.getPath()));
+        newtrip.setTripfile(fileuri);
+        // WRITE TO DB HERE
 
-        sendTripLoggingBroadcast(false, fileuri);
+        // the uri of the file to be uploaded from fragment
+        if(locAccHit)
+            sendTripLoggingBroadcast(false, newtrip.getTripfile());
+        else
+            sendTripLoggingBroadcast(false, null);
+
 
     }
 
-    void sendTripLoggingBroadcast(boolean status, Uri uploadFile) {
+    void sendTripLoggingBroadcast(boolean status, Uri uploadFileId) {
         Intent iTemp = new Intent("tripstatus");
         iTemp.putExtra("LoggingStatus", status);
-        iTemp.putExtra("filename", uploadFile);
+        iTemp.putExtra("filename", uploadFileId);
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
         l.sendBroadcast(iTemp);
     }
@@ -304,6 +326,10 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         try {
             out.close();
+            if(!locAccHit){
+                file.delete();
+                // TODO Reset trip details / log failure in dynamo db
+            }
         } catch (IOException e) {
             Log.d(TAG, "File closing failed: " + e.toString());
         }
@@ -313,6 +339,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         stopTrip();
         stopLocationUpdates();
         ApplicationClass.getGoogleApiHelper().getGoogleApiClient().disconnect();
+        ApplicationClass.tripEnded = true;
         stopForeground(true);
     }
 
@@ -334,7 +361,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                     mRequestingLocationUpdates = true;
                 }
             });
-        } catch (SecurityException e) {
+        } catch (SecurityException | IllegalStateException e) {
 
         }
     }
@@ -349,6 +376,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     @Override
     public void onLocationChanged(Location location) {
+        locUpdating = true;
         mCurrentLocation = location;
         mLastUpdateTime = DateFormat.getDateTimeInstance().format(new Date()).replaceFirst(",", "");
         LocData = getLocData();

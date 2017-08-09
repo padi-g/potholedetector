@@ -1,7 +1,9 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -44,6 +46,8 @@ public class LoginActivity extends AppCompatActivity {
     Button SignOut;
     Boolean signedIn;
     private FirebaseAuth mAuth;
+
+    ProgressDialog dialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -142,6 +146,7 @@ public class LoginActivity extends AppCompatActivity {
             handleSignInResult(result);
 
             GoogleSignInAccount account = result.getSignInAccount();
+            // TODO why is this null??
             firebaseAuthWithGoogle(account);
         }
     }
@@ -153,6 +158,17 @@ public class LoginActivity extends AppCompatActivity {
             GoogleSignInAccount acct = result.getSignInAccount();
             mStatusTextView.setText("You have been signed in using " + acct.getEmail());
             mUser_nameTextView.setText(acct.getDisplayName());
+
+            dialog = ProgressDialog.show(this, "", "Signing in...",
+                    true);
+            dialog.show();
+
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                public void run() {
+                    dialog.dismiss();
+                }
+            }, 3000); // 3000 milliseconds delay
 
         } else {
             // Signed out, show unauthenticated UI.

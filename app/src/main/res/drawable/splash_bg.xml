@@ -2,7 +2,7 @@
 
     <!-- Fill the background with a solid color -->
     <item
-        android:drawable="@color/colorAccent"/>
+        android:drawable="@color/colorPrimary"/>
     <item>
 
         <!-- Place your bitmap in the center -->

@@ -2,7 +2,10 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.location.Location;
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 /**
@@ -16,6 +19,8 @@ public class Trip {
 
     String firepath;  // path to firebase storage
     Uri tripfile;
+    float filesize;
+    boolean uploaded;
 
     String startTime, endTime;
     //String vehicle;
@@ -36,10 +41,6 @@ public class Trip {
         // find the number of bumps and the locations
 
         // write the file metadata into the file or not?
-    }
-
-    public void upload_file(){
-        // procedure to upload this.tripfile
     }
 
     public String getTrip_id() {
@@ -160,4 +161,21 @@ public class Trip {
     public void setNo_of_lines(int no_of_lines) {
         this.no_of_lines = no_of_lines;
     }
+
+    public float getFilesize() {
+        return filesize;
+    }
+
+    public void setFilesize(float filesize) {
+        this.filesize = filesize;
+    }
+
+    public boolean isUploaded() {
+        return uploaded;
+    }
+
+    public void setUploaded(boolean uploaded) {
+        this.uploaded = uploaded;
+    }
+
 }

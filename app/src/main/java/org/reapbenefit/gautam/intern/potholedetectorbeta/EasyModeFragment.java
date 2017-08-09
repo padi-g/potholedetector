@@ -6,8 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
@@ -16,16 +14,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.location.DetectedActivity;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnPausedListener;
 import com.google.firebase.storage.OnProgressListener;
@@ -55,6 +52,7 @@ public class EasyModeFragment extends Fragment {
 
     static public boolean tripStatus;
     static public Uri uploadFileUri;
+    static public Trip justFinishedTrip;
     View bgframe;
     TextView statusIndicatorText;
     private StorageReference mStorageRef;
@@ -102,7 +100,7 @@ public class EasyModeFragment extends Fragment {
 
         mStorageRef = FirebaseStorage.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
-
+        justFinishedTrip = new Trip();
 
     }
 
@@ -111,17 +109,29 @@ public class EasyModeFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
         // How to access the outside variables here?
             tripStatus = intent.getBooleanExtra("LoggingStatus", false);
-            uploadFileUri = intent.getParcelableExtra("filename");
-            Log.d("Upload", "file received is"+String.valueOf(uploadFileUri));
             if(tripStatus){
                 bgframe.setBackgroundResource(R.drawable.logging_bg);
                 statusIndicatorText.setText(getResources().getString(R.string.detecting));
             }else {
+                uploadFileUri = intent.getParcelableExtra("filename");
+                if(uploadFileUri == null){
+                    Toast.makeText(getActivity(), "Seems like you are indoors. Could not accurately detect your location", Toast.LENGTH_LONG).show();
+                    restartButton.setVisibility(View.VISIBLE);
+                    statusIndicatorText.setText("Sorry for that!");
+                    restartButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                        public void onClick(View view) {
+                            getActivity().finish();
+                            System.exit(0);
+                        }
+                    });
+                }else {
+                    Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
+                    progressBar.setVisibility(View.VISIBLE);
+                    statusIndicatorText.setText(getResources().getString(R.string.uploading));
+                    uploadFile(uploadFileUri);
+                }
                 bgframe.setBackgroundResource(R.drawable.notlogging_bg);
-                statusIndicatorText.setText(getResources().getString(R.string.not_detecting));
-                progressBar.setVisibility(View.VISIBLE);
-                statusIndicatorText.setText(getResources().getString(R.string.uploading));
-                uploadFile(uploadFileUri);
 
             }
 
@@ -153,6 +163,9 @@ public class EasyModeFragment extends Fragment {
                                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                // update to database object uploaded = true
+
                 statusIndicatorText.setText("Uploaded");
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 Log.d("Upload","Download file from "+downloadUrl.toString());
@@ -167,6 +180,7 @@ public class EasyModeFragment extends Fragment {
                 });
             }
         });
+
 
 
     }

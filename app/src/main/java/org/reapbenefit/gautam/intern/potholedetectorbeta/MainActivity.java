@@ -93,13 +93,16 @@ public class MainActivity extends AppCompatActivity
         confidence = intentFromService.getIntExtra("Confidence", 0); // 0 is default
         */
 
-        if (!ApplicationClass.tripInProgress) {
+        if (!ApplicationClass.tripInProgress && !ApplicationClass.tripEnded) {
             // this did not come from intent service
             // Show dialog asking to open
             buildDialog();
-        } else {
+        } else if(ApplicationClass.tripInProgress && !ApplicationClass.tripEnded) {
             StartsStop.setChecked(true);
-
+        }else if(ApplicationClass.tripInProgress && ApplicationClass.tripEnded) {
+            // case is not possible
+        } else /* !ApplicationClass.tripInProgress && ApplicationClass.tripEnded */ {
+            StartsStop.setVisibility(View.GONE);
         }
 
         /*
@@ -127,8 +130,6 @@ public class MainActivity extends AppCompatActivity
                 new TabLayout.TabLayoutOnPageChangeListener(tabLayout)
         );
 
-        askPermissions();
-
         mAuth = FirebaseAuth.getInstance();
         if(mAuth.getCurrentUser() == null){
             // Toast
@@ -137,7 +138,8 @@ public class MainActivity extends AppCompatActivity
             Intent i = new Intent(this, LoginActivity.class);
             startActivity(i);
         }
-
+        if(mAuth.getCurrentUser() != null)
+            askPermissions();
 
         // Log.i(TAG, String.valueOf(intentFromService.getBooleanExtra("CarMode", false)));
 
@@ -338,18 +340,21 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onPermissionsDenied(int requestCode, List<String> perms) {
 
+        MainActivity.this.finish();
+        System.exit(0);
+
     }
 
     @AfterPermissionGranted(1)
     private void askPermissions() {
 
-        String[] perms = {android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        String[] perms = {android.Manifest.permission.ACCESS_FINE_LOCATION};
         if (EasyPermissions.hasPermissions(this, perms)) {
             // Already have permission, do the thing
             // ...
         } else {
             // Do not have permissions, request them now
-            EasyPermissions.requestPermissions(this, "This app requires the following permissions to function properly",
+            EasyPermissions.requestPermissions(this, "This app will not function without the permissions asked for",
                     1, perms);
         }
     }
