@@ -12,9 +12,14 @@
         android:orderInCategory="200"
         ></item>
     <item
+        android:id="@+id/actions_partners"
+        android:title="@string/menu_partners"
+        android:orderInCategory="300"
+        ></item>
+    <item
         android:id="@+id/actions_login"
         android:title="@string/menu_login"
-        android:orderInCategory="300"
+        android:orderInCategory="400"
         ></item>
 
 </menu>

@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:id="@+id/easyframe"
     android:background="@drawable/notlogging_bg"
-    tools:context="org.reapbenefit.gautam.intern.potholedetectorbeta.EasyModeFragment">
+    tools:context="org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment">
 
     <!-- TODO: Update blank fragment layout -->
 

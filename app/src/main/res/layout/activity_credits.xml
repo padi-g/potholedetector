@@ -1,50 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_credits"
     android:layout_width="match_parent"
+    android:orientation="vertical"
     android:layout_height="match_parent"
-    tools:context="org.reapbenefit.gautam.intern.potholedetectorbeta.CreditsActivity">
+    tools:context="org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.CreditsActivity">
 
     <include
         layout="@layout/toolbar_main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-    <TextView
-        android:text="Built by Gautam Padiyar @ Reap Benefit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/toolbar"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="114dp"
-        android:id="@+id/textView"
-        android:textStyle="normal|bold" />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <TextView
-        android:text="Aniruddha Mysore"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/textView3"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/textView4" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-    <TextView
-        android:text="Copyright 2017"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="23dp"
-        android:id="@+id/textView2"
-        android:layout_below="@+id/textView4"
-        android:layout_centerHorizontal="true" />
+            <TextView
+                android:text="Built by Gautam Padiyar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="50dp"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:fontFamily="sans-serif"
+                android:textSize="18sp"
+                android:textStyle="normal|bold" />
 
-    <TextView
-        android:text="Other contributors : "
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textView3"
-        android:layout_below="@+id/textView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="39dp" />
+            <TextView
+                android:text="with \n Android Studio + Firebase"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:textAlignment="center" />
 
-</RelativeLayout>
+            <TextView
+                android:paddingTop="25dp"
+                android:text="Contributions by: "
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:textAlignment="center" />
+
+            <TextView
+                android:padding="10dp"
+                android:text="Logo \n by Aniruddha Mysore"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:textAlignment="center" />
+            <TextView
+                android:padding="10dp"
+                android:text="Data analytics \n by Sankarshan Baliga \n @reapBenefit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:textAlignment="center" />
+
+            <TextView
+                android:padding="10dp"
+                android:text="Mentors \n Gautam Prakash \n Kuldeep Dantewadia \n Saurabh Chakravarty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:textAlignment="center" />
+
+
+            <TextView
+                android:text="Copyright 2017"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="23dp"
+                android:layout_centerHorizontal="true"
+                android:textAlignment="center" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Contact Us"
+                android:textAlignment="center"
+                android:textStyle="normal|bold"
+                android:fontFamily="serif"
+                android:paddingTop="10dp" />
+
+            <TextView
+                android:text="gp712@snu.edu.in"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start"
+                android:typeface="serif"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:fontFamily="serif"
+                android:textAlignment="center"
+                android:textStyle="normal|bold|italic"
+                android:onClick="sendEmail"/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

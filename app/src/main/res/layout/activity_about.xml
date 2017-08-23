@@ -5,27 +5,127 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="org.reapbenefit.gautam.intern.potholedetectorbeta.AboutActivity">
+    tools:context="org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.AboutActivity">
 
     <include
         layout="@layout/toolbar_main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-    <TextView
-        android:text="@string/about"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textStyle="bold"
-        android:padding="10dp"
-        android:id="@+id/textView13"
-        android:textAllCaps="false"
-        android:textSize="15sp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:textAlignment="viewStart"
-        android:gravity="start"
-        android:fontFamily="sans-serif-condensed" />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Why are we doing this?"
+                android:textAlignment="center"
+                android:textStyle="normal|bold"
+                android:fontFamily="serif"
+                android:padding="10dp"/>
+
+            <TextView
+                android:text="@string/about1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:gravity="start"
+                android:typeface="serif"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:fontFamily="serif" />
+
+            <TextView
+                android:text="@string/about2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:gravity="start"
+                android:typeface="serif"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:fontFamily="serif" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="How can you help?"
+                android:textAlignment="center"
+                android:textStyle="normal|bold"
+                android:fontFamily="serif"
+                android:padding="10dp" />
+
+            <TextView
+                android:text="@string/about3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:gravity="start"
+                android:typeface="serif"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:fontFamily="serif" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Contact Us"
+                android:textAlignment="center"
+                android:textStyle="normal|bold"
+                android:fontFamily="serif"
+                android:paddingTop="10dp" />
+
+            <TextView
+                android:text="gp712@snu.edu.in"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start"
+                android:typeface="serif"
+                android:textAppearance="@style/TextAppearance.AppCompat"
+                android:fontFamily="serif"
+                android:textAlignment="center"
+                android:textStyle="normal|bold|italic"
+                android:onClick="sendEmail"/>
+
+
+        </LinearLayout>
+    </ScrollView>
+
+
+
+    <!--
+        Potholes - = slow trffic lower milage maintainance injuroies
+        happen all the time, gov doesnt know where they are
+
+        we just want you to use this app when you drive.
+
+        How do you help us? Turn the app on, drive and contribute
+
+
+        credits : break it up
+        idea
+        coding
+        logo
+        UI/UX
+        data analysis
+
+
+        programming used
+        mentor name
+
+        Future : will be made open source soon.
+        data analytics is coming up
+        partners : reap benefit
+
+        Using the data we collect, we will be able to do multiple things\n
+        1. Train machine learning models that will help us correctly classify a bump as a pothole or a patch
+        of bad road. We will publish these results online.\n
+        2. Analyse driver behaviour to detect bad driving habits and helping you correct them.\n
+        3. Analyse your car\'s route and give you feedback on how you can get the best out of your car and the route in terms of fuel efficiency
+        and time spend on the road.\n
+    -->
 
 </LinearLayout>

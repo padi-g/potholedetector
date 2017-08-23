@@ -3,11 +3,8 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
@@ -15,10 +12,9 @@ import android.util.Log;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 
-import static android.R.attr.id;
+import java.util.List;
 
 /**
  * Created by gautam on 25/01/17.

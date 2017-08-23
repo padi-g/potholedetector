@@ -22,7 +22,7 @@ public class Trip {
     float filesize;
     boolean uploaded;
 
-    String startTime, endTime;
+    String date, startTime, endTime;
     //String vehicle;
     Location startLoc, endLoc;
     int no_of_lines;
@@ -178,4 +178,11 @@ public class Trip {
         this.uploaded = uploaded;
     }
 
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
 }
