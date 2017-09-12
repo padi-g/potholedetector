@@ -27,6 +27,9 @@ public class Trip {
     Location startLoc, endLoc;
     int no_of_lines;
 
+    float distance;
+    long duration;
+
     /*
         float distance; // in km
         int duration; // in minutes
@@ -184,5 +187,21 @@ public class Trip {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public float getDistance() {
+        return distance;
+    }
+
+    public void setDistance(float distance) {
+        this.distance = distance;
+    }
+
+    public long getDuration() {
+        return duration;
+    }
+
+    public void setDuration(long duration) {
+        this.duration = duration;
     }
 }

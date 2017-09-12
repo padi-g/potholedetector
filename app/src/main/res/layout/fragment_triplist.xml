@@ -6,8 +6,6 @@
     android:orientation="vertical"
     tools:context="org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-
     <GridLayout
         android:id="@+id/content_profiles"
         android:layout_width="match_parent"

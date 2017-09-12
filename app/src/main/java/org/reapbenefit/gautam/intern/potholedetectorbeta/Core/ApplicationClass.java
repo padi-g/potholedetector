@@ -6,6 +6,8 @@ import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
+
 
 /**
  * Created by gautam on 03/06/17.
@@ -19,6 +21,7 @@ public class ApplicationClass extends Application {
     public Context mContext;
     protected static String TAG = "Application";
     public static boolean tripInProgress, tripEnded = false;  // ended is to make sure that only one trip per instance
+    private static Trip trip;
 
     @Override
     public void onCreate() {
@@ -48,6 +51,13 @@ public class ApplicationClass extends Application {
         return getInstance().getGoogleApiHelperInstance();
     }
 
+    public static void setTrip(Trip incoming) {
+        trip = incoming;
+    }
+
+    public static Trip getTrip() {
+        return trip;
+    }
 }
 
 /**

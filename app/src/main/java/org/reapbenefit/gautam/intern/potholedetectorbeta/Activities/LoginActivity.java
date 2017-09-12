@@ -148,7 +148,6 @@ public class LoginActivity extends AppCompatActivity {
             handleSignInResult(result);
 
             GoogleSignInAccount account = result.getSignInAccount();
-            // TODO why is this null??
             firebaseAuthWithGoogle(account);
         }
     }

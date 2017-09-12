@@ -27,6 +27,8 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
@@ -37,9 +39,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static org.reapbenefit.gautam.intern.potholedetectorbeta.Core.GoogleApiHelper.mGoogleApiClient;
 
@@ -65,11 +70,11 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     int no_of_lines = 0, meansumx =0, meansumy =0, meansumz =0;
     float meanx, meany, meanz, deviation;
 
+    Date startTime, endTime;
+
     boolean locAccHit = false, locUpdating = false;
     // Sometimes location is first taken from the last known location. When location starts updating
     // the accuracy can get worse before getting better again
-
-    Date startDate, endDate; // used to calculate the time elapsed for the trip
 
     UUID fileid;
 
@@ -86,6 +91,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     Trip newtrip;
     FirebaseAuth mAuth;
     FirebaseAnalytics mFirebaseAnalytics;
+    FirebaseDatabase mDatabase;
+    DatabaseReference ref;
 
     public LoggerService() {
         super();
@@ -100,6 +107,10 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         newtrip.setTrip_id(fileid.toString());
         mAuth = FirebaseAuth.getInstance();
         newtrip.setUser_id(mAuth.getCurrentUser().toString());
+
+        mDatabase = FirebaseDatabase.getInstance();
+
+        ref = mDatabase.getReference(newtrip.getTrip_id().toString());
 
         newtrip.setDevice(Build.MANUFACTURER + " " + Build.MODEL + " " + Build.PRODUCT);
         newtrip.setUser_id(mAuth.getCurrentUser().getUid());
@@ -121,17 +132,14 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         }
         startLocationUpdates();
 
+        newtrip.setStartTime(getCurrentTime());
+        startTime = new Date();  // to pass into bundle
+        setupSensors();
         setupLogFile();
         mp = MediaPlayer.create(getApplication(), R.raw.beep);
-        setupSensors();
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-        Bundle b = new Bundle();
-        b.putString("LoggerService", "trip started");
-        mFirebaseAnalytics.logEvent("trip_started", b);
-        Log.i("LoggerService", "trip started analytics");
-
-        startDate = new Date();
+        logAnalytics("trip_started");
 
         return START_NOT_STICKY;
     }
@@ -223,7 +231,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         }
 
         if (!gAvailable) {
-            e2 = "null" + ", " + "null" + ", " + "null" + ", ";
+            e2 = null;
         } else if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
 
             if (gAvailable) {
@@ -234,29 +242,36 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                 e2 = GyroXvalue + ", " + GyroYvalue + ", " + GyroZvalue + ", ";
             }
         }
-        if (mCurrentLocation.getAccuracy() < ACCURACY_REQUIRED) {
-            if(!locAccHit && locUpdating) {
-                locAccHit = true;
-                Log.i("Logger Service", "Location accuracy hit");
-                // TODO Add analytics event here
-            }
-            if (!startFlag) {
-                newtrip.setStartLoc(mCurrentLocation);
-                startFlag = true;
-            }
+        if(mCurrentLocation!=null) {
+            if (mCurrentLocation.getAccuracy() < ACCURACY_REQUIRED) {
+                if (!locAccHit && locUpdating) {
+                    locAccHit = true;
+                    Log.i("Logger Service", "Location accuracy hit");
+                    logAnalytics("location_accuracy_hit_started_logging");
+                }
+                if (!startFlag) {
+                    newtrip.setStartLoc(mCurrentLocation);
+                    startFlag = true;
+                }
 
-        no_of_lines++;
-
-        writeToFile(e1, e2, LocData);
-        }
-        else{
-            Log.i("Logger Service", "Location accuracy not hit" + mCurrentLocation.getAccuracy());
+                no_of_lines++;
+                writeToFile(e1, e2, LocData);
+                // TODO : Remove the first few nulls
+                // TODO : Do not log when the location is null
+            } else {
+                Log.i("Logger Service", "Location accuracy not hit" + mCurrentLocation.getAccuracy());
+            }
         }
 
     }
 
     protected void writeToFile(String Acc, String Gyr, String LocationData) {
-        String data = Acc + Gyr + LocationData + ", " + Marks + "\n";
+        String data;
+        if(Gyr == null)
+            data = Acc + LocationData + ", " + Marks + "\n";
+        else
+            data = Acc + Gyr + LocationData + ", " + Marks + "\n";
+
         try {
             out.write(data.getBytes());
             Log.d(TAG, "Writing " + data);
@@ -274,18 +289,23 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     }
 
     private void setupLogFile() {
-        String time = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.UK).format(new Date());
 
-        newtrip.setStartTime(time);
-        Log.i(" time", "end" + String.valueOf(newtrip.getEndTime()));
+        Log.i(" time", "start" + String.valueOf(newtrip.getStartTime()));
 
         String path = "logs/";
         File temp = new File(getApplicationContext().getFilesDir() + path);
         temp.mkdir();
         file = new File(temp.getPath(), fileid.toString());
 
-        // Accx, Acc y, Axxz, Gyrx, gyry, gyrz, lat, long, timestamp, accuracy
-        String data = "AccX, AccY, AccZ, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy, proximity\n";
+        String data;
+
+        if (gAvailable){
+            // Accx, Acc y, Axxz, Gyrx, gyry, gyrz, lat, long, timestamp, accuracy
+            data = "AccX, AccY, AccZ, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy, proximity\n";
+        }else{
+            // Accx, Acc y, Axxz, lat, long, timestamp, accuracy
+            data = "AccX, AccY, AccZ, latitude, longitude, timestamp, accuracy, proximity\n";
+        }
 
         try {
             out = new FileOutputStream(file, true);
@@ -302,7 +322,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         String time = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.UK).format(new Date());
         newtrip.setEndTime(time);
 
-        Log.i(" time", "start" + String.valueOf(newtrip.getStartTime()));
+        Log.i(" endtime", String.valueOf(newtrip.getEndTime()));
         mp.stop();
         mSensorManager.unregisterListener(this);
 
@@ -310,21 +330,46 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         newtrip.setUploaded(false);
         Uri fileuri = Uri.fromFile(new File(file.getPath()));
         newtrip.setTripfile(fileuri);
+        newtrip.setDuration(calcTimeTravelled());
+        Log.i("Time Elapsed in trip ", String.valueOf(calcTimeTravelled()) + " minutes");
+
         // WRITE TO DB HERE
+       // ref.setValue(newtrip);    // not executing
+        ApplicationClass.setTrip(newtrip);
+        Log.i("Logger Service", "logged newtrip");
+
 
         // the uri of the file to be uploaded from fragment
         if(locAccHit)
-            sendTripLoggingBroadcast(false, newtrip.getTripfile());
+            sendTripLoggingBroadcast(false, newtrip.getTripfile()/*, createEssentialsBundle(newtrip)*/);
+            // WRITE TO DB HERE
         else
-            sendTripLoggingBroadcast(false, null);
+            sendTripLoggingBroadcast(false, null/*, null*/);
 
 
     }
 
-    void sendTripLoggingBroadcast(boolean status, Uri uploadFileId) {
+    /*
+    Bundle createEssentialsBundle(Trip t){
+
+        // The bundle that is passed with the information to give the user information about
+        // their trip like duration and distance travelled.
+
+        Bundle b = new Bundle();
+        b.putSerializable("startTime", startTime);
+        b.putSerializable("endTime", endTime);
+        b.putParcelable("startLocation", t.getStartLoc());
+        b.putParcelable("endLocation", t.getEndLoc());
+
+        return b;
+    }
+    */
+
+    void sendTripLoggingBroadcast(boolean status, Uri uploadFileId /*, Bundle essentials*/) {
         Intent iTemp = new Intent("tripstatus");
         iTemp.putExtra("LoggingStatus", status);
         iTemp.putExtra("filename", uploadFileId);
+        //iTemp.putExtra("essentials", essentials);
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
         l.sendBroadcast(iTemp);
     }
@@ -351,13 +396,25 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         }
 
         newtrip.setEndLoc(mCurrentLocation);
-        endDate = new Date();
+        newtrip.setEndTime(getCurrentTime());
+        endTime = new Date();  // to pass into bundle
 
         stopTrip();
         stopLocationUpdates();
         ApplicationClass.getGoogleApiHelper().getGoogleApiClient().disconnect();
         ApplicationClass.tripEnded = true;
         stopForeground(true);
+    }
+
+    public String getCurrentTime(){
+        Date d = new Date();
+        try {
+            d = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(new Date().toString());
+        }catch (ParseException e){
+
+        }
+        String time = new SimpleDateFormat("HH:mm:ss").format(d);
+        return time;
     }
 
     public void startLocationUpdates() {
@@ -395,7 +452,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     public void onLocationChanged(Location location) {
         locUpdating = true;
         mCurrentLocation = location;
-        mLastUpdateTime = DateFormat.getDateTimeInstance().format(new Date()).replaceFirst(",", "");
+        mLastUpdateTime = getCurrentTime();
         LocData = getLocData();
     }
 
@@ -407,5 +464,18 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                 String.format("%.1f", mCurrentLocation.getAccuracy());
         return l;
     }
+
+    public long calcTimeTravelled(){
+        long duration  = endTime.getTime() - startTime.getTime();
+        return TimeUnit.MILLISECONDS.toMinutes(duration);
+    }
+
+    public void logAnalytics(String data){
+        Bundle b = new Bundle();
+        b.putString("LoggerService", data);
+        mFirebaseAnalytics.logEvent(data, b);
+        Log.i("LoggerService", data);
+    }
+
 
 }

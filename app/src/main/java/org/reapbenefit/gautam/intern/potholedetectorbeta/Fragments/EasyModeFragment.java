@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -132,6 +133,10 @@ public class EasyModeFragment extends Fragment {
                     progressBar.setVisibility(View.VISIBLE);
                     statusIndicatorText.setText(getResources().getString(R.string.uploading));
                     uploadFile(uploadFileUri);
+
+                    // show toast with all the
+                    showTripEndedDialog();
+
                 }
                 bgframe.setBackgroundResource(R.drawable.notlogging_bg);
 
@@ -140,6 +145,17 @@ public class EasyModeFragment extends Fragment {
 
         }
     };
+
+    public void showTripEndedDialog(){
+
+
+
+        Trip finished = ApplicationClass.getTrip();
+        //float distance = finished.getDistance();
+        //int duration = finished.getTripTime();
+    }
+
+
 
     public void uploadFile(Uri uri){
 
@@ -330,3 +346,15 @@ public class EasyModeFragment extends Fragment {
         void onFragmentInteraction(Uri uri);
     }
 }
+
+// // TODO: 03/09/17
+/*
+* Date startDate = // Set start date
+Date endDate   = // Set end date
+
+long duration  = endDate.getTime() - startDate.getTime();
+
+long diffInSeconds = TimeUnit.MILLISECONDS.toSeconds(duration);
+long diffInMinutes = TimeUnit.MILLISECONDS.toMinutes(duration);
+long diffInHours = TimeUnit.MILLISECONDS.toHours(duration);
+* */

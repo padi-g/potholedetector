@@ -66,7 +66,6 @@ public class ExtractTripDetailsService extends Service {
                         Log.i("ExtractTripDetail", "Could not location");
                 }
                 catch (IOException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                     Log.i("ExtractTripDetail", "Could not location exception");
                 }

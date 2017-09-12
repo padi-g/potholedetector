@@ -8,11 +8,15 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Switch;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
+
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 public class CreditsActivity extends AppCompatActivity {
 
     Switch StartsStop;
+    FirebaseAnalytics mFirebaseAnalytics;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,6 +28,9 @@ public class CreditsActivity extends AppCompatActivity {
         Switch s = (Switch) toolbar.findViewById(R.id.stopSwitch);
         s.setVisibility(View.GONE);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        logAnalytics("credits_opened");
     }
 
     public void sendEmail(View v){
@@ -34,5 +41,11 @@ public class CreditsActivity extends AppCompatActivity {
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
         }
+    }
+
+    public void logAnalytics(String data){
+        Bundle b = new Bundle();
+        b.putString("CreditsActivity", data);
+        mFirebaseAnalytics.logEvent(data, b);
     }
 }

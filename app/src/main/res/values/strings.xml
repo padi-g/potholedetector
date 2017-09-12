@@ -6,7 +6,7 @@
     <string name="menu_about">About</string>
     <string name="menu_credits">Credits</string>
 
-    <string name="dialog_question">Do you want to start a trip?</string>
+    <string name="dialog_question">Would you like to start a trip?</string>
     <string name="dialog_positive">Yes</string>
     <string name="dialog_negative">No</string>
     <string name="not_detecting">Press on the toggle to start your trip</string>
