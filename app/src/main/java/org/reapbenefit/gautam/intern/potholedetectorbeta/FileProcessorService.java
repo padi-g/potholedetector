@@ -22,7 +22,7 @@ import java.util.Locale;
  * Also trims the file to contain only important
  */
 
-public class ExtractTripDetailsService extends Service {
+public class FileProcessorService extends Service {
 
     Trip trip;
     File file;
@@ -33,7 +33,7 @@ public class ExtractTripDetailsService extends Service {
         return null;
     }
 
-    public ExtractTripDetailsService(Uri fileuri, Trip trip) {
+    public FileProcessorService(Uri fileuri, Trip trip) {
         this.trip = trip;
         // setup file to operate on it
     }
