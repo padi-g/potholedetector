@@ -2,6 +2,7 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
 import android.app.Application;
 import android.content.Context;
+import android.support.multidex.MultiDexApplication;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -13,7 +14,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
  * Created by gautam on 03/06/17.
  */
 
-public class ApplicationClass extends Application {
+public class ApplicationClass extends MultiDexApplication {
 
     public GoogleApiClient mGoogleApiClient;
     private GoogleApiHelper googleApiHelper;
@@ -52,7 +53,7 @@ public class ApplicationClass extends Application {
     }
 
     public static void setTrip(Trip incoming) {
-        trip = incoming;
+        trip = new Trip(incoming);
     }
 
     public static Trip getTrip() {

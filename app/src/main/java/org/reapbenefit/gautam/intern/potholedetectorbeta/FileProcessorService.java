@@ -4,13 +4,24 @@ import android.app.Service;
 import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
 import android.net.Uri;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -25,7 +36,13 @@ import java.util.Locale;
 public class FileProcessorService extends Service {
 
     Trip trip;
+    String filename = "trips.json";
     File file;
+    OutputStream out;
+
+    int latIndex, lngIndex, accuracyIndex;
+    float distance_travelled = 0;
+    float[] results;
 
     @Nullable
     @Override
@@ -33,47 +50,75 @@ public class FileProcessorService extends Service {
         return null;
     }
 
-    public FileProcessorService(Uri fileuri, Trip trip) {
-        this.trip = trip;
+    public FileProcessorService() {
+        trip = new Trip(ApplicationClass.getTrip());
         // setup file to operate on it
     }
 
     @Override
-    public void onCreate() {
+    public void onCreate(){
+        Log.d("File Processor ", "onCreate");
 
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                Geocoder geocoder= new Geocoder(getBaseContext(), Locale.ENGLISH);
 
-                try {
 
-                    //Place your latitude and longitude
-                    List<Address> addresses = geocoder.getFromLocation(trip.getStartLoc().getLatitude(),trip.getStartLoc().getLongitude(), 1);
+//Get the text file
+        File file = new File(getApplicationContext().getFilesDir(), "logs/"+trip.getTripfile().toString()+".csv");
 
-                    if(addresses != null) {
 
-                        Address fetchedAddress = addresses.get(0);
-                        StringBuilder strAddress = new StringBuilder();
+        double c_gps[] = {0.0, 0.0};
+        double temp_gps[] = {0.0, 0.0};
+        try {
+            Log.i("File Processor", trip.getTripfile().toString());
+            BufferedReader in = new BufferedReader(new FileReader(file));
+            String line = "";
 
-                        for(int i=0; i<fetchedAddress.getMaxAddressLineIndex(); i++) {
-                            strAddress.append(fetchedAddress.getAddressLine(i)).append("\n");
-                        }
-                        Log.i("ExtractTripDetail", strAddress.toString());
-                    }
-
-                    else
-                        Log.i("ExtractTripDetail", "Could not location");
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                    Log.i("ExtractTripDetail", "Could not location exception");
+            line = in.readLine();
+            String tokens[] = line.split(",");
+            for(int i=0; i<tokens.length; i++){
+                if(tokens[i].contentEquals(" latitude")) {
+                    latIndex = i;
+                    lngIndex = latIndex + 1;
+                    accuracyIndex = lngIndex + 2;
                 }
             }
 
-        };
-        thread.start();
+            //line.contains("null, null")
 
+            while (!(line = in.readLine()).contentEquals(null)) {
+                if(line.contains("null, null"))
+                    continue;
+                String values[] = line.split(",");
+                for(int i=0; i<values.length; i++){
+                    temp_gps[0] = Float.valueOf(values[latIndex]);
+                    temp_gps[1] = Float.valueOf(values[lngIndex]);
+                    if(Arrays.equals(temp_gps, c_gps)){
+                        Location.distanceBetween(c_gps[0], c_gps[1], temp_gps[0], temp_gps[1], results);
+                        distance_travelled += results[0];
+                    }
+                    c_gps = temp_gps;
+                    System.out.println("{lat: "+ temp_gps[0]+ ", lng: "+ temp_gps[1]+ "},");
+
+                }
+
+            }
+        }catch (Exception f){}
+
+
+        Gson gson = new Gson();
+        String json = gson.toJson(trip);
+        Log.d("File Processor ", json);
+/*
+        File file = new File(getApplicationContext().getFilesDir(), filename);
+        try {
+            out = new FileOutputStream(file, true);
+            out.write(json.getBytes());
+
+        } catch (IOException e) {
+            Log.d("File Processor ", "File setup failed: " + e.toString());
+        }
+//        Trip t = new Trip(gson.fromJson(json, Trip.class));
+//        Log.d("File Processor ", t.getUser_id());
+*/
         super.onCreate();
     }
 
@@ -87,3 +132,8 @@ public class FileProcessorService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 }
+
+
+// TODO 1 : Convert trip from appclass to json and store in a file
+// TODO 2 : Build json schema
+// TODO 2 : Extract device info and

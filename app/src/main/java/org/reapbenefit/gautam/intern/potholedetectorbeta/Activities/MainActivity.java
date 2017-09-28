@@ -41,6 +41,7 @@ import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.FileProcessorService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
@@ -172,6 +173,15 @@ public class MainActivity extends AppCompatActivity
                     //sendTripLoggingBroadcast(false);   // already being sent from the loggerservice
                     stopLogger();
                     StartsStop.setVisibility(View.GONE);
+
+                   // start the fileprocessor
+                   /* Enable later
+
+                   Intent processor = new Intent(MainActivity.this, FileProcessorService.class);
+                   startService(processor);
+                   Log.d("File Processor ", "intent sent");
+
+                    */
                    //MainActivity.this.finish();
                     //startActivityService();
                 }

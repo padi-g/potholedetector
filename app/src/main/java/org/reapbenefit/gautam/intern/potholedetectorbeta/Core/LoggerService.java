@@ -173,8 +173,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-        if (mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
-            mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) != null) {
+            mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         }
 
         if (mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY) != null) {
@@ -272,6 +272,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         else
             data = Acc + Gyr + LocationData + ", " + Marks + "\n";
 
+        if(LocationData == "null")
+
         try {
             out.write(data.getBytes());
             Log.d(TAG, "Writing " + data);
@@ -295,7 +297,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         String path = "logs/";
         File temp = new File(getApplicationContext().getFilesDir() + path);
         temp.mkdir();
-        file = new File(temp.getPath(), fileid.toString());
+        file = new File(temp.getPath(), fileid.toString()+ ".csv");
 
         String data;
 
@@ -337,7 +339,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
        // ref.setValue(newtrip);    // not executing
         ApplicationClass.setTrip(newtrip);
         Log.i("Logger Service", "logged newtrip");
-
 
         // the uri of the file to be uploaded from fragment
         if(locAccHit)

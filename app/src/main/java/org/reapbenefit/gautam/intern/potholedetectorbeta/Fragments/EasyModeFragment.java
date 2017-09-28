@@ -148,8 +148,6 @@ public class EasyModeFragment extends Fragment {
 
     public void showTripEndedDialog(){
 
-
-
         Trip finished = ApplicationClass.getTrip();
         //float distance = finished.getDistance();
         //int duration = finished.getTripTime();

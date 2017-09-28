@@ -39,11 +39,30 @@ public class Trip {
 
     public Trip(){}
 
-    public void analyse_file(){
-        // calculate the std deviation
-        // find the number of bumps and the locations
+    public Trip(Trip t) {
+        this.trip_id = t.trip_id;
+        this.user_id = t.user_id;
+        this.firepath = t.firepath;
+        this.tripfile = t.tripfile;
+        this.filesize = t.filesize;
+        this.uploaded = t.uploaded;
+        this.date = t.date;
+        this.startTime = t.startTime;
+        this.endTime = t.endTime;
+        this.startLoc = t.startLoc;
+        this.endLoc = t.endLoc;
+        this.no_of_lines = t.no_of_lines;
+        this.distance = t.distance;
+        this.duration = t.duration;
+        this.device = t.device;
+    }  // copy constructor
 
-        // write the file metadata into the file or not?
+    public void writeToJsonFile(){
+
+        // load all trip objects to an arraylist of trips
+        // search for relevant trip object
+        // write new data to it
+
     }
 
     public String getTrip_id() {
