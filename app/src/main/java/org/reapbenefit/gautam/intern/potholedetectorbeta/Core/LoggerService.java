@@ -217,7 +217,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             }
         }
 
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {  // or TYPE_ACCELEROMETER
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {  // or TYPE_ACCELEROMETER
             AccXvalue = String.format("%.1f", sensorEvent.values[0]);
             AccYvalue = String.format("%.1f", sensorEvent.values[1]);
             AccZvalue = String.format("%.1f", sensorEvent.values[2]);
