@@ -399,3 +399,6 @@ public class MainActivity extends AppCompatActivity
 // eg koramangala to indiranagar
 
 //  https://coolors.co/6da34d-c9cba3-202030-39304a-52528c  for colours
+
+// TODO : Internet checking
+// TODO : orientation fixed vertical

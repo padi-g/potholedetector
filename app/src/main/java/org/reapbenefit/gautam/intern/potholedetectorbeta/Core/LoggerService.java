@@ -62,7 +62,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     private String AccXvalue, AccYvalue, AccZvalue, GyroXvalue, GyroYvalue, GyroZvalue, e1, e2, Marks;
     protected String LocData, mLastUpdateTime;
-    boolean gAvailable;
+    boolean gAvailable = true;
     MediaPlayer mp;
 
     boolean startFlag = false;
@@ -126,9 +126,14 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                 Log.d(TAG, "Permission not granted for gps");
             }
             //mLastUpdateTime = new Date().toString();
-            mLastUpdateTime = DateFormat.getDateTimeInstance().format(new Date()).replaceFirst(",", "");
-            if (mCurrentLocation != null)
+            if (mCurrentLocation != null) {
+                mLastUpdateTime = getCurrentTime();
                 LocData = getLocData();
+            }
+        }
+        else{
+            mLastUpdateTime = getCurrentTime();
+            LocData = getLocData();
         }
         startLocationUpdates();
 
@@ -234,15 +239,14 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             e2 = null;
         } else if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
 
-            if (gAvailable) {
-                GyroXvalue = String.format("%.1f", sensorEvent.values[0]);
-                GyroYvalue = String.format("%.1f", sensorEvent.values[1]);
-                GyroZvalue = String.format("%.1f", sensorEvent.values[2]);
+            GyroXvalue = String.format("%.1f", sensorEvent.values[0]);
+            GyroYvalue = String.format("%.1f", sensorEvent.values[1]);
+            GyroZvalue = String.format("%.1f", sensorEvent.values[2]);
 
-                e2 = GyroXvalue + ", " + GyroYvalue + ", " + GyroZvalue + ", ";
-            }
+            e2 = GyroXvalue + ", " + GyroYvalue + ", " + GyroZvalue + ", ";
+
         }
-        if(mCurrentLocation!=null) {
+        if(mCurrentLocation!=null && e1!=null && e2!=null) {
             if (mCurrentLocation.getAccuracy() < ACCURACY_REQUIRED) {
                 if (!locAccHit && locUpdating) {
                     locAccHit = true;
@@ -256,8 +260,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
                 no_of_lines++;
                 writeToFile(e1, e2, LocData);
-                // TODO : Remove the first few nulls
-                // TODO : Do not log when the location is null
             } else {
                 Log.i("Logger Service", "Location accuracy not hit" + mCurrentLocation.getAccuracy());
             }
@@ -267,12 +269,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     protected void writeToFile(String Acc, String Gyr, String LocationData) {
         String data;
-        if(Gyr == null)
-            data = Acc + LocationData + ", " + Marks + "\n";
-        else
-            data = Acc + Gyr + LocationData + ", " + Marks + "\n";
 
-        if(LocationData == "null")
+        data = Acc + Gyr + LocationData + ", " + Marks + "\n";
 
         try {
             out.write(data.getBytes());
@@ -331,6 +329,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         newtrip.setFilesize(file.length());
         newtrip.setUploaded(false);
         Uri fileuri = Uri.fromFile(new File(file.getPath()));
+
         newtrip.setTripfile(fileuri);
         newtrip.setDuration(calcTimeTravelled());
         Log.i("Time Elapsed in trip ", String.valueOf(calcTimeTravelled()) + " minutes");
@@ -480,3 +479,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
 
 }
+
+
+// TODO : Android O Support : fileURI
