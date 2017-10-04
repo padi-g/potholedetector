@@ -17,9 +17,10 @@ public class Trip {
     String trip_id;  // unique id for trip and name for the file
     String user_id;  // user who created this trip
 
-    String firepath;  // path to firebase storage
-    Uri tripfile;
+    //String firepath;  // path to firebase storage
+    //Uri tripfile;
     float filesize;
+
     boolean uploaded;
 
     String date, startTime, endTime;
@@ -27,37 +28,33 @@ public class Trip {
     Location startLoc, endLoc;
     int no_of_lines;
 
-    float distance;
+    //float distance;
     long duration;
 
-    /*
-        float distance; // in km
-        int duration; // in minutes
-        */
     String device;
     //int rating;
 
-    public Trip(){}
+    public Trip() {
+    }
 
     public Trip(Trip t) {
         this.trip_id = t.trip_id;
         this.user_id = t.user_id;
-        this.firepath = t.firepath;
-        this.tripfile = t.tripfile;
+        //this.firepath = t.firepath;
+        //this.tripfile = t.tripfile;
         this.filesize = t.filesize;
         this.uploaded = t.uploaded;
-        this.date = t.date;
         this.startTime = t.startTime;
         this.endTime = t.endTime;
         this.startLoc = t.startLoc;
         this.endLoc = t.endLoc;
         this.no_of_lines = t.no_of_lines;
-        this.distance = t.distance;
+        //this.distance = t.distance;
         this.duration = t.duration;
         this.device = t.device;
     }  // copy constructor
 
-    public void writeToJsonFile(){
+    public void writeToJsonFile() {
 
         // load all trip objects to an arraylist of trips
         // search for relevant trip object
@@ -80,21 +77,29 @@ public class Trip {
     public void setUser_id(String user_id) {
         this.user_id = user_id;
     }
-
-    public String getFirepath() {
-        return firepath;
-    }
-
-    public void setFirepath(String firepath) {
-        this.firepath = firepath;
-    }
-
+/*
     public Uri getTripfile() {
         return tripfile;
     }
 
     public void setTripfile(Uri tripfile) {
         this.tripfile = tripfile;
+    }
+*/
+    public float getFilesize() {
+        return filesize;
+    }
+
+    public void setFilesize(float filesize) {
+        this.filesize = filesize;
+    }
+
+    public boolean isUploaded() {
+        return uploaded;
+    }
+
+    public void setUploaded(boolean uploaded) {
+        this.uploaded = uploaded;
     }
 
     public String getStartTime() {
@@ -113,16 +118,6 @@ public class Trip {
         this.endTime = endTime;
     }
 
-    /*
-    public String getVehicle() {
-        return vehicle;
-    }
-
-    public void setVehicle(String vehicle) {
-        this.vehicle = vehicle;
-    }
-    */
-
     public Location getStartLoc() {
         return startLoc;
     }
@@ -139,43 +134,6 @@ public class Trip {
         this.endLoc = endLoc;
     }
 
-    /*
-    public float getDistance() {
-        return distance;
-    }
-
-    public void setDistance(float distance) {
-        this.distance = distance;
-    }
-
-    public int getDuration() {
-        return duration;
-    }
-
-    public void setDuration(int duration) {
-        this.duration = duration;
-    }
-    */
-
-    public String getDevice() {
-        return device;
-    }
-
-    public void setDevice(String device) {
-        this.device = device;
-    }
-
-    /*
-    public int getRating() {
-        return rating;
-    }
-
-
-    public void setRating(int rating) {
-        this.rating = rating;
-    }
-    */
-
     public int getNo_of_lines() {
         return no_of_lines;
     }
@@ -184,43 +142,19 @@ public class Trip {
         this.no_of_lines = no_of_lines;
     }
 
-    public float getFilesize() {
-        return filesize;
-    }
-
-    public void setFilesize(float filesize) {
-        this.filesize = filesize;
-    }
-
-    public boolean isUploaded() {
-        return uploaded;
-    }
-
-    public void setUploaded(boolean uploaded) {
-        this.uploaded = uploaded;
-    }
-
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-    }
-
-    public float getDistance() {
-        return distance;
-    }
-
-    public void setDistance(float distance) {
-        this.distance = distance;
-    }
-
     public long getDuration() {
         return duration;
     }
 
     public void setDuration(long duration) {
         this.duration = duration;
+    }
+
+    public String getDevice() {
+        return device;
+    }
+
+    public void setDevice(String device) {
+        this.device = device;
     }
 }

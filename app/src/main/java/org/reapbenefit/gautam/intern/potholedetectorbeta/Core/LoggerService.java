@@ -106,11 +106,10 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         fileid = UUID.randomUUID();
         newtrip.setTrip_id(fileid.toString());
         mAuth = FirebaseAuth.getInstance();
-        newtrip.setUser_id(mAuth.getCurrentUser().toString());
 
         mDatabase = FirebaseDatabase.getInstance();
 
-        ref = mDatabase.getReference(newtrip.getTrip_id().toString());
+        ref = mDatabase.getReference();
 
         newtrip.setDevice(Build.MANUFACTURER + " " + Build.MODEL + " " + Build.PRODUCT);
         newtrip.setUser_id(mAuth.getCurrentUser().getUid());
@@ -137,7 +136,14 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         }
         startLocationUpdates();
 
-        newtrip.setStartTime(getCurrentTime());
+        ///////////// TO MAKE sure that devices without gyroscope dont have null locations
+        if(mCurrentLocation != null) {
+            newtrip.setStartLoc(mCurrentLocation);
+            newtrip.setEndLoc(mCurrentLocation);
+        }
+        //////////////
+
+        newtrip.setStartTime(getCurrentDateTime());
         startTime = new Date();  // to pass into bundle
         setupSensors();
         setupLogFile();
@@ -316,38 +322,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         }
     }
 
-    public void stopTrip() {
 
-        newtrip.setNo_of_lines(no_of_lines);
-        String time = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.UK).format(new Date());
-        newtrip.setEndTime(time);
-
-        Log.i(" endtime", String.valueOf(newtrip.getEndTime()));
-        mp.stop();
-        mSensorManager.unregisterListener(this);
-
-        newtrip.setFilesize(file.length());
-        newtrip.setUploaded(false);
-        Uri fileuri = Uri.fromFile(new File(file.getPath()));
-
-        newtrip.setTripfile(fileuri);
-        newtrip.setDuration(calcTimeTravelled());
-        Log.i("Time Elapsed in trip ", String.valueOf(calcTimeTravelled()) + " minutes");
-
-        // WRITE TO DB HERE
-       // ref.setValue(newtrip);    // not executing
-        ApplicationClass.setTrip(newtrip);
-        Log.i("Logger Service", "logged newtrip");
-
-        // the uri of the file to be uploaded from fragment
-        if(locAccHit)
-            sendTripLoggingBroadcast(false, newtrip.getTripfile()/*, createEssentialsBundle(newtrip)*/);
-            // WRITE TO DB HERE
-        else
-            sendTripLoggingBroadcast(false, null/*, null*/);
-
-
-    }
 
     /*
     Bundle createEssentialsBundle(Trip t){
@@ -396,14 +371,45 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         }
 
         newtrip.setEndLoc(mCurrentLocation);
-        newtrip.setEndTime(getCurrentTime());
-        endTime = new Date();  // to pass into bundle
 
         stopTrip();
         stopLocationUpdates();
         ApplicationClass.getGoogleApiHelper().getGoogleApiClient().disconnect();
         ApplicationClass.tripEnded = true;
         stopForeground(true);
+    }
+
+    public void stopTrip() {
+
+        newtrip.setNo_of_lines(no_of_lines);
+        newtrip.setEndTime(getCurrentDateTime());
+        endTime = new Date();
+
+        Log.i(" endtime", String.valueOf(newtrip.getEndTime()));
+        mp.stop();
+        mSensorManager.unregisterListener(this);
+
+        newtrip.setFilesize(file.length());
+        newtrip.setUploaded(false);
+        Uri fileuri = Uri.fromFile(new File(file.getPath()));
+
+        newtrip.setDuration(calcTimeTravelled());
+        Log.i("Time Elapsed in trip ", String.valueOf(calcTimeTravelled()) + " minutes");
+
+        logTripDetails(newtrip);
+
+        ApplicationClass.setTrip(newtrip);
+        Log.i("Logger Service", "logged newtrip");
+
+        // the uri of the file to be uploaded from fragment
+        if(locAccHit) {
+            ref.child(newtrip.getUser_id()).child(newtrip.getTrip_id()).setValue(newtrip);
+            sendTripLoggingBroadcast(false, fileuri/*, createEssentialsBundle(newtrip)*/);
+        }else {
+            ref.child(newtrip.getUser_id()).child("unsuccessful_in_starting_logging").child(newtrip.getTrip_id()).setValue(newtrip);
+            sendTripLoggingBroadcast(false, null/*, null*/);
+        }
+
     }
 
     public String getCurrentTime(){
@@ -415,6 +421,16 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         }
         String time = new SimpleDateFormat("HH:mm:ss").format(d);
         return time;
+    }
+
+    public String getCurrentDateTime(){
+        Date d = new Date();
+        try {
+            d = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(new Date().toString());
+        }catch (ParseException e){
+
+        }
+        return d.toString();
     }
 
     public void startLocationUpdates() {
@@ -477,6 +493,20 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         Log.i("LoggerService", data);
     }
 
+    public void logTripDetails(Trip t){
+        Log.i("trip_details", t.getTrip_id());
+        Log.i("trip_details", t.getUser_id());
+        //Log.i("trip_details", t.getTripfile().toString());
+        Log.i("trip_details", String.valueOf(t.getFilesize()));
+        Log.i("trip_details", String.valueOf(newtrip.isUploaded()));
+        Log.i("trip_details", t.getStartTime());
+        Log.i("trip_details", t.getEndTime());
+        Log.i("trip_details", t.getStartLoc().toString());
+        Log.i("trip_details", t.getEndLoc().toString());
+        Log.i("trip_details", String.valueOf(newtrip.getNo_of_lines()));
+        Log.i("trip_details", String.valueOf(newtrip.getDuration()));
+        Log.i("trip_details", t.getDevice());
+    }
 
 }
 

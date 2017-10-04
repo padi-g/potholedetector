@@ -62,13 +62,12 @@ public class FileProcessorService extends Service {
 
 
 //Get the text file
-        File file = new File(getApplicationContext().getFilesDir(), "logs/"+trip.getTripfile().toString()+".csv");
-
+        File file = new File(getApplicationContext().getFilesDir(), "logs/"+trip.getTrip_id()+".csv");
 
         double c_gps[] = {0.0, 0.0};
         double temp_gps[] = {0.0, 0.0};
         try {
-            Log.i("File Processor", trip.getTripfile().toString());
+            Log.i("File Processor", trip.getTrip_id());
             BufferedReader in = new BufferedReader(new FileReader(file));
             String line = "";
 
