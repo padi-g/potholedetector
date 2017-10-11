@@ -29,15 +29,6 @@
         android:textSize="20dp"
         android:id="@+id/textView5" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="40dp"
-        android:id="@+id/users_name"
-        android:text="Please sign-in"
-        android:layout_above="@+id/imageView"
-        android:layout_centerHorizontal="true" />
-
     <Button
         android:text="Sign Out"
         android:layout_width="150dp"
@@ -61,6 +52,15 @@
         android:layout_height="wrap_content"
         android:id="@+id/start_sign_in"
         android:layout_below="@+id/login_details"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="40dp"
+        android:id="@+id/users_name"
+        android:text="Please sign-in"
+        android:layout_above="@+id/imageView"
         android:layout_centerHorizontal="true" />
 
 

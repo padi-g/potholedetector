@@ -19,13 +19,13 @@ public class Trip {
 
     //String firepath;  // path to firebase storage
     //Uri tripfile;
-    float filesize;
+    long filesize;
 
     boolean uploaded;
 
     String date, startTime, endTime;
     //String vehicle;
-    Location startLoc, endLoc;
+    MyLocation startLoc, endLoc;
     int no_of_lines;
 
     //float distance;
@@ -53,6 +53,9 @@ public class Trip {
         this.duration = t.duration;
         this.device = t.device;
     }  // copy constructor
+
+// LoggerService -> EasyModeFragment -> FileProcessor.java
+    // when application gets killed, the old trip instance is lost.
 
     public void writeToJsonFile() {
 
@@ -86,11 +89,11 @@ public class Trip {
         this.tripfile = tripfile;
     }
 */
-    public float getFilesize() {
+    public long getFilesize() {
         return filesize;
     }
 
-    public void setFilesize(float filesize) {
+    public void setFilesize(long filesize) {
         this.filesize = filesize;
     }
 
@@ -118,19 +121,19 @@ public class Trip {
         this.endTime = endTime;
     }
 
-    public Location getStartLoc() {
+    public MyLocation getStartLoc() {
         return startLoc;
     }
 
-    public void setStartLoc(Location startLoc) {
+    public void setStartLoc(MyLocation startLoc) {
         this.startLoc = startLoc;
     }
 
-    public Location getEndLoc() {
+    public MyLocation getEndLoc() {
         return endLoc;
     }
 
-    public void setEndLoc(Location endLoc) {
+    public void setEndLoc(MyLocation endLoc) {
         this.endLoc = endLoc;
     }
 

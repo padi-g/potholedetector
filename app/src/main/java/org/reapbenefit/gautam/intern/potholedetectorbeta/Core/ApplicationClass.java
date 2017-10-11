@@ -18,30 +18,32 @@ public class ApplicationClass extends MultiDexApplication {
 
     public GoogleApiClient mGoogleApiClient;
     private GoogleApiHelper googleApiHelper;
-    private static ApplicationClass mInstance;
+    private static ApplicationClass singleton;
     public Context mContext;
     protected static String TAG = "Application";
     public static boolean tripInProgress, tripEnded = false;  // ended is to make sure that only one trip per instance
-    private static Trip trip;
+
+    private Trip trip;
 
     @Override
     public void onCreate() {
         super.onCreate();
         mContext = getApplicationContext();
-        mInstance = this;
-
+        singleton = this;
 
         Log.i(TAG, "App started");
 
         // Get permissions
 
+        trip = new Trip();
+
         tripInProgress = false;
-        googleApiHelper = new GoogleApiHelper(mInstance);
+        googleApiHelper = new GoogleApiHelper(singleton);
         mGoogleApiClient = googleApiHelper.getGoogleApiClient();
     }
 
     public static synchronized ApplicationClass getInstance() {
-        return mInstance;
+        return singleton;
     }
 
     public GoogleApiHelper getGoogleApiHelperInstance() {
@@ -52,11 +54,11 @@ public class ApplicationClass extends MultiDexApplication {
         return getInstance().getGoogleApiHelperInstance();
     }
 
-    public static void setTrip(Trip incoming) {
-        trip = new Trip(incoming);
+    public void setTrip(Trip incoming) {
+        trip = incoming;
     }
 
-    public static Trip getTrip() {
+    public Trip getTrip() {
         return trip;
     }
 }

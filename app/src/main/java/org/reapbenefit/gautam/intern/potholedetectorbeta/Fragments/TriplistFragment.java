@@ -13,10 +13,19 @@ import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 import java.io.File;
+import java.util.ArrayList;
 
 
 /**
@@ -39,10 +48,17 @@ public class TriplistFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    File dir;
-    File[] logfiles;
+    private TripListAdapter adapter;
+
     ListView l;
     ImageButton refreshButton;
+
+    private ArrayList<Trip> trips = new ArrayList<>();
+
+    FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    FirebaseDatabase database = FirebaseDatabase.getInstance();;
+    DatabaseReference myRef = database.getReference();
+
 
     public TriplistFragment() {
         // Required empty public constructor
@@ -74,36 +90,34 @@ public class TriplistFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
-        getListofLogFiles();
-        int n;
-        if(logfiles != null)
-            n = logfiles.length;
-        else n =0;
-        for(int i=0; i<n; i++){
-            Log.i("File "+String.valueOf(i), logfiles[i].getName());
+        myRef = myRef.child(mAuth.getCurrentUser().getUid());
 
-        }
-    }
+        myRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot d : dataSnapshot.getChildren()) {
+                    trips.add(d.getValue(Trip.class));
+                    createListView();
+                }
+            }
 
-    private void getListofLogFiles(){
-        dir = getContext().getFilesDir();
-        String path = dir.getPath() + "logs/";
-        File logdir = new File(path);
-       // file = new File(MainActivity.this.getFilesDir(), t2);
-        logfiles = logdir.listFiles();
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void createListView(){
-        if(logfiles!=null) {
-            l.setAdapter(new TripListAdapter(getActivity(), logfiles));
+        if(!trips.isEmpty()) {
+            adapter = new TripListAdapter(getActivity(), trips);
+            l.setAdapter(new TripListAdapter(getActivity(), trips));
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS + "/PotholeApp/");
-        logfiles = dir.listFiles();
     }
 
     @Override
@@ -115,7 +129,6 @@ public class TriplistFragment extends Fragment {
         refreshButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getListofLogFiles();
                 createListView();
             }
         });

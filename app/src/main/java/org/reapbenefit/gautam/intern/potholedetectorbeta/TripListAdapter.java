@@ -3,6 +3,7 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,21 +12,34 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+
 import java.io.File;
+import java.util.ArrayList;
 
 /**
  * Created by gautam on 26/01/17.
  */
 
-public class TripListAdapter extends ArrayAdapter<File> {
+public class TripListAdapter extends ArrayAdapter<Trip> {
 
     private final Context context;
-    private final File[] values;
 
-    public TripListAdapter(Context context, File[] values) {
+    private static ArrayList<Trip> trips;
+
+    public TripListAdapter(Context context, ArrayList<Trip> values) {
         super(context, -1, values);
         this.context = context;
-        this.values = values;
+        trips = new ArrayList<>(values);
+
+
     }
 
     @Override
@@ -33,35 +47,34 @@ public class TripListAdapter extends ArrayAdapter<File> {
         LayoutInflater inflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        if(values != null) {
-            String filename = values[position].getName().replaceFirst("AM.csv|PM.csv", "");
-            String d = filename.substring(0, 9);
-            String t = "ID : " + filename.substring(9,14);
+        View rowView = inflater.inflate(R.layout.trip_list_item, parent, false);
 
-            View rowView = inflater.inflate(R.layout.trip_list_item, parent, false);
+        if(!trips.isEmpty()){
+            Trip trip = trips.get(position);
+            String d = "Trip " + String.valueOf(position+1);
+            String t = String.valueOf(trip.getDuration()) + " mins";
+
+            rowView = inflater.inflate(R.layout.trip_list_item, parent, false);
             TextView date = (TextView) rowView.findViewById(R.id.date);
             TextView time = (TextView) rowView.findViewById(R.id.start_time);
             TextView size = (TextView) rowView.findViewById(R.id.size);
             date.setText(d);
             time.setText(t);
-            size.setText(Long.toString(values[position].length() / 1000) + " kB");
+            size.setText(humanReadableByteCount(trip.getFilesize(), true));
 
-            ImageButton shareButton = (ImageButton) rowView.findViewById(R.id.imageButton);
-            shareButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    // file = values[position]
-                    String your_file_path = values[position].getPath();
-                    Intent intent = new Intent(android.content.Intent.ACTION_SEND);
-                    intent.setType("text/plain");
-                    intent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + your_file_path));
-                    view.getContext().startActivity(Intent.createChooser(intent, ""));
-                }
-            });
-
-            return rowView;
         }
-        return null; // if no files present
+
+        return rowView;
+
+        //return null; // if no files present
+    }
+
+    public static String humanReadableByteCount(long bytes, boolean si) {
+        int unit = si ? 1000 : 1024;
+        if (bytes < unit) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
+        return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
 }

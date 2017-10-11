@@ -31,6 +31,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.MyLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
@@ -58,7 +59,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     protected String TAG = "Logger Service";
     private SensorManager mSensorManager;
     private Sensor mAccelerometer, mGyroscope, mProximity;
-    private static final int ACCURACY_REQUIRED = 30;
+    private static final int ACCURACY_REQUIRED = 25;
 
     private String AccXvalue, AccYvalue, AccZvalue, GyroXvalue, GyroYvalue, GyroZvalue, e1, e2, Marks;
     protected String LocData, mLastUpdateTime;
@@ -138,8 +139,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         ///////////// TO MAKE sure that devices without gyroscope dont have null locations
         if(mCurrentLocation != null) {
-            newtrip.setStartLoc(mCurrentLocation);
-            newtrip.setEndLoc(mCurrentLocation);
+            newtrip.setStartLoc(MyLocation.locToMyloc(mCurrentLocation));
+            newtrip.setEndLoc(MyLocation.locToMyloc(mCurrentLocation));
         }
         //////////////
 
@@ -187,6 +188,9 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         if (mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) != null) {
             mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         }
+        else {
+            mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        }
 
         if (mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY) != null) {
             mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
@@ -228,7 +232,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             }
         }
 
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {  // or TYPE_ACCELEROMETER
+        if (sensorEvent.sensor.getType() == mAccelerometer.getType()) {  // or TYPE_ACCELEROMETER
             AccXvalue = String.format("%.1f", sensorEvent.values[0]);
             AccYvalue = String.format("%.1f", sensorEvent.values[1]);
             AccZvalue = String.format("%.1f", sensorEvent.values[2]);
@@ -243,7 +247,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         if (!gAvailable) {
             e2 = null;
-        } else if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+        } else if (sensorEvent.sensor.getType() == mGyroscope.getType()) {
 
             GyroXvalue = String.format("%.1f", sensorEvent.values[0]);
             GyroYvalue = String.format("%.1f", sensorEvent.values[1]);
@@ -252,7 +256,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             e2 = GyroXvalue + ", " + GyroYvalue + ", " + GyroZvalue + ", ";
 
         }
-        if(mCurrentLocation!=null && e1!=null && e2!=null) {
+        if(mCurrentLocation!=null && e1!=null && (e2!=null || !gAvailable)) {
             if (mCurrentLocation.getAccuracy() < ACCURACY_REQUIRED) {
                 if (!locAccHit && locUpdating) {
                     locAccHit = true;
@@ -260,7 +264,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                     logAnalytics("location_accuracy_hit_started_logging");
                 }
                 if (!startFlag) {
-                    newtrip.setStartLoc(mCurrentLocation);
+                    newtrip.setStartLoc(MyLocation.locToMyloc(mCurrentLocation));
                     startFlag = true;
                 }
 
@@ -276,7 +280,10 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     protected void writeToFile(String Acc, String Gyr, String LocationData) {
         String data;
 
-        data = Acc + Gyr + LocationData + ", " + Marks + "\n";
+        if(gAvailable)
+            data = Acc + Gyr + LocationData + ", " + Marks + "\n";
+        else
+            data = Acc + LocationData + ", " + Marks + "\n";
 
         try {
             out.write(data.getBytes());
@@ -298,10 +305,12 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         Log.i(" time", "start" + String.valueOf(newtrip.getStartTime()));
 
-        String path = "logs/";
+        String path = "/logs/";
         File temp = new File(getApplicationContext().getFilesDir() + path);
         temp.mkdir();
         file = new File(temp.getPath(), fileid.toString()+ ".csv");
+
+        Log.i("filename", file.toString());
 
         String data;
 
@@ -321,8 +330,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             Log.d(TAG, "File setup failed: " + e.toString());
         }
     }
-
-
 
     /*
     Bundle createEssentialsBundle(Trip t){
@@ -364,13 +371,12 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             out.close();
             if(!locAccHit){
                 file.delete();
-                // TODO Reset trip details / log failure in dynamo db
             }
         } catch (IOException e) {
             Log.d(TAG, "File closing failed: " + e.toString());
         }
 
-        newtrip.setEndLoc(mCurrentLocation);
+        newtrip.setEndLoc(MyLocation.locToMyloc(mCurrentLocation));
 
         stopTrip();
         stopLocationUpdates();
@@ -398,7 +404,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         logTripDetails(newtrip);
 
-        ApplicationClass.setTrip(newtrip);
+        ApplicationClass.getInstance().setTrip(newtrip);
         Log.i("Logger Service", "logged newtrip");
 
         // the uri of the file to be uploaded from fragment

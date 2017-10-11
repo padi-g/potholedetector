@@ -110,7 +110,6 @@ public class EasyModeFragment extends Fragment {
 
         mStorageRef = FirebaseStorage.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
-        justFinishedTrip = new Trip();
 
     }
 
@@ -123,6 +122,7 @@ public class EasyModeFragment extends Fragment {
                 bgframe.setBackgroundResource(R.drawable.logging_bg);
                 statusIndicatorText.setText(getResources().getString(R.string.detecting));
             }else {
+                justFinishedTrip = ApplicationClass.getInstance().getTrip();
                 uploadFileUri = intent.getParcelableExtra("filename");
                 if(uploadFileUri == null){
                     Toast.makeText(getActivity(), "Seems like you are indoors. Could not accurately detect your location", Toast.LENGTH_LONG).show();
@@ -148,7 +148,7 @@ public class EasyModeFragment extends Fragment {
 
     public void showTripEndedDialog(){
 
-        Trip finished = ApplicationClass.getTrip();
+        Trip finished = ApplicationClass.getInstance().getTrip();
         //float distance = finished.getDistance();
         //int duration = finished.getTripTime();
     }

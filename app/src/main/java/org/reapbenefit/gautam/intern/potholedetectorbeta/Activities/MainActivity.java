@@ -178,10 +178,13 @@ public class MainActivity extends AppCompatActivity
                    /* Enable later
 
                    Intent processor = new Intent(MainActivity.this, FileProcessorService.class);
+                   processor.putExtra("filename", ApplicationClass.getTrip().getTrip_id());
+//                   processor.putExtra("filename", ApplicationClass.getTrip().getTrip_id());  send userID if required. Remove if not
                    startService(processor);
                    Log.d("File Processor ", "intent sent");
 
-                    */
+*/
+
                    //MainActivity.this.finish();
                     //startActivityService();
                 }

@@ -13,21 +13,27 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    ArrayList<LatLng> latLngs;
-
+    ArrayList<LatLng> latLngs = new ArrayList<>();
+    Trip trip;
+    InputStream inputStream;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,34 +44,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        latLngs = new ArrayList<>();
-        latLngs.add(new LatLng(22.716543, 75.855447));
-        latLngs.add(new LatLng(22.713047, 75.840208));
-        latLngs.add(new LatLng(22.703484, 75.861601));
-        latLngs.add(new LatLng(22.710510, 75.872051));
-        latLngs.add(new LatLng(22.706072, 75.878865));
-        latLngs.add(new LatLng(22.693437, 75.869135));
-        latLngs.add(new LatLng(22.694373, 75.862454));
+        trip = new Trip(ApplicationClass.getInstance().getTrip());
 
-        latLngs.add(new LatLng(22.686290, 75.824502));
-        latLngs.add(new LatLng(22.641438, 75.807314));
-        latLngs.add(new LatLng(22.630740, 75.790426));
-        latLngs.add(new LatLng(22.748208, 75.912086));
+        File file = new File(getApplicationContext().getFilesDir(), "locs/"+trip.getTrip_id()+".txt");
 
-        Toast.makeText(this, "This is representational data from our tests", Toast.LENGTH_LONG);
+        try {
+            inputStream = new FileInputStream(file);
+        } catch (Exception e) {
+            System.out.println("Exception_raised " + e.toString());
+        }
 
+        InputStreamReader isr = new InputStreamReader(inputStream);
+        BufferedReader bufferedReader = new BufferedReader(isr);
+        String line;
+        try {
+            line = bufferedReader.readLine();
+            String tokens[] = line.split(",");
+            for (int i = 0; i < tokens.length; i++) {
+                latLngs.add(new LatLng(Double.valueOf(tokens[0]), Double.valueOf(tokens[1])));
+            }
+        }
+        catch (Exception e){
 
-        //Intent i = getIntent();
-        //File f = (File)i.getExtras().get("file");
-
-        //latLngs = extractPoints(f);
-        CameraPosition c = new CameraPosition(new LatLng(22.694373, 75.862454),0,0,0);
-        CameraUpdateFactory.newCameraPosition(c);
-
+        }
 
         // setup action bar
     }
-
 
     /**
      * Manipulates the map once available.
@@ -79,50 +83,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-//2201784907pm
+
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                new LatLng(12.9088, 77.6478), 3));
+
+        PolylineOptions polyline = new PolylineOptions().geodesic(true);
         for(LatLng l : latLngs){
-            mMap.addMarker(new MarkerOptions().position(l));
+            polyline.add(l);
         }
+        // Polylines are useful for marking paths and routes on the map.
+        mMap.addPolyline(polyline);
+
+
+
 
     }
 
-    ArrayList<LatLng> extractPoints(File file){
-
-        BufferedReader in;
-        String line, lats, longs;
-        ArrayList<LatLng> mLatlng = null;
-        int k = 0, t=0;
-
-        try {
-            in = new BufferedReader(new FileReader(file));
-        }catch (java.io.FileNotFoundException e){
-            return null;
-        }
-        try {
-            line = in.readLine();
-            while(!line.isEmpty()) {
-                for (int i = 1; i < 12; i++) {
-                    if(i==2){
-                        t = Integer.parseInt(line.substring(1,2));
-                    }
-                    int a = line.indexOf(",");
-                    line = line.substring(a + 1);
-                }
-                if(t>13) {
-                    lats = line.substring(0, 10);
-                    longs = line.substring(12, 21);
-                    LatLng temp = new LatLng(Double.parseDouble(lats), Double.parseDouble(longs));
-                    mLatlng.add(k, temp);
-                }
-                k++;
-                line = in.readLine();
-            }
-
-        }catch (java.io.IOException e){
-
-        }
-
-
-    return mLatlng;
-    }
 }

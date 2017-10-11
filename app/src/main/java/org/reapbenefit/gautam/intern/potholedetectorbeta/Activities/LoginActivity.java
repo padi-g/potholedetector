@@ -149,6 +149,7 @@ public class LoginActivity extends AppCompatActivity {
 
             GoogleSignInAccount account = result.getSignInAccount();
             firebaseAuthWithGoogle(account);
+
         }
     }
 

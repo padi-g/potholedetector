@@ -39,6 +39,7 @@
         android:layout_gravity="end"
         android:padding="10dp"/>
 
+    /*
     <ImageButton
         android:layout_width="40dp"
         android:layout_height="40dp"
@@ -49,5 +50,7 @@
         app:srcCompat="@android:drawable/ic_menu_share"
         android:id="@+id/imageButton"
         android:padding="10dp"/>
+
+    */
 
 </GridLayout>
