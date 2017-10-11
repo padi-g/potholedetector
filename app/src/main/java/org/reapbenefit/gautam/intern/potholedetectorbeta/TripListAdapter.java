@@ -39,7 +39,6 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
         this.context = context;
         trips = new ArrayList<>(values);
 
-
     }
 
     @Override

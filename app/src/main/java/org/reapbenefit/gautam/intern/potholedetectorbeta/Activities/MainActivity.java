@@ -125,8 +125,8 @@ public class MainActivity extends AppCompatActivity
         tabLayout = (TabLayout) findViewById(R.id.tabLayout);
 
         //Adding the tabs using addTab() method
-        tabLayout.addTab(tabLayout.newTab().setIcon(R.mipmap.home));
-        tabLayout.addTab(tabLayout.newTab().setIcon(R.mipmap.settings));
+        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_action_home));
+        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_list));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
 

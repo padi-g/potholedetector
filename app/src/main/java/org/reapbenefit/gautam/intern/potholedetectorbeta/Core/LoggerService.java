@@ -271,7 +271,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                 no_of_lines++;
                 writeToFile(e1, e2, LocData);
             } else {
-                Log.i("Logger Service", "Location accuracy not hit" + mCurrentLocation.getAccuracy());
+                Log.i("Logger Service", "Location accuracy not hit " + mCurrentLocation.getAccuracy());
             }
         }
 
@@ -412,7 +412,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             ref.child(newtrip.getUser_id()).child(newtrip.getTrip_id()).setValue(newtrip);
             sendTripLoggingBroadcast(false, fileuri/*, createEssentialsBundle(newtrip)*/);
         }else {
-            ref.child(newtrip.getUser_id()).child("unsuccessful_in_starting_logging").child(newtrip.getTrip_id()).setValue(newtrip);
+            logAnalytics("unsuccessful_in_starting_logging");
             sendTripLoggingBroadcast(false, null/*, null*/);
         }
 

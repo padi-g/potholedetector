@@ -161,12 +161,6 @@ public class EasyModeFragment extends Fragment {
 
         StorageReference fileRef = mStorageRef.child("logs/" + mAuth.getCurrentUser().getUid() + filename);
 
-        StorageMetadata metadata = new StorageMetadata.Builder()
-                .setCustomMetadata("User", mAuth.getCurrentUser().getUid())
-                .build();
-
-        fileRef.updateMetadata(metadata);
-
         UploadTask uploadTask = fileRef.putFile(uri);
 
         uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
@@ -209,6 +203,13 @@ public class EasyModeFragment extends Fragment {
                     // Handle unsuccessful uploads
                     }
         });
+
+        StorageMetadata metadata = new StorageMetadata.Builder()
+                .setCustomMetadata("User", mAuth.getCurrentUser().getUid())
+                .build();
+
+        fileRef.updateMetadata(metadata);
+
     }
 
     // TODO : Just noticed that location may not update when hotspot is on. Check whether this is true even when user is outdoors and not using wifi routers to find location.
