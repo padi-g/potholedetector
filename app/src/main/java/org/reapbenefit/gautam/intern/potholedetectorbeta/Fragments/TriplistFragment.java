@@ -26,6 +26,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 
 /**
@@ -90,22 +91,29 @@ public class TriplistFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
-        myRef = myRef.child(mAuth.getCurrentUser().getUid());
+        try {   // thrown when the user is not signed in
+            myRef = myRef.child(mAuth.getCurrentUser().getUid());
 
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot d : dataSnapshot.getChildren()) {
-                    trips.add(d.getValue(Trip.class));
+            myRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+
+                    trips = new ArrayList<Trip>();
+
+                    for (DataSnapshot d : dataSnapshot.getChildren()) {
+                        trips.add(d.getValue(Trip.class));
+                    }
                     createListView();
                 }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
 
-            }
-        });
+                }
+            });
+        }catch (NullPointerException e){
+
+        }
     }
 
     private void createListView(){
@@ -214,5 +222,12 @@ public class TriplistFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
+    }
+
+    class CustomComparator implements Comparator<Trip> {
+        @Override
+        public int compare(Trip o1, Trip o2) {
+            return 0;
+        }
     }
 }

@@ -51,8 +51,10 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
 
         if(!trips.isEmpty()){
             Trip trip = trips.get(position);
-            String d = "Trip " + String.valueOf(position+1);
-            String t = String.valueOf(trip.getDuration()) + " mins";
+            String d = "Trip " + String.valueOf(position+1) + " : " + String.valueOf(trip.getDuration()) + " mins";
+            String t = trip.getStartTime();
+            t = t.substring(0, t.indexOf("GMT")-4);
+
 
             rowView = inflater.inflate(R.layout.trip_list_item, parent, false);
             TextView date = (TextView) rowView.findViewById(R.id.date);
