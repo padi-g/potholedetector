@@ -56,7 +56,7 @@ import static org.reapbenefit.gautam.intern.potholedetectorbeta.Core.GoogleApiHe
 
 public class LoggerService extends Service implements SensorEventListener, LocationListener {
 
-    protected String TAG = "Logger Service";
+    protected String TAG = "Logger_Service";
     private SensorManager mSensorManager;
     private Sensor mAccelerometer, mGyroscope, mProximity;
     private static final int ACCURACY_REQUIRED = 25;
@@ -177,7 +177,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                 .setContentIntent(pendingIntent).build();
 
         startForeground(1337, notification);
-
 
     }
 
@@ -331,21 +330,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         }
     }
 
-    /*
-    Bundle createEssentialsBundle(Trip t){
-
-        // The bundle that is passed with the information to give the user information about
-        // their trip like duration and distance travelled.
-
-        Bundle b = new Bundle();
-        b.putSerializable("startTime", startTime);
-        b.putSerializable("endTime", endTime);
-        b.putParcelable("startLocation", t.getStartLoc());
-        b.putParcelable("endLocation", t.getEndLoc());
-
-        return b;
-    }
-    */
 
     void sendTripLoggingBroadcast(boolean status, Uri uploadFileId /*, Bundle essentials*/) {
         Intent iTemp = new Intent("tripstatus");

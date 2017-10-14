@@ -48,20 +48,28 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
 
         View rowView = inflater.inflate(R.layout.trip_list_item, parent, false);
 
-        if(!trips.isEmpty()){
-            Trip trip = trips.get(position);
-            String d = "Trip " + String.valueOf(position+1) + " : " + String.valueOf(trip.getDuration()) + " mins";
-            String t = trip.getStartTime();
-            t = t.substring(0, t.indexOf("GMT")-4);
+        String dateString, timeString, sizeString;
 
+        if(!trips.isEmpty()){
+            try {
+                Trip trip = trips.get(position);
+                dateString = "Trip " + String.valueOf(position + 1) + " : " + String.valueOf(trip.getDuration()) + " mins";
+                timeString = trip.getStartTime();
+                timeString = timeString.substring(0, timeString.indexOf("GMT") - 4);
+                sizeString = humanReadableByteCount(trip.getFilesize(), true);
+            }catch (NullPointerException e){
+                dateString = "null";
+                timeString = "null";
+                sizeString = "null";
+            }
 
             rowView = inflater.inflate(R.layout.trip_list_item, parent, false);
             TextView date = (TextView) rowView.findViewById(R.id.date);
             TextView time = (TextView) rowView.findViewById(R.id.start_time);
             TextView size = (TextView) rowView.findViewById(R.id.size);
-            date.setText(d);
-            time.setText(t);
-            size.setText(humanReadableByteCount(trip.getFilesize(), true));
+            date.setText(dateString);
+            time.setText(timeString);
+            size.setText(sizeString);
 
         }
 

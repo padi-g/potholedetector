@@ -32,7 +32,8 @@ public class Trip {
     long duration;
 
     String device;
-    //int rating;
+
+    int userRating;
 
     public Trip() {
     }
@@ -52,6 +53,7 @@ public class Trip {
         //this.distance = t.distance;
         this.duration = t.duration;
         this.device = t.device;
+        this.userRating = t.userRating;
     }  // copy constructor
 
 // LoggerService -> EasyModeFragment -> FileProcessor.java
@@ -159,5 +161,13 @@ public class Trip {
 
     public void setDevice(String device) {
         this.device = device;
+    }
+
+    public int getUserRating() {
+        return userRating;
+    }
+
+    public void setUserRating(int userRating) {
+        this.userRating = userRating;
     }
 }

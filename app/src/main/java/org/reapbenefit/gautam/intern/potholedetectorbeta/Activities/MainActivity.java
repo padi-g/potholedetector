@@ -152,8 +152,6 @@ public class MainActivity extends AppCompatActivity
         if(mAuth.getCurrentUser() != null)
             askPermissions();
 
-        // Log.i(TAG, String.valueOf(intentFromService.getBooleanExtra("CarMode", false)));
-
         StartsStop.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -175,14 +173,12 @@ public class MainActivity extends AppCompatActivity
                     StartsStop.setVisibility(View.GONE);
 
                    // start the fileprocessor
-                   /* Enable later
-
+/*
                    Intent processor = new Intent(MainActivity.this, FileProcessorService.class);
-                   processor.putExtra("filename", ApplicationClass.getTrip().getTrip_id());
+                   processor.putExtra("filename", ApplicationClass.getInstance().getTrip().getTrip_id());
 //                   processor.putExtra("filename", ApplicationClass.getTrip().getTrip_id());  send userID if required. Remove if not
                    startService(processor);
                    Log.d("File Processor ", "intent sent");
-
 */
 
                    //MainActivity.this.finish();
@@ -260,8 +256,6 @@ public class MainActivity extends AppCompatActivity
 
     void buildDialog() {
 
-        LayoutInflater inflater = getLayoutInflater();
-        View dialoglayout = inflater.inflate(R.layout.start_dialog, null);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         builder.setTitle(R.string.dialog_question);
@@ -283,7 +277,6 @@ public class MainActivity extends AppCompatActivity
                         // leave as it it
                     }
                 });
-        builder.setView(dialoglayout);
         builder.show();
     }
 

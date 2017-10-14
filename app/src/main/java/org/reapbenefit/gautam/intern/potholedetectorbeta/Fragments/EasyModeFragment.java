@@ -2,6 +2,7 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
@@ -11,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,12 +20,15 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnPausedListener;
 import com.google.firebase.storage.OnProgressListener;
@@ -36,6 +41,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -60,7 +66,6 @@ public class EasyModeFragment extends Fragment {
 
     static public boolean tripStatus;
     static public Uri uploadFileUri;
-    static public Trip justFinishedTrip;
     View bgframe;
     TextView statusIndicatorText;
     private StorageReference mStorageRef;
@@ -71,7 +76,10 @@ public class EasyModeFragment extends Fragment {
     ProgressBar progressBar;
 
     private FirebaseAuth mAuth;
+    private DatabaseReference db;
 
+    private int accuracy_result = 0;
+    private Trip finishedTrip;
 
     public EasyModeFragment() {
         // Required empty public constructor
@@ -109,6 +117,7 @@ public class EasyModeFragment extends Fragment {
         }
 
         mStorageRef = FirebaseStorage.getInstance().getReference();
+        db = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
 
     }
@@ -122,7 +131,6 @@ public class EasyModeFragment extends Fragment {
                 bgframe.setBackgroundResource(R.drawable.logging_bg);
                 statusIndicatorText.setText(getResources().getString(R.string.detecting));
             }else {
-                justFinishedTrip = ApplicationClass.getInstance().getTrip();
                 uploadFileUri = intent.getParcelableExtra("filename");
                 if(uploadFileUri == null){
                     Toast.makeText(getActivity(), "Seems like you are indoors. Could not accurately detect your location", Toast.LENGTH_LONG).show();
@@ -136,7 +144,6 @@ public class EasyModeFragment extends Fragment {
 
                     // show toast with all the
                     showTripEndedDialog();
-
                 }
                 bgframe.setBackgroundResource(R.drawable.notlogging_bg);
 
@@ -148,12 +155,49 @@ public class EasyModeFragment extends Fragment {
 
     public void showTripEndedDialog(){
 
-        Trip finished = ApplicationClass.getInstance().getTrip();
-        //float distance = finished.getDistance();
-        //int duration = finished.getTripTime();
+        finishedTrip = ApplicationClass.getInstance().getTrip();
+        long duration = finishedTrip.getDuration();
+
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        View dialoglayout = inflater.inflate(R.layout.user_feedback_dialog, null);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+        TextView d = (TextView) dialoglayout.findViewById(R.id.trip_duration);
+        d.setText(String.valueOf("Trip Duration " + duration + " mins"));
+
+        TextView t = (TextView) dialoglayout.findViewById(R.id.nos_of_potholes);
+        String temp = "Potholes detected : ";
+        t.setText(temp);
+
+        final SeekBar s = (SeekBar) dialoglayout.findViewById(R.id.accuracy_seekbar);
+
+        builder.setTitle("Trip Summary");
+        builder.setPositiveButton("Submit",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        accuracy_result = s.getProgress();
+                        setUserPercievedAccuracy(accuracy_result);
+
+                    }
+                });
+        builder.setIcon(R.drawable.ic_launcher);
+
+        builder.setView(dialoglayout);
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
+        builder.setCancelable(false);
+
+        builder.show();
+
+
     }
 
-
+    private void setUserPercievedAccuracy(int a){
+        db = db.child(finishedTrip.getUser_id()).child(finishedTrip.getTrip_id()).child("userRating");
+        db.setValue(a);
+    }
 
     public void uploadFile(Uri uri){
 
@@ -184,7 +228,7 @@ public class EasyModeFragment extends Fragment {
 
                     // update to database object uploaded = true
 
-                    statusIndicatorText.setText("Uploaded");
+                    statusIndicatorText.setText("Data uploaded \n\n Thanks for your contribution!");
                     Uri downloadUrl = taskSnapshot.getDownloadUrl();
                     Log.d("Upload","Download file from "+downloadUrl.toString());
                     Toast.makeText(getActivity(), "Please restart the app to start a new trip", Toast.LENGTH_LONG).show();
@@ -241,7 +285,7 @@ public class EasyModeFragment extends Fragment {
             bgframe.setBackgroundResource(R.drawable.logging_bg);
             statusIndicatorText.setText(getResources().getString(R.string.detecting));
         }else if(ApplicationClass.tripEnded){
-            statusIndicatorText.setText("Your trip has ended");
+            statusIndicatorText.setText("Thanks for your contribution! \n\n Come back again");
             restartButton.setVisibility(View.VISIBLE);
         }
 
