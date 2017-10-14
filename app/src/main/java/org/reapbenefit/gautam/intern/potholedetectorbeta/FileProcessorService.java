@@ -47,9 +47,11 @@ public class FileProcessorService extends Service {
     OutputStream outputStream;
     InputStream inputStream;
 
+    private static final String TAG = "File_Processor";
+
     int latIndex, lngIndex, accuracyIndex;
     float distance_travelled = 0;
-    float[] results;
+    float[] results = new float[]{0.0f, 0.0f, 0.0f};
 
     String c_gps0 = "", c_gps1 = "",temp_gps0, temp_gps1;
 
@@ -60,20 +62,29 @@ public class FileProcessorService extends Service {
     }
 
     public FileProcessorService() {
-        // trip = ApplicationClass.getTrip();
-        // setup file to operate on it
+
     }
 
     @Override
     public void onCreate(){
         super.onCreate();
 
-        Log.d("File Processor ", "onCreate");
+        Log.d(TAG, "onCreate");
 
         //Get the csv file
 
-        File inputfile = new File(getApplicationContext().getFilesDir(), "/logs/"+trip.getTrip_id()+".csv");
-        File outputfile = new File(getApplicationContext().getFilesDir(), "/locs/"+trip.getTrip_id()+".csv");
+        trip = new Trip();
+        trip.setTrip_id(fetchTripID());
+
+        String path = "/logs/";
+        //File inputfile = new File(getApplicationContext().getFilesDir() + path + trip.getTrip_id() + ".csv");
+        File inputfile = new File(getExternalFilesDir(null), "mum1.csv");
+
+        File temp = new File(getExternalFilesDir(null), "analysis/");
+        temp.mkdir();
+        File outputfile = new File(temp.getPath(), trip.getTrip_id()+ ".csv");
+        Log.d(TAG, inputfile.toString());
+        Log.d(TAG, outputfile.toString());
 
         try {
             inputStream = new FileInputStream(inputfile);
@@ -92,33 +103,43 @@ public class FileProcessorService extends Service {
                 }
             }
 
-            System.out.println(latIndex + " " + accuracyIndex + " " + lngIndex);
+            Log.d(TAG,latIndex + " " + accuracyIndex + " " + lngIndex);
+
+            //////////////////   FOR first line
+            line = bufferedReader.readLine();
+            String line1[] = line.split(",");
+
+            c_gps0 = line1[latIndex];
+            c_gps1 = line1[lngIndex];
+            outputStream.write((c_gps0 + "," + c_gps1 + "\n").replace(" ", "").getBytes());
+            //////////////////   FOR first line
 
             while ((line = bufferedReader.readLine()) != null) {
 
                 String values[] = line.split(",");
-                for (int i = 0; i < values.length; i++) {
-                    temp_gps0 = values[latIndex];
-                    temp_gps1 = values[lngIndex];
-                    if (!(temp_gps0.equals(c_gps0) && temp_gps1.equals(c_gps1))) {
-                        Location.distanceBetween(Double.valueOf(c_gps0), Double.valueOf(c_gps1), Double.valueOf(temp_gps0), Double.valueOf(temp_gps1), results);
-                        distance_travelled += results[0];
-                        System.out.println("{lat: " + temp_gps0 + ", lng: " + temp_gps1 + "},");
-                        outputStream.write((temp_gps0 + "," + temp_gps1 + "\n").replace(" ", "").getBytes());
-                    }
-                    c_gps0 = temp_gps0;
-                    c_gps1 = temp_gps1;
+                temp_gps0 = values[latIndex];
+                temp_gps1 = values[lngIndex];
 
+                if (!(temp_gps0.equals(c_gps0) && temp_gps1.equals(c_gps1))) {
+                    Location.distanceBetween(Double.valueOf(c_gps0), Double.valueOf(c_gps1), Double.valueOf(temp_gps0), Double.valueOf(temp_gps1), results);
+                    distance_travelled += results[0];
+                    Log.d(TAG, "{lat: " + temp_gps0 + ", lng: " + temp_gps1 + "},");
+                    outputStream.write((temp_gps0 + "," + temp_gps1 + "\n").replace(" ", "").getBytes());
                 }
+                c_gps0 = temp_gps0;
+                c_gps1 = temp_gps1;
+
             }
 
-            System.out.println(distance_travelled);
+            Log.d(TAG, "Distance travelled " +  String.valueOf(distance_travelled));
             inputStream.close();
             outputStream.close();
         } catch (Exception e) {
             System.out.println("Exception_raised " + e.toString());
             Log.i("Exception_raised ", e.toString());
         }
+
+        this.onDestroy();
 
         //TODO Change logs/ to /logs/ everywhere
 
@@ -147,9 +168,26 @@ public class FileProcessorService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        trip.setTrip_id((String) intent.getExtras().get("filename"));
-
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private String fetchTripID(){
+        String name = "null";
+
+        String path = "tripsIDs.csv";
+        File temp = new File(getExternalFilesDir(null), path);
+        try {
+            InputStream inputStream = new FileInputStream(temp);
+            InputStreamReader isr = new InputStreamReader(inputStream);
+            BufferedReader bufferedReader = new BufferedReader(isr);
+            name = bufferedReader.readLine();
+        }catch (FileNotFoundException e){
+
+        }catch (IOException er){
+
+        }
+
+        return name;
     }
 }
 

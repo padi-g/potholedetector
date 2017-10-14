@@ -1,6 +1,7 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.location.Location;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -32,21 +33,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     ArrayList<LatLng> latLngs = new ArrayList<>();
-    Trip trip;
     InputStream inputStream;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
 
-        trip = new Trip(ApplicationClass.getInstance().getTrip());
 
-        File file = new File(getApplicationContext().getFilesDir(), "locs/"+trip.getTrip_id()+".txt");
+        File temp = new File(getExternalFilesDir(null), "analysis/");
+        temp.mkdir();
+        File file = new File(temp.getPath(), "test.csv");
+
+        //File file = new File(getApplicationContext().getFilesDir(), "locs/"+trip.getTrip_id()+".txt");
 
         try {
             inputStream = new FileInputStream(file);
@@ -58,15 +56,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         BufferedReader bufferedReader = new BufferedReader(isr);
         String line;
         try {
-            line = bufferedReader.readLine();
-            String tokens[] = line.split(",");
-            for (int i = 0; i < tokens.length; i++) {
+            while((line = bufferedReader.readLine()) != null ){
+                String tokens[] = line.split(",");
                 latLngs.add(new LatLng(Double.valueOf(tokens[0]), Double.valueOf(tokens[1])));
             }
         }
         catch (Exception e){
 
         }
+
+        setContentView(R.layout.activity_maps);
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+
+        mapFragment.getMapAsync(this);
 
         // setup action bar
     }
@@ -86,17 +90,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(12.9088, 77.6478), 3));
+                new LatLng(12.9088, 77.6478), 11));
 
-        PolylineOptions polyline = new PolylineOptions().geodesic(true);
+        PolylineOptions polyline = new PolylineOptions().geodesic(true).width(5).color(Color.BLUE);
+
+
         for(LatLng l : latLngs){
             polyline.add(l);
         }
         // Polylines are useful for marking paths and routes on the map.
         mMap.addPolyline(polyline);
-
-
-
 
     }
 

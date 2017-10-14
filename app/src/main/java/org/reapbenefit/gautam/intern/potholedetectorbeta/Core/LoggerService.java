@@ -393,6 +393,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         // the uri of the file to be uploaded from fragment
         if(locAccHit) {
+            logTripIDtoFile(newtrip.getTrip_id());
             ref.child(newtrip.getUser_id()).child(newtrip.getTrip_id()).setValue(newtrip);
             sendTripLoggingBroadcast(false, fileuri/*, createEssentialsBundle(newtrip)*/);
         }else {
@@ -498,6 +499,24 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         Log.i("trip_details", t.getDevice());
     }
 
+    private void logTripIDtoFile(String name){
+
+        String path = "tripsIDs.csv";
+        File temp = new File(getExternalFilesDir(null), path);
+
+        Log.i("filename", temp.toString());
+
+        String data = name;
+
+        try {
+            FileOutputStream out = new FileOutputStream(temp, false);   // TODO : change to append the trip ids
+            out.write(data.getBytes());
+
+        } catch (IOException e) {
+            Log.d(TAG, "File setup failed: " + e.toString());
+        }
+
+    }
 }
 
 

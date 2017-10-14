@@ -48,6 +48,9 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -172,14 +175,9 @@ public class MainActivity extends AppCompatActivity
                     stopLogger();
                     StartsStop.setVisibility(View.GONE);
 
-                   // start the fileprocessor
-/*
                    Intent processor = new Intent(MainActivity.this, FileProcessorService.class);
-                   processor.putExtra("filename", ApplicationClass.getInstance().getTrip().getTrip_id());
-//                   processor.putExtra("filename", ApplicationClass.getTrip().getTrip_id());  send userID if required. Remove if not
                    startService(processor);
                    Log.d("File Processor ", "intent sent");
-*/
 
                    //MainActivity.this.finish();
                     //startActivityService();
