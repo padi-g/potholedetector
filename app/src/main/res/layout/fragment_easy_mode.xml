@@ -29,7 +29,7 @@
 
     <ProgressBar
         style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="30dp"
         android:layout_below="@+id/easytext"
         android:layout_centerHorizontal="true"
@@ -42,7 +42,14 @@
         android:layout_below="@+id/upload_progressbar"
         android:layout_centerHorizontal="true"
         android:id="@+id/restart"
-        android:visibility="invisible" />
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/upload_progressbar"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/progress" />
 
 
 </RelativeLayout>

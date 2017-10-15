@@ -39,11 +39,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -259,7 +257,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             if (mCurrentLocation.getAccuracy() < ACCURACY_REQUIRED) {
                 if (!locAccHit && locUpdating) {
                     locAccHit = true;
-                    Log.i("Logger Service", "Location accuracy hit");
+                    Log.i(TAG, "Location accuracy hit");
                     logAnalytics("location_accuracy_hit_started_logging");
                 }
                 if (!startFlag) {
@@ -270,7 +268,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                 no_of_lines++;
                 writeToFile(e1, e2, LocData);
             } else {
-                Log.i("Logger Service", "Location accuracy not hit " + mCurrentLocation.getAccuracy());
+                Log.i(TAG, "Location accuracy not hit " + mCurrentLocation.getAccuracy());
             }
         }
 
@@ -302,14 +300,14 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     private void setupLogFile() {
 
-        Log.i(" time", "start" + String.valueOf(newtrip.getStartTime()));
+        Log.i(TAG, "start" + String.valueOf(newtrip.getStartTime()));
 
         String path = "/logs/";
         File temp = new File(getApplicationContext().getFilesDir() + path);
         temp.mkdir();
         file = new File(temp.getPath(), fileid.toString()+ ".csv");
 
-        Log.i("filename", file.toString());
+        Log.i(TAG, file.toString());
 
         String data;
 
@@ -347,9 +345,9 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         meany = (float)meansumy / no_of_lines;
         meanz = (float)meansumz / no_of_lines;
 
-        Log.i(" Means ", "x = " + String.valueOf(meanx));
-        Log.i(" Means ", "y = " + String.valueOf(meany));
-        Log.i(" Means ", "z = " + String.valueOf(meanz));
+        Log.i(TAG+"Means", "x = " + String.valueOf(meanx));
+        Log.i(TAG+"Means", "y = " + String.valueOf(meany));
+        Log.i(TAG+"Means", "z = " + String.valueOf(meanz));
 
         try {
             out.close();
@@ -375,7 +373,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         newtrip.setEndTime(getCurrentDateTime());
         endTime = new Date();
 
-        Log.i(" endtime", String.valueOf(newtrip.getEndTime()));
+        Log.i(TAG+" endtime", String.valueOf(newtrip.getEndTime()));
         mp.stop();
         mSensorManager.unregisterListener(this);
 
@@ -384,12 +382,12 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         Uri fileuri = Uri.fromFile(new File(file.getPath()));
 
         newtrip.setDuration(calcTimeTravelled());
-        Log.i("Time Elapsed in trip ", String.valueOf(calcTimeTravelled()) + " minutes");
+        Log.i(TAG+" Duration", String.valueOf(calcTimeTravelled()) + " minutes");
 
         logTripDetails(newtrip);
 
         ApplicationClass.getInstance().setTrip(newtrip);
-        Log.i("Logger Service", "logged newtrip");
+        Log.i(TAG, "logged newtrip");
 
         // the uri of the file to be uploaded from fragment
         if(locAccHit) {

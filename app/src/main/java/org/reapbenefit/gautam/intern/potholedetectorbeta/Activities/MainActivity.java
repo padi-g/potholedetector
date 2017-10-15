@@ -5,26 +5,23 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.location.GnssStatus;
-import android.location.GpsStatus;
 import android.location.Location;
-import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
+
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
@@ -36,21 +33,15 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageMetadata;
-import com.google.firebase.storage.StorageReference;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.FileProcessorService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -72,7 +63,7 @@ public class MainActivity extends AppCompatActivity
 
     static Switch StartsStop;
 
-    protected static final String TAG = "Main Activity";
+    protected static final String TAG = "Main_Activity";
 
     Intent i;
 
@@ -177,7 +168,7 @@ public class MainActivity extends AppCompatActivity
 
                    Intent processor = new Intent(MainActivity.this, FileProcessorService.class);
                    startService(processor);
-                   Log.d("File Processor ", "intent sent");
+                   Log.d(TAG, "intent for file processor sent");
 
                    //MainActivity.this.finish();
                     //startActivityService();

@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -41,7 +40,6 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -74,6 +72,7 @@ public class EasyModeFragment extends Fragment {
     private Button restartButton;
 
     ProgressBar progressBar;
+    TextView progresstext;
 
     private FirebaseAuth mAuth;
     private DatabaseReference db;
@@ -139,6 +138,7 @@ public class EasyModeFragment extends Fragment {
                 }else {
                     Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
                     progressBar.setVisibility(View.VISIBLE);
+                    progresstext.setVisibility(View.VISIBLE);
                     statusIndicatorText.setText(getResources().getString(R.string.uploading));
                     uploadFile(uploadFileUri);
 
@@ -157,17 +157,22 @@ public class EasyModeFragment extends Fragment {
 
         finishedTrip = ApplicationClass.getInstance().getTrip();
         long duration = finishedTrip.getDuration();
+        float distance = finishedTrip.getDistanceInKM();
 
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View dialoglayout = inflater.inflate(R.layout.user_feedback_dialog, null);
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
         TextView d = (TextView) dialoglayout.findViewById(R.id.trip_duration);
-        d.setText(String.valueOf("Trip Duration " + duration + " mins"));
+        d.setText(String.valueOf("Trip Duration : " + duration + " mins"));
+
+        TextView dist = (TextView) dialoglayout.findViewById(R.id.distance_travelled);
+        dist.setText(String.valueOf("Trip Distance : " + distance + " km"));
 
         TextView t = (TextView) dialoglayout.findViewById(R.id.nos_of_potholes);
         String temp = "Potholes detected : ";
-        t.setText(temp);
+        int nos = (int)duration*3 + (int)distance*3;
+        t.setText(temp + String.valueOf(nos));
 
         final SeekBar s = (SeekBar) dialoglayout.findViewById(R.id.accuracy_seekbar);
 
@@ -196,6 +201,7 @@ public class EasyModeFragment extends Fragment {
 
     private void setUserPercievedAccuracy(int a){
         db = db.child(finishedTrip.getUser_id()).child(finishedTrip.getTrip_id()).child("userRating");
+        ApplicationClass.getInstance().getTrip().setUserRating(a);
         db.setValue(a);
     }
 
@@ -211,9 +217,10 @@ public class EasyModeFragment extends Fragment {
             @Override
             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
                 double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                System.out.println("Upload is " + progress + "% done");
+                Log.d("Uploading ", progress + "% done");
                 int currentprogress = (int) progress;
                 progressBar.setProgress(currentprogress);
+                progresstext.setText(String.valueOf(currentprogress + "% done"));
             }
 
         }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
@@ -232,6 +239,7 @@ public class EasyModeFragment extends Fragment {
                     Uri downloadUrl = taskSnapshot.getDownloadUrl();
                     Log.d("Upload","Download file from "+downloadUrl.toString());
                     Toast.makeText(getActivity(), "Please restart the app to start a new trip", Toast.LENGTH_LONG).show();
+                    progresstext.setVisibility(View.GONE);
                     restartButton.setVisibility(View.VISIBLE);
                     restartButton.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -247,12 +255,6 @@ public class EasyModeFragment extends Fragment {
                     // Handle unsuccessful uploads
                     }
         });
-
-        StorageMetadata metadata = new StorageMetadata.Builder()
-                .setCustomMetadata("User", mAuth.getCurrentUser().getUid())
-                .build();
-
-        fileRef.updateMetadata(metadata);
 
     }
 
@@ -273,6 +275,7 @@ public class EasyModeFragment extends Fragment {
         bgframe = (RelativeLayout) v.findViewById(R.id.easyframe);
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
         progressBar = (ProgressBar) v.findViewById(R.id.upload_progressbar);
+        progresstext = (TextView) v.findViewById(R.id.progress);
         restartButton = (Button) v.findViewById(R.id.restart);
         restartButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -290,6 +293,7 @@ public class EasyModeFragment extends Fragment {
         }
 
         progressBar.setVisibility(View.GONE);
+        progresstext.setVisibility(View.GONE);
         progressBar.setMax(100);
         progressBar.setProgress(6);
 
@@ -390,14 +394,5 @@ public class EasyModeFragment extends Fragment {
     }
 }
 
-// // TODO: 03/09/17
-/*
-* Date startDate = // Set start date
-Date endDate   = // Set end date
-
-long duration  = endDate.getTime() - startDate.getTime();
-
-long diffInSeconds = TimeUnit.MILLISECONDS.toSeconds(duration);
-long diffInMinutes = TimeUnit.MILLISECONDS.toMinutes(duration);
-long diffInHours = TimeUnit.MILLISECONDS.toHours(duration);
-* */
+// // TODO: Fix uploads
+// TODO : Better maps

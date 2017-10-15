@@ -1,21 +1,22 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
-import android.net.Uri;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.google.gson.Gson;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 
@@ -24,14 +25,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+
+import static java.lang.Math.abs;
+
 
 /**
  * Created by gautam on 29/06/17.
@@ -43,9 +43,10 @@ import java.util.Locale;
 
 public class FileProcessorService extends Service {
 
-    Trip trip;
     OutputStream outputStream;
     InputStream inputStream;
+
+    SummaryStatistics stats = new SummaryStatistics();
 
     private static final String TAG = "File_Processor";
 
@@ -54,6 +55,10 @@ public class FileProcessorService extends Service {
     float[] results = new float[]{0.0f, 0.0f, 0.0f};
 
     String c_gps0 = "", c_gps1 = "",temp_gps0, temp_gps1;
+    double mean, std;
+
+    private FirebaseAuth mAuth;
+    private DatabaseReference db;
 
     @Nullable
     @Override
@@ -73,16 +78,18 @@ public class FileProcessorService extends Service {
 
         //Get the csv file
 
-        trip = new Trip();
-        trip.setTrip_id(fetchTripID());
+        db = FirebaseDatabase.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
 
         String path = "/logs/";
-        //File inputfile = new File(getApplicationContext().getFilesDir() + path + trip.getTrip_id() + ".csv");
-        File inputfile = new File(getExternalFilesDir(null), "mum1.csv");
+        File inputfile = new File(getApplicationContext().getFilesDir() + path + fetchTripID() + ".csv");
+        //File inputfile = new File(getExternalFilesDir(null), "datafile.csv");
 
-        File temp = new File(getExternalFilesDir(null), "analysis/");
+        File temp = new File(getApplicationContext().getFilesDir(), "analysis/");
         temp.mkdir();
-        File outputfile = new File(temp.getPath(), trip.getTrip_id()+ ".csv");
+        File outputfile = new File(temp.getPath() + fetchTripID() + ".csv");
+        //File outputfile = new File(temp.getPath(), "test.csv");
+
         Log.d(TAG, inputfile.toString());
         Log.d(TAG, outputfile.toString());
 
@@ -129,9 +136,16 @@ public class FileProcessorService extends Service {
                 c_gps0 = temp_gps0;
                 c_gps1 = temp_gps1;
 
+                stats.addValue(abs(Double.parseDouble(values[2].trim())));
+
             }
 
             Log.d(TAG, "Distance travelled " +  String.valueOf(distance_travelled));
+            mean = stats.getMean();
+            std = stats.getStandardDeviation();
+            Log.d(TAG, "Mean " + mean);
+            Log.d(TAG, "std " + std);
+            setDistance_travelled(distance_travelled);
             inputStream.close();
             outputStream.close();
         } catch (Exception e) {
@@ -149,19 +163,29 @@ public class FileProcessorService extends Service {
     public void onDestroy() {
         super.onDestroy();
 
-        Intent notificationIntent = new Intent(this, MapsActivity.class);
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle("Road Quality Audit")
+                        .setContentText("Data has been processed")
+                        .setSubText("Click to open map");
+        Intent resultIntent = new Intent(this, MapsActivity.class);
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                notificationIntent, 0);
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(
+                        this,
+                        0,
+                        resultIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
 
-        Notification notification = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("Road Quality Audit")
-                .setContentText("Data has been processed")
-                .setSubText("Press to open on map")
-                .setContentIntent(pendingIntent).build();
+        mBuilder.setContentIntent(resultPendingIntent);
+        mBuilder.setAutoCancel(true);
 
-        startForeground(1335, notification);
+        int mNotificationId = 001;
+        NotificationManager mNotifyMgr =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotifyMgr.notify(mNotificationId, mBuilder.build());
 
     }
 
@@ -189,5 +213,13 @@ public class FileProcessorService extends Service {
 
         return name;
     }
+
+        private void setDistance_travelled(float a){
+        a = a/1000;
+        db = db.child(mAuth.getCurrentUser().getUid()).child(fetchTripID()).child("distanceInKM");
+        db.setValue(a);
+        ApplicationClass.getInstance().getTrip().setDistanceInKM(a);
+    }
+
 }
 

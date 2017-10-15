@@ -1,6 +1,5 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
-import android.app.Application;
 import android.content.Context;
 import android.support.multidex.MultiDexApplication;
 import android.util.Log;
@@ -63,12 +62,3 @@ public class ApplicationClass extends MultiDexApplication {
     }
 }
 
-/**
- * Code to check whether client is connected or not, in other places
- * <p>
- * if(App.getGoogleApiHelper().isConnected())
- * {
- * //Get google api client
- * LoggerTask(App.getGoogleApiHelper().getGoogleApiClient());
- * }
- */

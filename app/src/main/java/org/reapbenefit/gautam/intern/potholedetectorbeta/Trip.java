@@ -1,13 +1,5 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
-import android.location.Location;
-import android.net.Uri;
-import android.os.Parcel;
-import android.os.Parcelable;
-
-import java.io.Serializable;
-import java.util.UUID;
-
 /**
  * Created by gautam on 29/06/17.
  */
@@ -28,7 +20,7 @@ public class Trip {
     MyLocation startLoc, endLoc;
     int no_of_lines;
 
-    //float distance;
+    float distanceInKM;
     long duration;
 
     String device;
@@ -50,7 +42,7 @@ public class Trip {
         this.startLoc = t.startLoc;
         this.endLoc = t.endLoc;
         this.no_of_lines = t.no_of_lines;
-        //this.distance = t.distance;
+        this.distanceInKM = t.distanceInKM;
         this.duration = t.duration;
         this.device = t.device;
         this.userRating = t.userRating;
@@ -169,5 +161,13 @@ public class Trip {
 
     public void setUserRating(int userRating) {
         this.userRating = userRating;
+    }
+
+    public float getDistanceInKM() {
+        return distanceInKM;
+    }
+
+    public void setDistanceInKM(float distanceInKM) {
+        this.distanceInKM = distanceInKM;
     }
 }

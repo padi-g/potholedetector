@@ -14,6 +14,12 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:id="@+id/distance_travelled"
+        android:paddingLeft="@dimen/activity_horizontal_margin" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="We detected x potholes"
         android:id="@+id/nos_of_potholes"
         android:paddingLeft="@dimen/activity_horizontal_margin" />
