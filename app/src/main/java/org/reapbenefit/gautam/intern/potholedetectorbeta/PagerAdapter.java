@@ -10,7 +10,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragm
 public class PagerAdapter extends FragmentStatePagerAdapter {
 
     //integer to count number of tabs
-    int tabCount;
+    private int tabCount;
 
     //Constructor to the class
     public PagerAdapter(FragmentManager fm, int tabCount) {

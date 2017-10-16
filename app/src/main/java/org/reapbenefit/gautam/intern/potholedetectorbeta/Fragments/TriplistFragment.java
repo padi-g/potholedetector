@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,14 +49,18 @@ public class TriplistFragment extends Fragment {
 
     private TripListAdapter adapter;
 
-    ListView l;
-    ImageButton refreshButton;
+    private ListView l;
+    private ImageButton refreshButton;
 
     private ArrayList<Trip> trips = new ArrayList<>();
 
-    FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    FirebaseDatabase database = FirebaseDatabase.getInstance();;
-    DatabaseReference myRef = database.getReference();
+    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    private FirebaseDatabase database = FirebaseDatabase.getInstance();;
+    private DatabaseReference myRef = database.getReference();
+    private DatabaseReference profileRef = database.getReference();
+
+    private int timeScore = 0;  // calculated based on time logged
+    private int distanceScore = 0;  // calculated based on distance logged
 
 
     public TriplistFragment() {
@@ -90,16 +95,28 @@ public class TriplistFragment extends Fragment {
 
         try {   // thrown when the user is not signed in
             myRef = myRef.child(mAuth.getCurrentUser().getUid());
+            profileRef = profileRef.child("profiles").child(mAuth.getCurrentUser().getUid());
+
 
             myRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
 
+                    timeScore = distanceScore = 0;
                     trips = new ArrayList<Trip>();
 
                     for (DataSnapshot d : dataSnapshot.getChildren()) {
-                        trips.add(d.getValue(Trip.class));
+                        if(!d.getKey().contains("profile")) {
+                            Trip t = d.getValue(Trip.class);
+                            trips.add(t);
+                            Log.d("SCORE", String.valueOf(t.getDuration()));
+                            timeScore += (int)t.getDuration();
+                            distanceScore += (int)t.getDistanceInKM()+1;
+                        }
                     }
+                    profileRef.child("timeScore").setValue(timeScore);
+                    profileRef.child("distanceScore").setValue(distanceScore);
+                    // TODO : Optimize to use lesser db reads by storing locally and updating
                     createListView();
                 }
 

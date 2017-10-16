@@ -59,16 +59,16 @@ public class MainActivity extends AppCompatActivity
     protected GoogleApiClient mGoogleApiClient;
     protected Location mCurrentLocation;
 
-    int activityType, confidence;
+    private int activityType, confidence;
 
-    static Switch StartsStop;
+    private static Switch StartsStop;
 
     protected static final String TAG = "Main_Activity";
 
-    Intent i;
+    private Intent i;
 
     private FirebaseAuth mAuth;
-    Toolbar toolbar;
+    private Toolbar toolbar;
 
 
     @Override

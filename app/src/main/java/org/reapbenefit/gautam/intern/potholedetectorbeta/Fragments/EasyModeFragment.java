@@ -64,15 +64,15 @@ public class EasyModeFragment extends Fragment {
 
     static public boolean tripStatus;
     static public Uri uploadFileUri;
-    View bgframe;
-    TextView statusIndicatorText;
+    private View bgframe;
+    private TextView statusIndicatorText;
     private StorageReference mStorageRef;
 
     private StorageReference fileRef = null;
     private Button restartButton;
 
-    ProgressBar progressBar;
-    TextView progresstext;
+    private ProgressBar progressBar;
+    private TextView progresstext;
 
     private FirebaseAuth mAuth;
     private DatabaseReference db;

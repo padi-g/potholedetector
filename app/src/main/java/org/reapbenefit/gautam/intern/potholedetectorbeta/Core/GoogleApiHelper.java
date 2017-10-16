@@ -20,11 +20,11 @@ import java.util.Date;
 public class GoogleApiHelper implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "GoogleApiHelper";
-    Context context;
+    private Context context;
     static GoogleApiClient mGoogleApiClient;
     public Location mCurrentLocation;
-    String mLastUpdateTime;
-    String LocData;
+    private String mLastUpdateTime;
+    private String LocData;
 
     public GoogleApiHelper(Context context) {
         this.context = context;

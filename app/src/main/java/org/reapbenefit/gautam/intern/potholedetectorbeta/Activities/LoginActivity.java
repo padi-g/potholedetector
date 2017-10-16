@@ -41,16 +41,16 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 public class LoginActivity extends AppCompatActivity {
 
-    GoogleApiClient mGoogleApiClient;
+    private GoogleApiClient mGoogleApiClient;
     private static final int RC_SIGN_IN = 530;
-    TextView mStatusTextView, mUser_nameTextView;
+    private TextView mStatusTextView, mUser_nameTextView;
 
-    SignInButton SignIn;
-    Button SignOut;
-    Boolean signedIn;
+    private SignInButton SignIn;
+    private Button SignOut;
+    private Boolean signedIn;
     private FirebaseAuth mAuth;
 
-    ProgressDialog dialog;
+    private ProgressDialog dialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

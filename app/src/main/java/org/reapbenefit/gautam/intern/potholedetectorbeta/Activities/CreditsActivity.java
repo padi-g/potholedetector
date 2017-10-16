@@ -14,8 +14,8 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 public class CreditsActivity extends AppCompatActivity {
 
-    Switch StartsStop;
-    FirebaseAnalytics mFirebaseAnalytics;
+    private Switch StartsStop;
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

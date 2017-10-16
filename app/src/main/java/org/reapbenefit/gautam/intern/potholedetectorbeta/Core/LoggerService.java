@@ -62,36 +62,36 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     private String AccXvalue, AccYvalue, AccZvalue, GyroXvalue, GyroYvalue, GyroZvalue, e1, e2, Marks;
     protected String LocData, mLastUpdateTime;
     boolean gAvailable = true;
-    MediaPlayer mp;
+    private MediaPlayer mp;
 
-    boolean startFlag = false;
+    private boolean startFlag = false;
 
-    int no_of_lines = 0, meansumx =0, meansumy =0, meansumz =0;
-    float meanx, meany, meanz, deviation;
+    private int no_of_lines = 0, meansumx =0, meansumy =0, meansumz =0;
+    private float meanx, meany, meanz, deviation;
 
-    Date startTime, endTime;
+    private Date startTime, endTime;
 
     boolean locAccHit = false, locUpdating = false;
     // Sometimes location is first taken from the last known location. When location starts updating
     // the accuracy can get worse before getting better again
 
-    UUID fileid;
+    private UUID fileid;
 
-    LocationRequest mLocationRequest;
-    File file;
-    OutputStream out;
-    boolean mRequestingLocationUpdates;
+    private LocationRequest mLocationRequest;
+    private File file;
+    private OutputStream out;
+    private boolean mRequestingLocationUpdates;
 
-    Location mCurrentLocation;
+    private Location mCurrentLocation;
 
     public final long UPDATE_INTERVAL_IN_MILLISECONDS = 0; // Fastest possible limited by hardware
     public final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 0;
 
-    Trip newtrip;
-    FirebaseAuth mAuth;
-    FirebaseAnalytics mFirebaseAnalytics;
-    FirebaseDatabase mDatabase;
-    DatabaseReference ref;
+    private Trip newtrip;
+    private FirebaseAuth mAuth;
+    private FirebaseAnalytics mFirebaseAnalytics;
+    private FirebaseDatabase mDatabase;
+    private DatabaseReference ref;
 
     public LoggerService() {
         super();

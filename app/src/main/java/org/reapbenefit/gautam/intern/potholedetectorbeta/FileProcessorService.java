@@ -43,19 +43,19 @@ import static java.lang.Math.abs;
 
 public class FileProcessorService extends Service {
 
-    OutputStream outputStream;
-    InputStream inputStream;
+    private OutputStream outputStream;
+    private InputStream inputStream;
 
-    SummaryStatistics stats = new SummaryStatistics();
+    private SummaryStatistics stats = new SummaryStatistics();
 
     private static final String TAG = "File_Processor";
 
-    int latIndex, lngIndex, accuracyIndex;
-    float distance_travelled = 0;
-    float[] results = new float[]{0.0f, 0.0f, 0.0f};
+    private int latIndex, lngIndex, accuracyIndex;
+    private float distance_travelled = 0;
+    private float[] results = new float[]{0.0f, 0.0f, 0.0f};
 
-    String c_gps0 = "", c_gps1 = "",temp_gps0, temp_gps1;
-    double mean, std;
+    private String c_gps0 = "", c_gps1 = "",temp_gps0, temp_gps1;
+    private double mean, std;
 
     private FirebaseAuth mAuth;
     private DatabaseReference db;

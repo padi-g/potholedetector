@@ -14,7 +14,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 public class AboutActivity extends AppCompatActivity {
 
-    FirebaseAnalytics mFirebaseAnalytics;
+    private FirebaseAnalytics mFirebaseAnalytics;
 
 
     @Override

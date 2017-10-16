@@ -8,8 +8,8 @@ import android.location.Location;
 public class MyLocation  {
 
 
-    float accuracy;
-    double latitude, longitude;
+    private float accuracy;
+    private double latitude, longitude;
 
     public MyLocation() {
     }

@@ -25,8 +25,8 @@ import java.util.ArrayList;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    ArrayList<LatLng> latLngs = new ArrayList<>();
-    InputStream inputStream;
+    private ArrayList<LatLng> latLngs = new ArrayList<>();
+    private InputStream inputStream;
 
     @Override
     protected void onDestroy() {

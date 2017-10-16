@@ -6,26 +6,24 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 public class Trip {
 
-    String trip_id;  // unique id for trip and name for the file
-    String user_id;  // user who created this trip
+    private String trip_id;  // unique id for trip and name for the file
+    private String user_id;  // user who created this trip
 
-    //String firepath;  // path to firebase storage
-    //Uri tripfile;
-    long filesize;
+    private long filesize;
 
-    boolean uploaded;
+    private boolean uploaded;
 
-    String date, startTime, endTime;
+    private String startTime, endTime;
     //String vehicle;
-    MyLocation startLoc, endLoc;
-    int no_of_lines;
+    private MyLocation startLoc, endLoc;
+    private int no_of_lines;
 
-    float distanceInKM;
-    long duration;
+    private float distanceInKM;
+    private long duration;
 
-    String device;
+    private String device;
 
-    int userRating;
+    private int userRating;
 
     public Trip() {
     }
@@ -33,8 +31,6 @@ public class Trip {
     public Trip(Trip t) {
         this.trip_id = t.trip_id;
         this.user_id = t.user_id;
-        //this.firepath = t.firepath;
-        //this.tripfile = t.tripfile;
         this.filesize = t.filesize;
         this.uploaded = t.uploaded;
         this.startTime = t.startTime;
@@ -47,9 +43,6 @@ public class Trip {
         this.device = t.device;
         this.userRating = t.userRating;
     }  // copy constructor
-
-// LoggerService -> EasyModeFragment -> FileProcessor.java
-    // when application gets killed, the old trip instance is lost.
 
     public void writeToJsonFile() {
 
@@ -74,15 +67,7 @@ public class Trip {
     public void setUser_id(String user_id) {
         this.user_id = user_id;
     }
-/*
-    public Uri getTripfile() {
-        return tripfile;
-    }
 
-    public void setTripfile(Uri tripfile) {
-        this.tripfile = tripfile;
-    }
-*/
     public long getFilesize() {
         return filesize;
     }
