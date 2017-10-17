@@ -35,6 +35,7 @@ import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
@@ -133,7 +134,7 @@ public class EasyModeFragment extends Fragment {
             }else {
                 uploadFileUri = intent.getParcelableExtra("filename");
                 if(uploadFileUri == null){
-                    Toast.makeText(getActivity(), "Seems like you are indoors. Could not accurately detect your location", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Sorry, could not detect your location accurately", Toast.LENGTH_LONG).show();
                     restartButton.setVisibility(View.VISIBLE);
                     statusIndicatorText.setText("Sorry for that!");
                 }else {
@@ -184,7 +185,7 @@ public class EasyModeFragment extends Fragment {
                     public void onClick(DialogInterface dialog, int which) {
                         accuracy_result = s.getProgress();
                         setUserPercievedAccuracy(accuracy_result);
-
+                        openMap();
                     }
                 });
         builder.setIcon(R.drawable.ic_launcher);
@@ -198,6 +199,11 @@ public class EasyModeFragment extends Fragment {
         builder.show();
 
 
+    }
+
+    private void openMap(){
+        Intent i = new Intent(this.getActivity(), MapsActivity.class);
+        startActivity(i);
     }
 
     private void setUserPercievedAccuracy(int a){
@@ -396,4 +402,3 @@ public class EasyModeFragment extends Fragment {
 }
 
 // // TODO: Fix uploads
-// TODO : Better maps

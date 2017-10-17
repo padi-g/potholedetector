@@ -91,16 +91,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngs.get(0), 15));
 
-        MarkerOptions markers = new MarkerOptions();
         PolylineOptions polyline = new PolylineOptions().geodesic(true).width(5).color(Color.BLUE);
 
 
         for(LatLng l : latLngs){
-            markers.position(l);
             polyline.add(l);
         }
         mMap.addPolyline(polyline);
-        mMap.addMarker(markers);
 
     }
 

@@ -405,7 +405,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         // the uri of the file to be uploaded from fragment
         if(locAccHit) {
             logGPSpollstoFile(gpsPolls);
-            sendNotificationForMap();
+            // sendNotificationForMap();
             logTripIDtoFile(newtrip.getTrip_id());
             ref.child(newtrip.getUser_id()).child(newtrip.getTrip_id()).setValue(newtrip);
             sendTripLoggingBroadcast(false, fileuri/*, createEssentialsBundle(newtrip)*/);
@@ -471,14 +471,16 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     @Override
     public void onLocationChanged(Location location) {
         locUpdating = true;
-        prevLoc[0] = mCurrentLocation.getLatitude();
-        prevLoc[1] = mCurrentLocation.getLongitude();
-        Location.distanceBetween(prevLoc[0], prevLoc[1], location.getLatitude(), location.getLongitude(), results);
-        distance_travelled += results[0];
+        if (location.getAccuracy() < ACCURACY_REQUIRED) {
+            prevLoc[0] = mCurrentLocation.getLatitude();
+            prevLoc[1] = mCurrentLocation.getLongitude();
+            Location.distanceBetween(prevLoc[0], prevLoc[1], location.getLatitude(), location.getLongitude(), results);
+            distance_travelled += results[0];
+            gpsPolls.add(MyLocation.locToMyloc(location));
+        }
         mCurrentLocation = location;
         mLastUpdateTime = getCurrentTime();
         LocData = getLocData();
-        gpsPolls.add(MyLocation.locToMyloc(location));
     }
 
     public String getLocData() {
