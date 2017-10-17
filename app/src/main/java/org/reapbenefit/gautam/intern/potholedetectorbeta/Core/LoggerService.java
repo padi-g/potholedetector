@@ -1,6 +1,7 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
@@ -31,16 +32,19 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MyLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -93,6 +97,11 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     private FirebaseDatabase mDatabase;
     private DatabaseReference ref;
 
+    private ArrayList<MyLocation> gpsPolls;
+    private float distance_travelled = 0;
+    private float[] results = new float[]{0.0f, 0.0f, 0.0f};
+    private double[] prevLoc = new double[2];
+
     public LoggerService() {
         super();
     }
@@ -109,6 +118,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         mDatabase = FirebaseDatabase.getInstance();
 
         ref = mDatabase.getReference();
+        gpsPolls = new ArrayList<>();
 
         newtrip.setDevice(Build.MANUFACTURER + " " + Build.MODEL + " " + Build.PRODUCT);
         newtrip.setUser_id(mAuth.getCurrentUser().getUid());
@@ -259,6 +269,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                     locAccHit = true;
                     Log.i(TAG, "Location accuracy hit");
                     logAnalytics("location_accuracy_hit_started_logging");
+                    prevLoc[0] = mCurrentLocation.getLatitude();
+                    prevLoc[1] = mCurrentLocation.getLongitude();
                 }
                 if (!startFlag) {
                     newtrip.setStartLoc(MyLocation.locToMyloc(mCurrentLocation));
@@ -379,6 +391,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         newtrip.setFilesize(file.length());
         newtrip.setUploaded(false);
+        newtrip.setDistanceInKM(distance_travelled/1000);
         Uri fileuri = Uri.fromFile(new File(file.getPath()));
 
         newtrip.setDuration(calcTimeTravelled());
@@ -391,6 +404,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         // the uri of the file to be uploaded from fragment
         if(locAccHit) {
+            logGPSpollstoFile(gpsPolls);
+            sendNotificationForMap();
             logTripIDtoFile(newtrip.getTrip_id());
             ref.child(newtrip.getUser_id()).child(newtrip.getTrip_id()).setValue(newtrip);
             sendTripLoggingBroadcast(false, fileuri/*, createEssentialsBundle(newtrip)*/);
@@ -456,9 +471,14 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     @Override
     public void onLocationChanged(Location location) {
         locUpdating = true;
+        prevLoc[0] = mCurrentLocation.getLatitude();
+        prevLoc[1] = mCurrentLocation.getLongitude();
+        Location.distanceBetween(prevLoc[0], prevLoc[1], location.getLatitude(), location.getLongitude(), results);
+        distance_travelled += results[0];
         mCurrentLocation = location;
         mLastUpdateTime = getCurrentTime();
         LocData = getLocData();
+        gpsPolls.add(MyLocation.locToMyloc(location));
     }
 
     public String getLocData() {
@@ -500,7 +520,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     private void logTripIDtoFile(String name){
 
         String path = "tripsIDs.csv";
-        File temp = new File(getExternalFilesDir(null), path);
+        File temp = new File(getApplicationContext().getFilesDir(), path);
 
         Log.i("filename", temp.toString());
 
@@ -513,9 +533,66 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         } catch (IOException e) {
             Log.d(TAG, "File setup failed: " + e.toString());
         }
+        try {
+            out.close();
+        }catch (IOException e){
+
+        }
 
     }
+
+    private void logGPSpollstoFile(ArrayList<MyLocation> polls){
+        String path = "analysis/" + newtrip.getTrip_id() + ".csv";
+        File temp = new File(getApplicationContext().getFilesDir(), path);
+
+        Log.i("filename", temp.toString());
+        try {
+            FileOutputStream out = new FileOutputStream(temp, false);
+            for(MyLocation loc : polls) {
+                String data = String.valueOf(loc.getLatitude()).trim() + "," + String.valueOf(loc.getLongitude()).trim()
+                        + "," + String.valueOf(loc.getAccuracy()).trim() + "\n";
+
+                out.write(data.getBytes());
+                }
+            } catch (IOException e) {
+                Log.d(TAG, "File setup failed: " + e.toString());
+            }
+
+        try {
+            out.close();
+        }catch (IOException e){
+
+        }
+    }
+
+    private void sendNotificationForMap() {
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle("Road Quality Audit")
+                        .setContentText("Data has been processed")
+                        .setSubText("Click to open map");
+        Intent resultIntent = new Intent(this, MapsActivity.class);
+
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(
+                        this,
+                        0,
+                        resultIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+
+        mBuilder.setContentIntent(resultPendingIntent);
+        mBuilder.setAutoCancel(true);
+
+        int mNotificationId = 001;
+        NotificationManager mNotifyMgr =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotifyMgr.notify(mNotificationId, mBuilder.build());
+    }
+
 }
 
+// TODO : Log no. of location updates, locations changed ...
 
 // TODO : Android O Support : fileURI

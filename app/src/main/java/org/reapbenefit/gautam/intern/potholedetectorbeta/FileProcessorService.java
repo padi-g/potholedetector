@@ -1,10 +1,8 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.IBinder;
@@ -155,8 +153,6 @@ public class FileProcessorService extends Service {
 
         this.onDestroy();
 
-        //TODO Change logs/ to /logs/ everywhere
-
     }
 
     @Override
@@ -214,7 +210,7 @@ public class FileProcessorService extends Service {
         return name;
     }
 
-        private void setDistance_travelled(float a){
+    private void setDistance_travelled(float a){
         a = a/1000;
         db = db.child(mAuth.getCurrentUser().getUid()).child(fetchTripID()).child("distanceInKM");
         db.setValue(a);
@@ -222,4 +218,3 @@ public class FileProcessorService extends Service {
     }
 
 }
-

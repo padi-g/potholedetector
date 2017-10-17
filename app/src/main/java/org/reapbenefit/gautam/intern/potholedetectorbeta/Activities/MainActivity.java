@@ -166,10 +166,11 @@ public class MainActivity extends AppCompatActivity
                     stopLogger();
                     StartsStop.setVisibility(View.GONE);
 
+                   /*
                    Intent processor = new Intent(MainActivity.this, FileProcessorService.class);
                    startService(processor);
                    Log.d(TAG, "intent for file processor sent");
-
+                    */
                    //MainActivity.this.finish();
                     //startActivityService();
                 }

@@ -78,6 +78,7 @@ public class EasyModeFragment extends Fragment {
     private DatabaseReference db;
 
     private int accuracy_result = 0;
+    // TODO : set validation rules for troublesome values like accuracy
     private Trip finishedTrip;
 
     public EasyModeFragment() {

@@ -3,12 +3,14 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
@@ -38,9 +40,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        File temp = new File(getApplicationContext().getFilesDir(), "analysis/");
-        temp.mkdir();
-        File file = new File(temp.getPath() + fetchTripID() + ".csv");
+        File file = new File(getApplicationContext().getFilesDir(), "analysis/" + fetchTripID() + ".csv");
+
+        Log.d("maps", file.toString());
 
         //File file = new File(getApplicationContext().getFilesDir(), "locs/"+trip.getTrip_id()+".txt");
 
@@ -87,17 +89,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(12.9767, 77.5713), 11));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngs.get(0), 15));
 
+        MarkerOptions markers = new MarkerOptions();
         PolylineOptions polyline = new PolylineOptions().geodesic(true).width(5).color(Color.BLUE);
 
 
         for(LatLng l : latLngs){
+            markers.position(l);
             polyline.add(l);
         }
-        // Polylines are useful for marking paths and routes on the map.
         mMap.addPolyline(polyline);
+        mMap.addMarker(markers);
 
     }
 
@@ -105,7 +108,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String name = "null";
 
         String path = "tripsIDs.csv";
-        File temp = new File(getExternalFilesDir(null), path);
+        File temp = new File(getApplicationContext().getFilesDir(), path);
         try {
             InputStream inputStream = new FileInputStream(temp);
             InputStreamReader isr = new InputStreamReader(inputStream);
