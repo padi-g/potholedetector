@@ -7,6 +7,7 @@
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-feature android:name="android.hardware.sensor.gyroscope"/>
+    <uses-feature android:name="android.hardware.screen.portrait" />
 
     <application
         android:name="org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass"
@@ -16,7 +17,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Activities.MainActivity">
+        <activity android:name=".Activities.MainActivity"
+            android:screenOrientation="portrait">
             <!-- temporary disabling
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,7 +28,8 @@
         </activity>
 
         <activity android:name=".Activities.SplashActivity"
-            android:theme="@style/SplashTheme">
+            android:theme="@style/SplashTheme"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -42,21 +45,24 @@
     -->
         <activity
             android:name=".Activities.AboutActivity"
-            android:parentActivityName=".Activities.MainActivity">
+            android:parentActivityName=".Activities.MainActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity" />
         </activity>
         <activity
             android:name=".Activities.CreditsActivity"
-            android:parentActivityName=".Activities.MainActivity">
+            android:parentActivityName=".Activities.MainActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity" />
         </activity>
         <activity
             android:name=".Activities.PartnersActivity"
-            android:parentActivityName=".Activities.MainActivity">
+            android:parentActivityName=".Activities.MainActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity" />
@@ -77,7 +83,8 @@
 
         <activity
             android:name="org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity"
-            android:label="@string/title_activity_maps">
+            android:label="@string/title_activity_maps"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity" />
@@ -86,7 +93,7 @@
 
         <activity
             android:name="org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.LoginActivity"
-            android:label="@string/title_activity_maps">
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity" />

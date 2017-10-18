@@ -12,6 +12,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
@@ -29,6 +30,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private ArrayList<LatLng> latLngs = new ArrayList<>();
     private InputStream inputStream;
+    FirebaseAnalytics mFirebaseAnalytics;
 
     @Override
     protected void onDestroy() {
@@ -40,6 +42,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        logAnalytics("map_opened");
         File file = new File(getApplicationContext().getFilesDir(), "analysis/" + fetchTripID() + ".csv");
 
         Log.d("maps", file.toString());
@@ -120,6 +124,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return name;
     }
 
-
+    public void logAnalytics(String data){
+        Bundle b = new Bundle();
+        b.putString("MapsActivity", data);
+        mFirebaseAnalytics.logEvent(data, b);
+    }
 
 }

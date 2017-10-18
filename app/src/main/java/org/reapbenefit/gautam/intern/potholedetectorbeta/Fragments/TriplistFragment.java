@@ -59,8 +59,8 @@ public class TriplistFragment extends Fragment {
     private DatabaseReference myRef = database.getReference();
     private DatabaseReference profileRef = database.getReference();
 
-    private int timeScore = 0;  // calculated based on time logged
-    private int distanceScore = 0;  // calculated based on distance logged
+    private long timeScore = 0;  // calculated based on time logged
+    private long distanceScore = 0;  // calculated based on distance logged
 
 
     public TriplistFragment() {
@@ -109,12 +109,15 @@ public class TriplistFragment extends Fragment {
                             Trip t = d.getValue(Trip.class);
                             trips.add(t);
                             Log.d("SCORE", String.valueOf(t.getDuration()));
-                            timeScore += (int)t.getDuration();
-                            distanceScore += (int)t.getDistanceInKM()+1;
+                            timeScore += t.getDuration();
+                            distanceScore += t.getDistanceInKM();
                         }
                     }
+                    timeScore = (int) timeScore;
+                    distanceScore = (int) distanceScore;
                     profileRef.child("timeScore").setValue(timeScore);
                     profileRef.child("distanceScore").setValue(distanceScore);
+                    profileRef.child("totalTrips").setValue(trips.size());
                     // TODO : Optimize to use lesser db reads by storing locally and updating
                     createListView();
                 }
@@ -160,6 +163,8 @@ public class TriplistFragment extends Fragment {
         l.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+
 
                 /*   *********  Opens a map activity, DUMMY
                 Intent intent = new Intent(getActivity(), MapsActivity.class);
