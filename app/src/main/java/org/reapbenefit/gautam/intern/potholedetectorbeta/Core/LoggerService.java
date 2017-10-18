@@ -381,9 +381,10 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     public void stopTrip() {
 
-        newtrip.setNo_of_lines(no_of_lines);
         newtrip.setEndTime(getCurrentDateTime());
         endTime = new Date();
+        newtrip.setNo_of_lines((int)(no_of_lines/calcTimeTravelledSecs()));
+        newtrip.setNo_of_lines((int)(no_of_lines/calcTimeTravelledSecs()));
 
         Log.i(TAG+" endtime", String.valueOf(newtrip.getEndTime()));
         mp.stop();
@@ -394,8 +395,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         newtrip.setDistanceInKM(distance_travelled/1000);
         Uri fileuri = Uri.fromFile(new File(file.getPath()));
 
-        newtrip.setDuration(calcTimeTravelled());
-        Log.i(TAG+" Duration", String.valueOf(calcTimeTravelled()) + " minutes");
+        newtrip.setDuration(calcTimeTravelledMins());
+        Log.i(TAG+" Duration", String.valueOf(calcTimeTravelledMins()) + " minutes");
 
         logTripDetails(newtrip);
 
@@ -492,9 +493,14 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         return l;
     }
 
-    public long calcTimeTravelled(){
+    public long calcTimeTravelledMins(){
         long duration  = endTime.getTime() - startTime.getTime();
         return TimeUnit.MILLISECONDS.toMinutes(duration);
+    }
+
+    public long calcTimeTravelledSecs(){
+        long duration  = endTime.getTime() - startTime.getTime();
+        return TimeUnit.MILLISECONDS.toSeconds(duration);
     }
 
     public void logAnalytics(String data){
@@ -543,28 +549,27 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     }
 
-    private void logGPSpollstoFile(ArrayList<MyLocation> polls){
-        String path = "analysis/" + newtrip.getTrip_id() + ".csv";
-        File temp = new File(getApplicationContext().getFilesDir(), path);
+    private void logGPSpollstoFile(ArrayList<MyLocation> polls) {
 
-        Log.i("filename", temp.toString());
+        String path = "/analysis/";
+        File temp = new File(getApplicationContext().getFilesDir() + path);
+        temp.mkdir();
+        File outfile = new File(temp.getPath(), fileid.toString() + ".csv");
+
         try {
-            FileOutputStream out = new FileOutputStream(temp, false);
-            for(MyLocation loc : polls) {
+            out = new FileOutputStream(outfile, true);
+
+            for (MyLocation loc : polls) {
                 String data = String.valueOf(loc.getLatitude()).trim() + "," + String.valueOf(loc.getLongitude()).trim()
                         + "," + String.valueOf(loc.getAccuracy()).trim() + "\n";
-
                 out.write(data.getBytes());
-                }
-            } catch (IOException e) {
-                Log.d(TAG, "File setup failed: " + e.toString());
             }
-
-        try {
-            out.close();
-        }catch (IOException e){
-
+        } catch (FileNotFoundException e) {
+            Log.d(TAG, "File_setup_failed: " + e.toString());
+        } catch (IOException e) {
+            Log.d(TAG, "File_setup_failed: " + e.toString());
         }
+
     }
 
     private void sendNotificationForMap() {

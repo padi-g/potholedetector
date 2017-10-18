@@ -97,7 +97,6 @@ public class TriplistFragment extends Fragment {
             myRef = myRef.child(mAuth.getCurrentUser().getUid());
             profileRef = profileRef.child("profiles").child(mAuth.getCurrentUser().getUid());
 
-
             myRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
