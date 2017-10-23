@@ -133,7 +133,7 @@ public class TriplistFragment extends Fragment {
     }
 
     private void createListView(){
-        if(!trips.isEmpty()) {
+        if(!trips.isEmpty() && getActivity()!=null) {
             adapter = new TripListAdapter(getActivity(), trips);
             l.setAdapter(new TripListAdapter(getActivity(), trips));
         }

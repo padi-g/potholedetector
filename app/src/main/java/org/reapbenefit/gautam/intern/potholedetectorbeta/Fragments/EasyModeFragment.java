@@ -245,7 +245,9 @@ public class EasyModeFragment extends Fragment {
                     statusIndicatorText.setText("Data uploaded \n\n Thanks for your contribution!");
                     Uri downloadUrl = taskSnapshot.getDownloadUrl();
                     Log.d("Upload","Download file from "+downloadUrl.toString());
-                    Toast.makeText(getActivity(), "Please restart the app to start a new trip", Toast.LENGTH_LONG).show();
+                    if(getActivity()!= null) {
+                        Toast.makeText(getActivity(), "Please restart the app to start a new trip", Toast.LENGTH_LONG).show();
+                    }
                     progresstext.setVisibility(View.GONE);
                     restartButton.setVisibility(View.VISIBLE);
                     restartButton.setOnClickListener(new View.OnClickListener() {

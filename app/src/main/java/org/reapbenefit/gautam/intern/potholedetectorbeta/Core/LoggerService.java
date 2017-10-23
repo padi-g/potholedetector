@@ -398,12 +398,11 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         newtrip.setDuration(calcTimeTravelledMins());
         Log.i(TAG+" Duration", String.valueOf(calcTimeTravelledMins()) + " minutes");
 
-        logTripDetails(newtrip);
-
         ApplicationClass.getInstance().setTrip(newtrip);
         Log.i(TAG, "logged newtrip");
 
         // the uri of the file to be uploaded from fragment
+        logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {
             logGPSpollstoFile(gpsPolls);
             // sendNotificationForMap();
@@ -472,7 +471,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     @Override
     public void onLocationChanged(Location location) {
         locUpdating = true;
-        if (location.getAccuracy() < ACCURACY_REQUIRED) {
+        if (location.getAccuracy() < ACCURACY_REQUIRED && mCurrentLocation != null) {
             prevLoc[0] = mCurrentLocation.getLatitude();
             prevLoc[1] = mCurrentLocation.getLongitude();
             Location.distanceBetween(prevLoc[0], prevLoc[1], location.getLatitude(), location.getLongitude(), results);
@@ -508,21 +507,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         b.putString("LoggerService", data);
         mFirebaseAnalytics.logEvent(data, b);
         Log.i("LoggerService", data);
-    }
-
-    public void logTripDetails(Trip t){
-        Log.i("trip_details", t.getTrip_id());
-        Log.i("trip_details", t.getUser_id());
-        //Log.i("trip_details", t.getTripfile().toString());
-        Log.i("trip_details", String.valueOf(t.getFilesize()));
-        Log.i("trip_details", String.valueOf(newtrip.isUploaded()));
-        Log.i("trip_details", t.getStartTime());
-        Log.i("trip_details", t.getEndTime());
-        Log.i("trip_details", t.getStartLoc().toString());
-        Log.i("trip_details", t.getEndLoc().toString());
-        Log.i("trip_details", String.valueOf(newtrip.getNo_of_lines()));
-        Log.i("trip_details", String.valueOf(newtrip.getDuration()));
-        Log.i("trip_details", t.getDevice());
     }
 
     private void logTripIDtoFile(String name){

@@ -79,7 +79,7 @@
              -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="***REMOVED***" />
+            android:value="AIzaSyAeQtuHIrj9DdQoTGAfMavIwrnQqYYRllE" />
 
         <activity
             android:name="org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity"
