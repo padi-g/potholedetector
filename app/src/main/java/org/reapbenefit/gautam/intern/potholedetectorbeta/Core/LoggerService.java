@@ -370,7 +370,9 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             Log.d(TAG, "File closing failed: " + e.toString());
         }
 
-        newtrip.setEndLoc(MyLocation.locToMyloc(mCurrentLocation));
+        if(mCurrentLocation!=null) {
+            newtrip.setEndLoc(MyLocation.locToMyloc(mCurrentLocation));
+        }
 
         stopTrip();
         stopLocationUpdates();
@@ -456,7 +458,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                 }
             });
         } catch (SecurityException | IllegalStateException e) {
-
+            e.printStackTrace();
         }
     }
 
