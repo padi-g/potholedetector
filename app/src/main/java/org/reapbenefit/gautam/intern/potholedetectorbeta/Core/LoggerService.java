@@ -71,7 +71,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     private boolean startFlag = false;
 
     private int no_of_lines = 0, meansumx =0, meansumy =0, meansumz =0;
-    private float meanx, meany, meanz, deviation;
+    private float meanx, meany, meanz, threshold;
+    String axisOfInterest;
 
     private Date startTime, endTime;
 
@@ -353,9 +354,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     @Override
     public void onDestroy() {
-        meanx = (float)meansumx / no_of_lines;
-        meany = (float)meansumy / no_of_lines;
-        meanz = (float)meansumz / no_of_lines;
+        calcMeans();
 
         Log.i(TAG+"Means", "x = " + String.valueOf(meanx));
         Log.i(TAG+"Means", "y = " + String.valueOf(meany));
@@ -408,7 +407,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         if(locAccHit) {
             logGPSpollstoFile(gpsPolls);
             // sendNotificationForMap();
-            logTripIDtoFile(newtrip.getTrip_id());
+            logTripIDtoFile(newtrip.getTrip_id(), String.valueOf(newtrip.getNo_of_lines()), String.valueOf(threshold));
             ref.child(newtrip.getUser_id()).child(newtrip.getTrip_id()).setValue(newtrip);
             sendTripLoggingBroadcast(false, fileuri/*, createEssentialsBundle(newtrip)*/);
         }else {
@@ -504,6 +503,26 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         return TimeUnit.MILLISECONDS.toSeconds(duration);
     }
 
+    private void calcMeans(){
+        meanx = (float)meansumx / no_of_lines;
+        meany = (float)meansumy / no_of_lines;
+        meanz = (float)meansumz / no_of_lines;
+
+        if(meanz >= meany && meanz >= meanx) {
+            threshold = meanz * (float) 1.5;
+            axisOfInterest = "AccZ";
+        }
+        else if(meanx >= meany && meanx >= meanz) {
+            threshold = meanx * (float) 1.5;
+            axisOfInterest = "AccX";
+        }
+        else {
+            threshold = meany * (float) 1.5;
+            axisOfInterest = "AccY";
+        }
+
+    }
+
     public void logAnalytics(String data){
         Bundle b = new Bundle();
         b.putString("LoggerService", data);
@@ -511,14 +530,14 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         Log.i("LoggerService", data);
     }
 
-    private void logTripIDtoFile(String name){
+    private void logTripIDtoFile(String name, String noOfLines, String threshold){
 
         String path = "tripsIDs.csv";
         File temp = new File(getApplicationContext().getFilesDir(), path);
 
         Log.i("filename", temp.toString());
 
-        String data = name;
+        String data = name + "\n" + noOfLines + "\n" + threshold + "\n" + axisOfInterest;
 
         try {
             FileOutputStream out = new FileOutputStream(temp, false);   // TODO : change to append the trip ids
