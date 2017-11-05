@@ -15,6 +15,7 @@ import android.widget.ListView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
@@ -104,14 +105,18 @@ public class TriplistFragment extends Fragment {
                     timeScore = distanceScore = 0;
                     trips = new ArrayList<Trip>();
 
-                    for (DataSnapshot d : dataSnapshot.getChildren()) {
-                        if(!d.getKey().contains("profile")) {
-                            Trip t = d.getValue(Trip.class);
-                            trips.add(t);
-                            Log.d("SCORE", String.valueOf(t.getDuration()));
-                            timeScore += t.getDuration();
-                            distanceScore += t.getDistanceInKM();
+                    try {
+                        for (DataSnapshot d : dataSnapshot.getChildren()) {
+                            if (!d.getKey().contains("profile")) {
+                                Trip t = d.getValue(Trip.class);
+                                trips.add(t);
+                                Log.d("SCORE", String.valueOf(t.getDuration()));
+                                timeScore += t.getDuration();
+                                distanceScore += t.getDistanceInKM();
+                            }
                         }
+                    }catch (DatabaseException e){
+
                     }
                     timeScore = (int) timeScore;
                     distanceScore = (int) distanceScore;
@@ -189,18 +194,6 @@ public class TriplistFragment extends Fragment {
         });
         return v;
     }
-
-    /*
-    public void saveToPrefs(Float h, float l, String car, String model){
-        SharedPreferences.Editor editor = getActivity().getSharedPreferences("Profiles", MODE_PRIVATE).edit();
-        editor.clear();
-        editor.putString("CurrentCar", car);
-        editor.putString("CurrentModel", model);
-        editor.putFloat("High", h);
-        editor.putFloat("Low", l);
-        editor.commit();
-    }
-    */
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {

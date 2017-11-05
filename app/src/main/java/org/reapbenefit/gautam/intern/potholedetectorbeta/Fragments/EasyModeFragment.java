@@ -1,15 +1,18 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -40,7 +43,12 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
+
+import static android.content.Context.NOTIFICATION_SERVICE;
 
 
 /**
@@ -72,15 +80,7 @@ public class EasyModeFragment extends Fragment {
     private StorageReference fileRef = null;
     private Button restartButton;
 
-    private ProgressBar progressBar;
-    private TextView progresstext;
-
     private FirebaseAuth mAuth;
-    private DatabaseReference db;
-
-    private int accuracy_result = 0;
-    // TODO : set validation rules for troublesome values like accuracy
-    private Trip finishedTrip;
 
     public EasyModeFragment() {
         // Required empty public constructor
@@ -118,7 +118,6 @@ public class EasyModeFragment extends Fragment {
         }
 
         mStorageRef = FirebaseStorage.getInstance().getReference();
-        db = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
 
     }
@@ -139,133 +138,22 @@ public class EasyModeFragment extends Fragment {
                     statusIndicatorText.setText("Sorry for that!");
                 }else {
                     Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
-                    progressBar.setVisibility(View.VISIBLE);
-                    progresstext.setVisibility(View.VISIBLE);
-                    statusIndicatorText.setText(getResources().getString(R.string.uploading));
-                    uploadFile(uploadFileUri);
-
-                    // show toast with all the
-                    showTripEndedDialog();
+                    statusIndicatorText.setText("Thanks for your contribution! \n\n Come back again");
+                    restartButton.setVisibility(View.VISIBLE);
+                    new MyUploadTask().execute(uploadFileUri);
+                    openMap();
                 }
                 bgframe.setBackgroundResource(R.drawable.notlogging_bg);
 
             }
-
-
         }
     };
-
-    public void showTripEndedDialog(){
-
-        finishedTrip = ApplicationClass.getInstance().getTrip();
-        long duration = finishedTrip.getDuration();
-        float distance = finishedTrip.getDistanceInKM();
-
-        LayoutInflater inflater = getActivity().getLayoutInflater();
-        View dialoglayout = inflater.inflate(R.layout.user_feedback_dialog, null);
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-
-        TextView d = (TextView) dialoglayout.findViewById(R.id.trip_duration);
-        d.setText(String.valueOf("Trip Duration : " + duration + " mins"));
-
-        TextView dist = (TextView) dialoglayout.findViewById(R.id.distance_travelled);
-        dist.setText(String.valueOf("Trip Distance : " + distance + " km"));
-
-        TextView t = (TextView) dialoglayout.findViewById(R.id.nos_of_potholes);
-        String temp = "Potholes detected : ";
-        int nos = (int)duration*3 + (int)distance*3;
-        t.setText(temp + String.valueOf(nos));
-
-        final SeekBar s = (SeekBar) dialoglayout.findViewById(R.id.accuracy_seekbar);
-
-        builder.setTitle("Trip Summary");
-        builder.setPositiveButton("Submit",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        accuracy_result = s.getProgress();
-                        setUserPercievedAccuracy(accuracy_result);
-                        openMap();
-                    }
-                });
-        builder.setIcon(R.drawable.ic_launcher);
-
-        builder.setView(dialoglayout);
-        AlertDialog dialog = builder.create();
-        dialog.setCancelable(false);
-        dialog.setCanceledOnTouchOutside(false);
-        builder.setCancelable(false);
-
-        builder.show();
-
-
-    }
 
     private void openMap(){
         Intent i = new Intent(this.getActivity(), MapsActivity.class);
         startActivity(i);
     }
 
-    private void setUserPercievedAccuracy(int a){
-        db = db.child(finishedTrip.getUser_id()).child(finishedTrip.getTrip_id()).child("userRating");
-        ApplicationClass.getInstance().getTrip().setUserRating(a);
-        db.setValue(a);
-    }
-
-    public void uploadFile(Uri uri){
-
-        String filename = uri.toString().substring(uri.toString().lastIndexOf('/')) ;
-
-        StorageReference fileRef = mStorageRef.child("logs/" + mAuth.getCurrentUser().getUid() + filename);
-
-        UploadTask uploadTask = fileRef.putFile(uri);
-
-        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                Log.d("Uploading ", progress + "% done");
-                int currentprogress = (int) progress;
-                progressBar.setProgress(currentprogress);
-                progresstext.setText(String.valueOf(currentprogress + "% done"));
-            }
-
-        }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
-               @Override
-               public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
-                   System.out.println("Upload is paused");
-               }
-
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-
-                    // update to database object uploaded = true
-
-                    statusIndicatorText.setText("Data uploaded \n\n Thanks for your contribution!");
-                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                    Log.d("Upload","Download file from "+downloadUrl.toString());
-                    if(getActivity()!= null) {
-                        Toast.makeText(getActivity(), "Please restart the app to start a new trip", Toast.LENGTH_LONG).show();
-                    }
-                    progresstext.setVisibility(View.GONE);
-                    restartButton.setVisibility(View.VISIBLE);
-                    restartButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            getActivity().finish();
-                            System.exit(0);
-                        }
-                    });
-                }
-        }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    // Handle unsuccessful uploads
-                    }
-        });
-
-    }
 
     // TODO : Just noticed that location may not update when hotspot is on. Check whether this is true even when user is outdoors and not using wifi routers to find location.
 
@@ -283,8 +171,6 @@ public class EasyModeFragment extends Fragment {
 
         bgframe = (RelativeLayout) v.findViewById(R.id.easyframe);
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
-        progressBar = (ProgressBar) v.findViewById(R.id.upload_progressbar);
-        progresstext = (TextView) v.findViewById(R.id.progress);
         restartButton = (Button) v.findViewById(R.id.restart);
         restartButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -300,11 +186,6 @@ public class EasyModeFragment extends Fragment {
             statusIndicatorText.setText("Thanks for your contribution! \n\n Come back again");
             restartButton.setVisibility(View.VISIBLE);
         }
-
-        progressBar.setVisibility(View.GONE);
-        progresstext.setVisibility(View.GONE);
-        progressBar.setMax(100);
-        progressBar.setProgress(6);
 
         return v;
     }
@@ -401,6 +282,102 @@ public class EasyModeFragment extends Fragment {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+
+    private class MyUploadTask extends AsyncTask<Uri, Integer, Void>{
+
+        NotificationManager mNotifyMgr;
+        int mNotificationId = 101;
+        NotificationCompat.Builder mBuilder;
+        int uploadProgress = 0;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+
+             mBuilder = new NotificationCompat.Builder(getContext())
+                            .setSmallIcon(R.drawable.ic_upload)
+                            .setContentTitle("Road Quality Audit")
+                            .setContentText("Data is being Uploaded");
+
+            mNotifyMgr =
+                    (NotificationManager) getActivity().getSystemService(NOTIFICATION_SERVICE);
+            mNotifyMgr.notify(mNotificationId, mBuilder.build());
+
+        }
+
+        @Override
+        protected Void doInBackground(Uri... files) {
+
+            mNotifyMgr.notify(mNotificationId, mBuilder.build());
+            uploadFile(files[0]);
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            if(values[0] == -1)
+                mBuilder.setContentText("Upload paused");
+            else if(values[0] == -2)
+                mBuilder.setContentText("Upload failed");
+            else {
+                mBuilder.setProgress(100, values[0], false);
+                if (values[0] == 100)
+                    mBuilder.setContentText("Upload Complete");
+            }
+            mNotifyMgr.notify(mNotificationId, mBuilder.build());
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            mNotifyMgr.notify(mNotificationId, mBuilder.build());
+        }
+
+        public void uploadFile(Uri uri){
+
+            String filename = uri.toString().substring(uri.toString().lastIndexOf('/')) ;
+
+            StorageReference fileRef = mStorageRef.child("logs/" + mAuth.getCurrentUser().getUid() + filename);
+
+            UploadTask uploadTask = fileRef.putFile(uri);
+
+            uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                    Log.d("Uploading ", progress + "% done");
+                    uploadProgress = (int) progress;
+                    publishProgress(uploadProgress);
+                }
+
+            }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                    System.out.println("Upload is paused");
+                    publishProgress(-1);  // paused code
+                }
+
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                    publishProgress(100);
+                    // update to database object uploaded = true
+
+                    }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    // Handle unsuccessful uploads
+                    publishProgress(-2);  // failed code
+                }
+            });
+
+        }
+
+    }
 }
 
-// // TODO: Fix uploads
+/// TODO: Fix uploads

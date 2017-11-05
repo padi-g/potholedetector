@@ -24,6 +24,9 @@ public class Trip {
     private String device;
 
     private int userRating;
+    private String axis;
+    private float threshold;
+    private int potholeCount;
 
     public Trip() {
     }
@@ -154,5 +157,29 @@ public class Trip {
 
     public void setDistanceInKM(float distanceInKM) {
         this.distanceInKM = distanceInKM;
+    }
+
+    public String getAxis() {
+        return axis;
+    }
+
+    public void setAxis(String axis) {
+        this.axis = axis;
+    }
+
+    public float getThreshold() {
+        return threshold;
+    }
+
+    public void setThreshold(float threshold) {
+        this.threshold = threshold;
+    }
+
+    public int getPotholeCount() {
+        return potholeCount;
+    }
+
+    public void setPotholeCount(int potholeCount) {
+        this.potholeCount = potholeCount;
     }
 }

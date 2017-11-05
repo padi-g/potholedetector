@@ -1,14 +1,18 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -19,17 +23,20 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MyLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -38,16 +45,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap mMap;
     private ArrayList<LatLng> latLngs = new ArrayList<>();
     private InputStream inputStream;
-    FirebaseAnalytics mFirebaseAnalytics;
+    private FirebaseAnalytics mFirebaseAnalytics;
+    private DatabaseReference db;
 
-    private TextView noOfPotholes;
     private ProgressBar spinner;
+    private TextView date, distance, duration, potholecount;
     private String tripID;
     private int linesPerSec;
     private float threshold;
     private String axisOfInterest;
     private int axisIndex;
+    private Trip finishedTrip;
     private HashMap<Integer, String> pointsOfInterest = new HashMap<>();
+    private int accuracy_result = 0;
+    // TODO : set validation rules for troublesome values like accuracy
 
     @Override
     protected void onDestroy() {
@@ -69,9 +80,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         logAnalytics("map_opened");
-        noOfPotholes = (TextView) findViewById(R.id.potholes);
         spinner = (ProgressBar) findViewById(R.id.indeterminateBar);
-        tripID = fetchTripID();
+        date = (TextView) findViewById(R.id.tripdate);
+        duration = (TextView) findViewById(R.id.duration);
+        distance = (TextView) findViewById(R.id.distance);
+        potholecount = (TextView) findViewById(R.id.potholecount);
+        finishedTrip = ApplicationClass.getInstance().getTrip();
+        tripID = finishedTrip.getTrip_id();
+        linesPerSec = finishedTrip.getNo_of_lines()*3;
+        threshold = finishedTrip.getThreshold()*5;
+        axisOfInterest = finishedTrip.getAxis();
 
         ProcessFileTask task = new ProcessFileTask();
         task.execute(tripID);
@@ -135,26 +153,61 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    private String fetchTripID(){
-        String name = "null";
+    public void showTripEndedDialog(){
 
-        String path = "tripsIDs.csv";
-        File temp = new File(getApplicationContext().getFilesDir(), path);
-        try {
-            InputStream inputStream = new FileInputStream(temp);
-            InputStreamReader isr = new InputStreamReader(inputStream);
-            BufferedReader bufferedReader = new BufferedReader(isr);
-            name = bufferedReader.readLine();
-            linesPerSec = Integer.valueOf(bufferedReader.readLine());
-            threshold = Float.valueOf(bufferedReader.readLine());
-            axisOfInterest = bufferedReader.readLine();
-        }catch (FileNotFoundException e){
+        long duration = finishedTrip.getDuration();
+        float distance = finishedTrip.getDistanceInKM();
 
-        }catch (IOException er){
+        LayoutInflater inflater = getLayoutInflater();
+        View dialoglayout = inflater.inflate(R.layout.user_feedback_dialog, null);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        }
+        TextView d = (TextView) dialoglayout.findViewById(R.id.trip_duration);
+        d.setText(String.valueOf("Trip Duration : " + duration + " mins"));
 
-        return name;
+        TextView dist = (TextView) dialoglayout.findViewById(R.id.distance_travelled);
+        dist.setText("Trip Distance : " + roundTwoDecimals(distance) + " km");
+
+        TextView t = (TextView) dialoglayout.findViewById(R.id.nos_of_potholes);
+        String temp = "Potholes detected : ";
+        int nos = finishedTrip.getPotholeCount();
+        t.setText(temp + String.valueOf(nos));
+
+        final SeekBar s = (SeekBar) dialoglayout.findViewById(R.id.accuracy_seekbar);
+
+        builder.setTitle("Trip Summary");
+        builder.setPositiveButton("Submit",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        accuracy_result = s.getProgress();
+                        setUserPercievedAccuracy(accuracy_result);
+                    }
+                });
+        builder.setIcon(R.drawable.ic_launcher);
+
+        builder.setView(dialoglayout);
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
+        builder.setCancelable(false);
+
+        builder.show();
+
+    }
+
+    private void setUserPercievedAccuracy(int a){
+        db = FirebaseDatabase.getInstance().getReference();
+        db = db.child(finishedTrip.getUser_id()).child(finishedTrip.getTrip_id()).child("userRating");
+        ApplicationClass.getInstance().getTrip().setUserRating(a);
+        db.setValue(a);
+    }
+
+    private void setPotholeCount(int a){
+        db = FirebaseDatabase.getInstance().getReference();
+        db = db.child(finishedTrip.getUser_id()).child(finishedTrip.getTrip_id()).child("potholeCount");
+        ApplicationClass.getInstance().getTrip().setPotholeCount(a);
+        db.setValue(a);
     }
 
     public void logAnalytics(String data){
@@ -163,13 +216,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mFirebaseAnalytics.logEvent(data, b);
     }
 
-    private class ProcessFileTask extends AsyncTask<String, Void, String>{
+    float roundTwoDecimals(float f) {
+        DecimalFormat twoDForm = new DecimalFormat("#.##");
+        return Float.valueOf(twoDForm.format(f));
+    }
+
+    private class ProcessFileTask extends AsyncTask<String, Void, Integer>{
 
         int lineNumber = 0, prevLineNumber = 0;
         FileInputStream is;
 
         @Override
-        protected String doInBackground(String... params) {
+        protected Integer doInBackground(String... params) {
             File file = new File(getApplicationContext().getFilesDir(), "logs/" + tripID + ".csv");
             try {
                 is = new FileInputStream(file);
@@ -207,15 +265,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
 
-            return String.valueOf(pointsOfInterest.size());
+            return pointsOfInterest.size();
         }
 
         @Override
-        protected void onPostExecute(String result) {
+        protected void onPostExecute(Integer result) {
             super.onPostExecute(result);
-            noOfPotholes.setText("We found " + result + " potholes");
+            setPotholeCount(result);
             spinner.setVisibility(View.GONE);
-            noOfPotholes.setVisibility(View.VISIBLE);
+            distance.setText("Distance Travelled : " + roundTwoDecimals(finishedTrip.getDistanceInKM()) + "km");
+            duration.setText("Trip Duration : " + finishedTrip.getDuration() + " mins");
+            date.setText("Date : " + finishedTrip.getStartTime().substring(0,11));
+            potholecount.setText("Potholes Detected : " + result);
+            distance.setVisibility(View.VISIBLE);
+            duration.setVisibility(View.VISIBLE);
+            date.setVisibility(View.VISIBLE);
+            potholecount.setVisibility(View.VISIBLE);
+            showTripEndedDialog();
         }
     }
 

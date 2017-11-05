@@ -405,11 +405,11 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         // the uri of the file to be uploaded from fragment
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {
+            newtrip.setAxis(axisOfInterest);
+            newtrip.setThreshold(threshold);
             logGPSpollstoFile(gpsPolls);
-            // sendNotificationForMap();
-            logTripIDtoFile(newtrip.getTrip_id(), String.valueOf(newtrip.getNo_of_lines()), String.valueOf(threshold));
             ref.child(newtrip.getUser_id()).child(newtrip.getTrip_id()).setValue(newtrip);
-            sendTripLoggingBroadcast(false, fileuri/*, createEssentialsBundle(newtrip)*/);
+            sendTripLoggingBroadcast(false, fileuri);
         }else {
             logAnalytics("unsuccessful_in_starting_logging");
             sendTripLoggingBroadcast(false, null/*, null*/);
@@ -509,15 +509,15 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         meanz = (float)meansumz / no_of_lines;
 
         if(meanz >= meany && meanz >= meanx) {
-            threshold = meanz * (float) 1.5;
+            threshold = meanz;
             axisOfInterest = "AccZ";
         }
         else if(meanx >= meany && meanx >= meanz) {
-            threshold = meanx * (float) 1.5;
+            threshold = meanx;
             axisOfInterest = "AccX";
         }
         else {
-            threshold = meany * (float) 1.5;
+            threshold = meany;
             axisOfInterest = "AccY";
         }
 
@@ -528,30 +528,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         b.putString("LoggerService", data);
         mFirebaseAnalytics.logEvent(data, b);
         Log.i("LoggerService", data);
-    }
-
-    private void logTripIDtoFile(String name, String noOfLines, String threshold){
-
-        String path = "tripsIDs.csv";
-        File temp = new File(getApplicationContext().getFilesDir(), path);
-
-        Log.i("filename", temp.toString());
-
-        String data = name + "\n" + noOfLines + "\n" + threshold + "\n" + axisOfInterest;
-
-        try {
-            FileOutputStream out = new FileOutputStream(temp, false);   // TODO : change to append the trip ids
-            out.write(data.getBytes());
-
-        } catch (IOException e) {
-            Log.d(TAG, "File setup failed: " + e.toString());
-        }
-        try {
-            out.close();
-        }catch (IOException e){
-
-        }
-
     }
 
     private void logGPSpollstoFile(ArrayList<MyLocation> polls) {
