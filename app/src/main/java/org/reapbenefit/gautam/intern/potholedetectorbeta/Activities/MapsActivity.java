@@ -11,6 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.Switch;
@@ -50,6 +51,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private ProgressBar spinner;
     private TextView date, distance, duration, potholecount;
+    private SeekBar accuracySeekbar;
+    private Button submitButton;
     private String tripID;
     private int linesPerSec;
     private float threshold;
@@ -73,23 +76,36 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(R.string.menu_about);
+        getSupportActionBar().setTitle("Trip Summary");
         Switch s = (Switch) toolbar.findViewById(R.id.stopSwitch);
         s.setVisibility(View.GONE);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         logAnalytics("map_opened");
-        spinner = (ProgressBar) findViewById(R.id.indeterminateBar);
-        date = (TextView) findViewById(R.id.tripdate);
-        duration = (TextView) findViewById(R.id.duration);
-        distance = (TextView) findViewById(R.id.distance);
-        potholecount = (TextView) findViewById(R.id.potholecount);
         finishedTrip = ApplicationClass.getInstance().getTrip();
         tripID = finishedTrip.getTrip_id();
         linesPerSec = finishedTrip.getNo_of_lines()*3;
         threshold = finishedTrip.getThreshold()*8;
         axisOfInterest = finishedTrip.getAxis();
+
+        spinner = (ProgressBar) findViewById(R.id.indeterminateBar);
+        date = (TextView) findViewById(R.id.tripdate);
+        duration = (TextView) findViewById(R.id.duration);
+        distance = (TextView) findViewById(R.id.distance);
+        potholecount = (TextView) findViewById(R.id.potholecount);
+        accuracySeekbar = (SeekBar) findViewById(R.id.accuracy_seek);
+        setUserPercievedAccuracy(-1); // To have a non 0 value when the user does not submit
+        submitButton = (Button) findViewById(R.id.submit_button);
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                accuracy_result = accuracySeekbar.getProgress();
+                setUserPercievedAccuracy(accuracy_result);
+                submitButton.setVisibility(View.GONE);
+                accuracySeekbar.setVisibility(View.GONE);
+            }
+        });
 
         ProcessFileTask task = new ProcessFileTask();
         task.execute(tripID);
@@ -145,54 +161,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         PolylineOptions polyline = new PolylineOptions().geodesic(true).width(5).color(Color.BLUE);
 
-
         for(LatLng l : latLngs){
             polyline.add(l);
         }
         mMap.addPolyline(polyline);
-
-    }
-
-    public void showTripEndedDialog(){
-
-        long duration = finishedTrip.getDuration();
-        float distance = finishedTrip.getDistanceInKM();
-
-        LayoutInflater inflater = getLayoutInflater();
-        View dialoglayout = inflater.inflate(R.layout.user_feedback_dialog, null);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        TextView d = (TextView) dialoglayout.findViewById(R.id.trip_duration);
-        d.setText(String.valueOf("Trip Duration : " + duration + " mins"));
-
-        TextView dist = (TextView) dialoglayout.findViewById(R.id.distance_travelled);
-        dist.setText("Trip Distance : " + roundTwoDecimals(distance) + " km");
-
-        TextView t = (TextView) dialoglayout.findViewById(R.id.nos_of_potholes);
-        String temp = "Potholes detected : ";
-        int nos = finishedTrip.getPotholeCount();
-        t.setText(temp + String.valueOf(nos));
-
-        final SeekBar s = (SeekBar) dialoglayout.findViewById(R.id.accuracy_seekbar);
-
-        builder.setTitle("Trip Summary");
-        builder.setPositiveButton("Submit",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        accuracy_result = s.getProgress();
-                        setUserPercievedAccuracy(accuracy_result);
-                    }
-                });
-        builder.setIcon(R.drawable.ic_launcher);
-
-        builder.setView(dialoglayout);
-        AlertDialog dialog = builder.create();
-        dialog.setCancelable(false);
-        dialog.setCanceledOnTouchOutside(false);
-        builder.setCancelable(false);
-
-        builder.show();
 
     }
 
@@ -281,7 +253,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             duration.setVisibility(View.VISIBLE);
             date.setVisibility(View.VISIBLE);
             potholecount.setVisibility(View.VISIBLE);
-            showTripEndedDialog();
+            accuracySeekbar.setVisibility(View.VISIBLE);
+            submitButton.setVisibility(View.VISIBLE);
         }
     }
 

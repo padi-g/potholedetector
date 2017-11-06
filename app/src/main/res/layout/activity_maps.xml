@@ -51,6 +51,37 @@
         android:visibility="gone"
         android:text="Distance"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="How accurate is our pothole prediction?"
+        android:paddingLeft="@dimen/activity_horizontal_margin"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingBottom="5dp">
+
+        <SeekBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:id="@+id/accuracy_seek"
+            android:thumb="@drawable/ic_location_on"
+            android:layout_weight="90"
+            android:max="9" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="10"
+            android:text="Submit"
+            android:id="@+id/submit_button"/>
+
+    </LinearLayout>
+
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:map="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
