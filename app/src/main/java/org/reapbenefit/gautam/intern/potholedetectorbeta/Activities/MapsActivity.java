@@ -88,7 +88,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         finishedTrip = ApplicationClass.getInstance().getTrip();
         tripID = finishedTrip.getTrip_id();
         linesPerSec = finishedTrip.getNo_of_lines()*3;
-        threshold = finishedTrip.getThreshold()*5;
+        threshold = finishedTrip.getThreshold()*8;
         axisOfInterest = finishedTrip.getAxis();
 
         ProcessFileTask task = new ProcessFileTask();

@@ -248,9 +248,9 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             // AccX, AccY, AccZ, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy (m)
             e1 = AccXvalue + ", " + AccYvalue + ", " + AccZvalue + ", ";
 
-            meansumx += sensorEvent.values[0];
-            meansumy += sensorEvent.values[1];
-            meansumz += sensorEvent.values[2];
+            meansumx += Math.abs(sensorEvent.values[0]);
+            meansumy += Math.abs(sensorEvent.values[1]);
+            meansumz += Math.abs(sensorEvent.values[2]);
         }
 
         if (!gAvailable) {
@@ -406,7 +406,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {
             newtrip.setAxis(axisOfInterest);
-            newtrip.setThreshold(threshold);
             logGPSpollstoFile(gpsPolls);
             ref.child(newtrip.getUser_id()).child(newtrip.getTrip_id()).setValue(newtrip);
             sendTripLoggingBroadcast(false, fileuri);
@@ -520,6 +519,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             threshold = meany;
             axisOfInterest = "AccY";
         }
+
+        newtrip.setThreshold(threshold);
 
     }
 

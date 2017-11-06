@@ -67,8 +67,6 @@ public class GoogleApiHelper implements GoogleApiClient.ConnectionCallbacks, Goo
                 .addApi(ActivityRecognition.API)
                 .build();
 
-
-
     }
 
     @Override
