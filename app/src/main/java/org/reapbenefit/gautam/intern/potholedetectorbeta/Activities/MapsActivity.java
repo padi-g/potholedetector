@@ -22,6 +22,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.database.DatabaseReference;
@@ -40,24 +42,28 @@ import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    SupportMapFragment mapFragment;
     private ArrayList<LatLng> latLngs = new ArrayList<>();
+    private ArrayList<LatLng> potholelatLngs = new ArrayList<>();
     private InputStream inputStream;
     private FirebaseAnalytics mFirebaseAnalytics;
     private DatabaseReference db;
 
     private ProgressBar spinner;
-    private TextView date, distance, duration, potholecount;
+    private TextView date, distance, duration, potholecount, textview;
     private SeekBar accuracySeekbar;
     private Button submitButton;
     private String tripID;
     private int linesPerSec;
     private float threshold;
     private String axisOfInterest;
-    private int axisIndex;
+    private int axisIndex, locIndex;
     private Trip finishedTrip;
     private HashMap<Integer, String> pointsOfInterest = new HashMap<>();
     private int accuracy_result = 0;
@@ -94,6 +100,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         duration = (TextView) findViewById(R.id.duration);
         distance = (TextView) findViewById(R.id.distance);
         potholecount = (TextView) findViewById(R.id.potholecount);
+        textview = (TextView) findViewById(R.id.how_accurate_text);
         accuracySeekbar = (SeekBar) findViewById(R.id.accuracy_seek);
         setUserPercievedAccuracy(-1); // To have a non 0 value when the user does not submit
         submitButton = (Button) findViewById(R.id.submit_button);
@@ -104,6 +111,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 setUserPercievedAccuracy(accuracy_result);
                 submitButton.setVisibility(View.GONE);
                 accuracySeekbar.setVisibility(View.GONE);
+                textview.setVisibility(View.GONE);
             }
         });
 
@@ -135,12 +143,29 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
 
         mapFragment.getMapAsync(this);
 
         // setup action bar
+    }
+
+    public void populatePotholeMarkerPoints(){
+
+        Iterator it = pointsOfInterest.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            potholelatLngs.add(extractLatLng((String) pair.getValue()));
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+
+    }
+
+    public LatLng extractLatLng(String line){
+        String vals[] = line.split(",");
+        LatLng l = new LatLng(Double.valueOf(vals[locIndex]), Double.valueOf(vals[locIndex+1]));
+        return l;
     }
 
     /**
@@ -156,7 +181,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngs.get(0), 15));
 
         PolylineOptions polyline = new PolylineOptions().geodesic(true).width(5).color(Color.BLUE);
@@ -165,6 +189,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             polyline.add(l);
         }
         mMap.addPolyline(polyline);
+
+        if(!potholelatLngs.isEmpty()) {
+            for (LatLng l : potholelatLngs) {
+                mMap.addMarker(new MarkerOptions()
+                        .position(l));
+            }
+        }
 
     }
 
@@ -219,6 +250,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if (tokens[i].contains(axisOfInterest)) {
                         axisIndex = i;
                     }
+                    if(tokens[i].contains("latitude")){
+                        locIndex = i;
+                    }
                 }
 
                 // populating our set of the points we are interested in
@@ -255,8 +289,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             potholecount.setVisibility(View.VISIBLE);
             accuracySeekbar.setVisibility(View.VISIBLE);
             submitButton.setVisibility(View.VISIBLE);
+            populatePotholeMarkerPoints();
+            mapFragment.getMapAsync(MapsActivity.this);
         }
     }
-
 }
+
 

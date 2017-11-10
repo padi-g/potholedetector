@@ -54,6 +54,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:id="@+id/how_accurate_text"
         android:text="How accurate is our pothole prediction?"
         android:paddingLeft="@dimen/activity_horizontal_margin"/>
 
