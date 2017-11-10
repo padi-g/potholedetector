@@ -24,7 +24,6 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -133,9 +132,8 @@ public class EasyModeFragment extends Fragment {
             }else {
                 uploadFileUri = intent.getParcelableExtra("filename");
                 if(uploadFileUri == null){
-                    Toast.makeText(getActivity(), "Sorry, could not detect your location accurately", Toast.LENGTH_LONG).show();
                     restartButton.setVisibility(View.VISIBLE);
-                    statusIndicatorText.setText("Sorry for that!");
+                    statusIndicatorText.setText("Sorry, we could not detect your location accurately");
                 }else {
                     Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
                     statusIndicatorText.setText("Thanks for your contribution! \n\n Come back again");
