@@ -24,6 +24,28 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="This app is in beta"
+                android:textAlignment="center"
+                android:textStyle="normal|bold"
+                android:textColor="#ff0000"
+                android:fontFamily="serif"
+                android:paddingTop="10dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="To help us improve the detection, please rate every trip using the slider shown after the trip"
+                android:textAlignment="center"
+                android:textStyle="normal|bold"
+                android:textColor="#00af00"
+                android:fontFamily="serif"
+                android:paddingBottom="10dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:text="Why are we doing this?"
                 android:textAlignment="center"
                 android:textStyle="normal|bold"
@@ -79,7 +101,7 @@
                 android:paddingTop="10dp" />
 
             <TextView
-                android:text="gp712@snu.edu.in"
+                android:text="intern.gautam@reapbenefit.org"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="start"

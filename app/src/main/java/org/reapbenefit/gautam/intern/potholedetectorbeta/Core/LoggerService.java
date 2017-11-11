@@ -300,7 +300,11 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         StringBuilder sb = new StringBuilder();
         for(float f : fa) {
             f = Math.abs(f);
-            sb.append(String.valueOf(f).trim().substring(0, 3) + ",");
+            String temp = String.valueOf(f).trim();
+            if(temp.length()>3)
+                sb.append(temp.substring(0, 4) + ",");
+            else
+                sb.append(temp.substring(0, 3) + ",");
         }
         return sb.toString();
     }
@@ -555,6 +559,4 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
 // TODO : Android O Support : fileURI
 
-// TODO :  about : ask users to rate it accordingly
-// tell them that it is beta
 // upload using wifi

@@ -17,11 +17,12 @@
     <string name="about1">Potholes are a major source of a lot of problems we see on Indian roads. Slow moving traffic, lower mileage, high maintenance
         and injuries, all of these issues are linked to potholes and poor roads.
     </string>
-    <string name="about2">Because this problem exists everywhere and happens all the time, the government cannot fix everything.
-        We should not rely on the government for everything and in fact many students have found ways to fix small potholes.
-        \n\nWe want to enable everyone to help solve this problem
+    <string name="about2">Because this problem exists everywhere and happens all through the year, the government cannot fix everything efficiently.
+        Citizens must take action sometimes. In fact, some students have found ways to fix small potholes. The data collected here can help use identify areas where we can take action without government intervention
+        \n\nWe want to enable everyone in taking small steps to collectively help solve this big problem.
+        \n\nSolve small, dent big!
     </string>
-    <string name="about3">Turn on the app, drive and contribute. So simple</string>
+    <string name="about3">Turn on the app, drive and contribute. It\'s that simple.</string>
     <string name="title_activity_maps">Map</string>
     <string name="icons_home"><a href="https://icons8.com/web-app/5572/Home">Home icon credits</a></string>
     <string name="icons_settings"><a href="https://icons8.com/web-app/5590/Settings">Settings icon credits</a></string>

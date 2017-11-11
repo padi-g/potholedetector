@@ -108,6 +108,11 @@
             android:name=".FileProcessorService"
             android:enabled="true" />
 
+        <service
+            android:name=".UploadTasksService"
+            android:enabled="true" />
+
+
     </application>
 
 </manifest>

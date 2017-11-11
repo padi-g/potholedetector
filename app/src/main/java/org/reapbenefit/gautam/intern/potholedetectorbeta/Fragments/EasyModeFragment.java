@@ -41,6 +41,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.UploadTasksService;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -138,7 +139,8 @@ public class EasyModeFragment extends Fragment {
                     Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
                     statusIndicatorText.setText("Thanks for your contribution! \n\n Come back again");
                     restartButton.setVisibility(View.VISIBLE);
-                    new MyUploadTask().execute(uploadFileUri);
+                    //new MyUploadTask().execute(uploadFileUri);
+                    startUploadService();
                     openMap();
                 }
                 bgframe.setBackgroundResource(R.drawable.notlogging_bg);
@@ -146,6 +148,14 @@ public class EasyModeFragment extends Fragment {
             }
         }
     };
+
+    public void startUploadService(){
+        Intent intent = new Intent(getContext(), UploadTasksService.class);
+        intent.setAction("upload_now");
+        intent.putExtra("upload_uri", uploadFileUri);
+        this.getContext().startService(intent);
+
+    }
 
     private void openMap(){
         Intent i = new Intent(this.getActivity(), MapsActivity.class);

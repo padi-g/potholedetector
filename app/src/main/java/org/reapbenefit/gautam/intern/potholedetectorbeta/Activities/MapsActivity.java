@@ -1,15 +1,11 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
-import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -22,7 +18,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.analytics.FirebaseAnalytics;
@@ -30,7 +25,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.MyLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
@@ -60,7 +54,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private SeekBar accuracySeekbar;
     private Button submitButton;
     private String tripID;
-    private int linesPerSec;
+    private int linesPerPeriod;
     private float threshold;
     private String axisOfInterest;
     private int axisIndex, locIndex;
@@ -91,8 +85,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         logAnalytics("map_opened");
         finishedTrip = ApplicationClass.getInstance().getTrip();
         tripID = finishedTrip.getTrip_id();
-        linesPerSec = finishedTrip.getNo_of_lines()*3;
-        threshold = finishedTrip.getThreshold()*8;
+        linesPerPeriod = finishedTrip.getNo_of_lines()*3;
+        threshold = finishedTrip.getThreshold()*9;
         axisOfInterest = finishedTrip.getAxis();
 
         spinner = (ProgressBar) findViewById(R.id.indeterminateBar);
@@ -259,8 +253,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 while ((line = bufferedReader.readLine()) != null) {
                     String values[] = line.split(",");
                     lineNumber++;
-                    if(Float.valueOf(values[axisIndex]) > threshold && lineNumber>prevLineNumber+linesPerSec){
-                        // this ignores the first second of data
+                    if(Float.valueOf(values[axisIndex]) > threshold && lineNumber>prevLineNumber+ linesPerPeriod){
+                        // this ignores the first period of data
                         pointsOfInterest.put(lineNumber, line);
                         prevLineNumber = lineNumber;
                     }
