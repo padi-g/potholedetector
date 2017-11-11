@@ -15,19 +15,16 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 public class ApplicationClass extends MultiDexApplication {
 
-    public GoogleApiClient mGoogleApiClient;
     private GoogleApiHelper googleApiHelper;
     private static ApplicationClass singleton;
-    public Context mContext;
     protected static String TAG = "Application";
-    public static boolean tripInProgress, tripEnded = false;  // ended is to make sure that only one trip per instance
+    private boolean tripInProgress, tripEnded = false;  // ended is to make sure that only one trip per instance
 
     private Trip trip;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        mContext = getApplicationContext();
         singleton = this;
 
         Log.i(TAG, "App started");
@@ -38,19 +35,14 @@ public class ApplicationClass extends MultiDexApplication {
 
         tripInProgress = false;
         googleApiHelper = new GoogleApiHelper(singleton);
-        mGoogleApiClient = googleApiHelper.getGoogleApiClient();
     }
 
     public static synchronized ApplicationClass getInstance() {
         return singleton;
     }
 
-    public GoogleApiHelper getGoogleApiHelperInstance() {
+    public GoogleApiHelper getGoogleApiHelper() {
         return this.googleApiHelper;
-    }
-
-    public static GoogleApiHelper getGoogleApiHelper() {
-        return getInstance().getGoogleApiHelperInstance();
     }
 
     public void setTrip(Trip incoming) {
@@ -59,6 +51,22 @@ public class ApplicationClass extends MultiDexApplication {
 
     public Trip getTrip() {
         return trip;
+    }
+
+    public boolean isTripInProgress() {
+        return tripInProgress;
+    }
+
+    public void setTripInProgress(boolean tripInProgress) {
+        this.tripInProgress = tripInProgress;
+    }
+
+    public boolean isTripEnded() {
+        return tripEnded;
+    }
+
+    public void setTripEnded(boolean tripEnded) {
+        this.tripEnded = tripEnded;
     }
 }
 

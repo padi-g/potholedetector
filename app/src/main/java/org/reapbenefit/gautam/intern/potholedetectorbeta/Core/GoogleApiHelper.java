@@ -58,7 +58,6 @@ public class GoogleApiHelper implements GoogleApiClient.ConnectionCallbacks, Goo
 
     private void buildGoogleApiClient() {
 
-
         Log.i(TAG, "Building GoogleApiClient");
         mGoogleApiClient = new GoogleApiClient.Builder(context)
                 .addConnectionCallbacks(this)

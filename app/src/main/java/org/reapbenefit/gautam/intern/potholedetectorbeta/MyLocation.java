@@ -2,8 +2,6 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.location.Location;
 
-import com.google.android.gms.maps.model.LatLng;
-
 /**
  * Created by gautam on 11/10/17.
  */

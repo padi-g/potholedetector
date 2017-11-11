@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
@@ -23,17 +22,11 @@ import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResolvableApiException;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -41,7 +34,6 @@ import com.google.firebase.auth.FirebaseAuth;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.FileProcessorService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
@@ -57,14 +49,8 @@ public class MainActivity extends AppCompatActivity
         TriplistFragment.OnFragmentInteractionListener, EasyModeFragment.OnFragmentInteractionListener,
         EasyPermissions.PermissionCallbacks {
 
-
     private TabLayout tabLayout;
     private ViewPager viewPager;
-
-    protected GoogleApiClient mGoogleApiClient;
-    protected Location mCurrentLocation;
-
-    private int activityType, confidence;
 
     private static Switch StartsStop;
 
@@ -75,6 +61,7 @@ public class MainActivity extends AppCompatActivity
 
     private FirebaseAuth mAuth;
     private Toolbar toolbar;
+    ApplicationClass app;
 
 
     @Override
@@ -82,6 +69,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         Log.d(TAG, "Inside onCreate");
+        app = ApplicationClass.getInstance();
 
         setContentView(R.layout.activity_main);
 
@@ -91,26 +79,19 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setTitle("Road Quality Audit");
 
-        mGoogleApiClient = ApplicationClass.getGoogleApiHelper().getGoogleApiClient();
         i = new Intent(MainActivity.this, LoggerService.class);
         settingsrequest();
 
         StartsStop = (Switch) findViewById(R.id.stopSwitch);
         StartsStop.setChecked(false);
-        /*
-        Intent intentFromService = getIntent();
-        tripStarted = intentFromService.getBooleanExtra("CarMode", false); // false is default
-        activityType = intentFromService.getIntExtra("ActivityType", -2);  // -2 is random.
-        confidence = intentFromService.getIntExtra("Confidence", 0); // 0 is default
-        */
 
-        if (!ApplicationClass.tripInProgress && !ApplicationClass.tripEnded) {
+        if (!app.isTripInProgress() && !app.isTripEnded()) {
             // this did not come from intent service
             // Show dialog asking to open
             buildDialog();
-        } else if(ApplicationClass.tripInProgress && !ApplicationClass.tripEnded) {
+        } else if(app.isTripInProgress() && !app.isTripEnded()) {
             StartsStop.setChecked(true);
-        }else if(ApplicationClass.tripInProgress && ApplicationClass.tripEnded) {
+        }else if(app.isTripInProgress() && app.isTripEnded()) {
             // case is not possible
         } else /* !ApplicationClass.tripInProgress && ApplicationClass.tripEnded */ {
             StartsStop.setVisibility(View.GONE);
@@ -156,29 +137,22 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                if (b) {
-                   if(ApplicationClass.tripInProgress)
+                   if(app.isTripInProgress())
                        // coming from dialog
                        //do nothing
                        ;
                    else {
-                       ApplicationClass.tripInProgress = true;
+                       app.setTripInProgress(true);
                        startLogger();
                        sendTripLoggingBroadcast(true);
                    }
 
                 } else {
-                    ApplicationClass.tripInProgress = false;
+                   app.setTripInProgress(false);
                     //sendTripLoggingBroadcast(false);   // already being sent from the loggerservice
                     stopLogger();
                     StartsStop.setVisibility(View.GONE);
 
-                   /*
-                   Intent processor = new Intent(MainActivity.this, FileProcessorService.class);
-                   startService(processor);
-                   Log.d(TAG, "intent for file processor sent");
-                    */
-                   //MainActivity.this.finish();
-                    //startActivityService();
                 }
             }
         });
@@ -271,7 +245,7 @@ public class MainActivity extends AppCompatActivity
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        ApplicationClass.tripInProgress = true;
+                        app.setTripInProgress(true);
                         StartsStop.setChecked(true);
                         sendTripLoggingBroadcast(true);
                         startLogger();
@@ -395,9 +369,6 @@ public class MainActivity extends AppCompatActivity
 
 
 }
-
-// there is no check whether location enabled or not
-
 
 // Make file names based on start-end location
 // eg koramangala to indiranagar

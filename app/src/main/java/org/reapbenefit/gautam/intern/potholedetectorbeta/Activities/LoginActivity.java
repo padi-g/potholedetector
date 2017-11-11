@@ -52,10 +52,14 @@ public class LoginActivity extends AppCompatActivity {
 
     private ProgressDialog dialog;
 
+    ApplicationClass app;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        app = ApplicationClass.getInstance();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -90,7 +94,7 @@ public class LoginActivity extends AppCompatActivity {
         if(mAuth.getCurrentUser() != null) {
             signedIn = true;
             SignIn.setVisibility(View.GONE);
-            if(ApplicationClass.tripInProgress)
+            if(app.isTripInProgress())
                 SignOut.setVisibility(View.INVISIBLE);
             else    SignOut.setVisibility(View.VISIBLE);
 

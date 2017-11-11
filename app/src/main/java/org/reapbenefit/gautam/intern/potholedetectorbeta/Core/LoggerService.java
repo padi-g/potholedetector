@@ -1,7 +1,6 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
@@ -17,11 +16,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.support.annotation.Nullable;
-import android.support.annotation.StringDef;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
@@ -33,7 +32,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MyLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
@@ -49,8 +47,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
-import static org.reapbenefit.gautam.intern.potholedetectorbeta.Core.GoogleApiHelper.mGoogleApiClient;
 
 /**
  * Created by gautam on 04/06/17.
@@ -105,6 +101,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     private float[] results = new float[]{0.0f, 0.0f, 0.0f};
     private double[] prevLoc = new double[2];
 
+    ApplicationClass app;
+
     public LoggerService() {
         super();
     }
@@ -112,6 +110,12 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        app = ApplicationClass.getInstance();
+
+        GoogleApiClient mGoogleApiClient = app.getGoogleApiHelper().getGoogleApiClient();
+
+        if (!app.getGoogleApiHelper().isConnected())
+            app.getGoogleApiHelper().connect();
 
         newtrip = new Trip();
         fileid = UUID.randomUUID();
@@ -126,7 +130,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         newtrip.setDevice(Build.MANUFACTURER + " " + Build.MODEL + " " + Build.PRODUCT);
         newtrip.setUser_id(mAuth.getCurrentUser().getUid());
 
-        mCurrentLocation = ApplicationClass.getGoogleApiHelper().mCurrentLocation;
+        mCurrentLocation = app.getGoogleApiHelper().mCurrentLocation;
 
         if (mCurrentLocation == null) {
             // retrieving .....
@@ -170,10 +174,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     @Override
     public void onCreate() {
         super.onCreate();
-
-
-        if (!ApplicationClass.getGoogleApiHelper().getGoogleApiClient().isConnected())
-            ApplicationClass.getGoogleApiHelper().getGoogleApiClient().connect();
 
         Intent notificationIntent = new Intent(this, MainActivity.class);
 
@@ -377,8 +377,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         stopTrip();
         stopLocationUpdates();
-        ApplicationClass.getGoogleApiHelper().getGoogleApiClient().disconnect();
-        ApplicationClass.tripEnded = true;
+        app.setTripEnded(true);
         stopForeground(true);
     }
 
@@ -400,7 +399,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         newtrip.setDuration(calcTimeTravelledMins());
         Log.i(TAG+" Duration", String.valueOf(calcTimeTravelledMins()) + " minutes");
 
-        ApplicationClass.getInstance().setTrip(newtrip);
+        app.setTrip(newtrip);
         Log.i(TAG, "logged newtrip");
 
         logAnalytics("stopped_logging_sensor_data");
@@ -445,7 +444,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         try {
             LocationServices.FusedLocationApi.requestLocationUpdates(
-                    ApplicationClass.getGoogleApiHelper().getGoogleApiClient(),
+                    app.getGoogleApiHelper().getGoogleApiClient(),
                     mLocationRequest,
                     this, Looper.getMainLooper()
             ).setResultCallback(new ResultCallback<Status>() {
@@ -464,7 +463,10 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         // stopped state. Doing so helps battery performance and is especially
         // recommended in applications that request frequent location updates.
 
-        LocationServices.FusedLocationApi.removeLocationUpdates(ApplicationClass.getGoogleApiHelper().getGoogleApiClient(), this);
+        LocationServices.FusedLocationApi.removeLocationUpdates(
+                app.getGoogleApiHelper().getGoogleApiClient(),
+                this);
+        app.getGoogleApiHelper().disconnect();
     }
 
     @Override
