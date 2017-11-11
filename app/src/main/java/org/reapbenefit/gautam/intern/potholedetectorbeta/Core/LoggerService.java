@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringDef;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -64,14 +65,15 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     private static final int ACCURACY_REQUIRED = 25;
 
     private String AccXvalue, AccYvalue, AccZvalue, GyroXvalue, GyroYvalue, GyroZvalue, e1, e2, Marks;
+    float accVals[] = null, gyrVals[] = null;
     protected String LocData, mLastUpdateTime;
     boolean gAvailable = true;
     private MediaPlayer mp;
 
     private boolean startFlag = false;
 
-    private int no_of_lines = 0, meansumx =0, meansumy =0, meansumz =0;
-    private float meanx, meany, meanz, threshold;
+    private int no_of_lines = 0;
+    private float meanx, meany, meanz, threshold, meansumx =0, meansumy =0, meansumz =0;
     String axisOfInterest;
 
     private Date startTime, endTime;
@@ -236,35 +238,20 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             if (sensorEvent.values[0] < 5) {
                 mp.start();
                 Marks = "1, ";
-                // and Marks = " , 1 ";  for audio marking
             }
         }
 
-        if (sensorEvent.sensor.getType() == mAccelerometer.getType()) {  // or TYPE_ACCELEROMETER
-            AccXvalue = String.format("%.1f", sensorEvent.values[0]);
-            AccYvalue = String.format("%.1f", sensorEvent.values[1]);
-            AccZvalue = String.format("%.1f", sensorEvent.values[2]);
-
-            // AccX, AccY, AccZ, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy (m)
-            e1 = AccXvalue + ", " + AccYvalue + ", " + AccZvalue + ", ";
-
-            meansumx += Math.abs(sensorEvent.values[0]);
-            meansumy += Math.abs(sensorEvent.values[1]);
-            meansumz += Math.abs(sensorEvent.values[2]);
+        if (sensorEvent.sensor.getType() == mAccelerometer.getType()) {
+            accVals = sensorEvent.values;
         }
 
         if (!gAvailable) {
-            e2 = null;
+            gyrVals = null;
         } else if (sensorEvent.sensor.getType() == mGyroscope.getType()) {
-
-            GyroXvalue = String.format("%.1f", sensorEvent.values[0]);
-            GyroYvalue = String.format("%.1f", sensorEvent.values[1]);
-            GyroZvalue = String.format("%.1f", sensorEvent.values[2]);
-
-            e2 = GyroXvalue + ", " + GyroYvalue + ", " + GyroZvalue + ", ";
-
+            gyrVals = sensorEvent.values;
         }
-        if(mCurrentLocation!=null && e1!=null && (e2!=null || !gAvailable)) {
+
+        if(mCurrentLocation!=null && accVals!=null && (gyrVals!=null || !gAvailable)) {
             if (mCurrentLocation.getAccuracy() < ACCURACY_REQUIRED) {
                 if (!locAccHit && locUpdating) {
                     locAccHit = true;
@@ -278,8 +265,11 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                     startFlag = true;
                 }
 
+                meansumx += Math.abs(accVals[0]);
+                meansumy += Math.abs(accVals[1]);
+                meansumz += Math.abs(accVals[2]);
                 no_of_lines++;
-                writeToFile(e1, e2, LocData);
+                writeToFile(accVals, gyrVals, LocData);
             } else {
                 Log.i(TAG, "Location accuracy not hit " + mCurrentLocation.getAccuracy());
             }
@@ -287,23 +277,32 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     }
 
-    protected void writeToFile(String Acc, String Gyr, String LocationData) {
+    protected void writeToFile(float[] acc, float[] gyr, String LocationData) {
         String data;
 
         if(gAvailable)
-            data = Acc + Gyr + LocationData + ", " + Marks + "\n";
+
+            data = floatArraytoString(acc) + floatArraytoString(gyr) + LocationData + ", " + Marks + "\n";
         else
-            data = Acc + LocationData + ", " + Marks + "\n";
+            data = floatArraytoString(acc) + LocationData + ", " + Marks + "\n";
 
         try {
             out.write(data.getBytes());
             Log.d(TAG, "Writing " + data);
-            //Log.d(TAG, "Writing to csv file at "+ logFile.getPath() );
         } catch (IOException e) {
             Log.d(TAG, "File write failed: " + e.toString());
         }
         Marks = null;
 
+    }
+
+    public String floatArraytoString(float[] fa){
+        StringBuilder sb = new StringBuilder();
+        for(float f : fa) {
+            f = Math.abs(f);
+            sb.append(String.valueOf(f).trim().substring(0, 3) + ",");
+        }
+        return sb.toString();
     }
 
     @Override
@@ -346,7 +345,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         Intent iTemp = new Intent("tripstatus");
         iTemp.putExtra("LoggingStatus", status);
         iTemp.putExtra("filename", uploadFileId);
-        //iTemp.putExtra("essentials", essentials);
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
         l.sendBroadcast(iTemp);
     }
@@ -385,7 +383,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         newtrip.setEndTime(getCurrentDateTime());
         endTime = new Date();
         newtrip.setNo_of_lines((int)(no_of_lines/calcTimeTravelledSecs()));
-        newtrip.setNo_of_lines((int)(no_of_lines/calcTimeTravelledSecs()));
 
         Log.i(TAG+" endtime", String.valueOf(newtrip.getEndTime()));
         mp.stop();
@@ -402,10 +399,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         ApplicationClass.getInstance().setTrip(newtrip);
         Log.i(TAG, "logged newtrip");
 
-        // the uri of the file to be uploaded from fragment
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {
-            newtrip.setAxis(axisOfInterest);
             logGPSpollstoFile(gpsPolls);
             ref.child(newtrip.getUser_id()).child(newtrip.getTrip_id()).setValue(newtrip);
             sendTripLoggingBroadcast(false, fileuri);
@@ -503,9 +498,9 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     }
 
     private void calcMeans(){
-        meanx = (float)meansumx / no_of_lines;
-        meany = (float)meansumy / no_of_lines;
-        meanz = (float)meansumz / no_of_lines;
+        meanx = meansumx / no_of_lines;
+        meany = meansumy / no_of_lines;
+        meanz = meansumz / no_of_lines;
 
         if(meanz >= meany && meanz >= meanx) {
             threshold = meanz;
@@ -521,7 +516,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         }
 
         newtrip.setThreshold(threshold);
-
+        newtrip.setAxis(axisOfInterest);
     }
 
     public void logAnalytics(String data){
@@ -554,34 +549,12 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
     }
 
-    private void sendNotificationForMap() {
-        NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.drawable.ic_launcher)
-                        .setContentTitle("Road Quality Audit")
-                        .setContentText("Data has been processed")
-                        .setSubText("Click to open map");
-        Intent resultIntent = new Intent(this, MapsActivity.class);
-
-        PendingIntent resultPendingIntent =
-                PendingIntent.getActivity(
-                        this,
-                        0,
-                        resultIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT
-                );
-
-        mBuilder.setContentIntent(resultPendingIntent);
-        mBuilder.setAutoCancel(true);
-
-        int mNotificationId = 001;
-        NotificationManager mNotifyMgr =
-                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        mNotifyMgr.notify(mNotificationId, mBuilder.build());
-    }
-
 }
 
 // TODO : Log no. of location updates, locations changed ...
 
 // TODO : Android O Support : fileURI
+
+// TODO :  about : ask users to rate it accordingly
+// tell them that it is beta
+// upload using wifi
