@@ -175,22 +175,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngs.get(0), 15));
+        if(!latLngs.isEmpty()) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngs.get(0), 15));
 
-        PolylineOptions polyline = new PolylineOptions().geodesic(true).width(5).color(Color.BLUE);
+            PolylineOptions polyline = new PolylineOptions().geodesic(true).width(5).color(Color.BLUE);
 
-        for(LatLng l : latLngs){
-            polyline.add(l);
-        }
-        mMap.addPolyline(polyline);
-
-        if(!potholelatLngs.isEmpty()) {
-            for (LatLng l : potholelatLngs) {
-                mMap.addMarker(new MarkerOptions()
-                        .position(l));
+            for (LatLng l : latLngs) {
+                polyline.add(l);
             }
-        }
+            mMap.addPolyline(polyline);
 
+            if (!potholelatLngs.isEmpty()) {
+                for (LatLng l : potholelatLngs) {
+                    mMap.addMarker(new MarkerOptions()
+                            .position(l));
+                }
+            }
+        }else {
+            textview.setText("No locations found");
+        }
     }
 
     private void setUserPercievedAccuracy(int a){

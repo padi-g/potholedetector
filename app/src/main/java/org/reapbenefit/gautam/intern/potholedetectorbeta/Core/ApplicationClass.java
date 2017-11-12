@@ -1,10 +1,8 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
-import android.content.Context;
+import android.location.Location;
 import android.support.multidex.MultiDexApplication;
 import android.util.Log;
-
-import com.google.android.gms.common.api.GoogleApiClient;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
@@ -15,10 +13,10 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 public class ApplicationClass extends MultiDexApplication {
 
-    private GoogleApiHelper googleApiHelper;
     private static ApplicationClass singleton;
     protected static String TAG = "Application";
     private boolean tripInProgress, tripEnded = false;  // ended is to make sure that only one trip per instance
+    private Location mCurrentLocation;
 
     private Trip trip;
 
@@ -34,15 +32,10 @@ public class ApplicationClass extends MultiDexApplication {
         trip = new Trip();
 
         tripInProgress = false;
-        googleApiHelper = new GoogleApiHelper(singleton);
     }
 
     public static synchronized ApplicationClass getInstance() {
         return singleton;
-    }
-
-    public GoogleApiHelper getGoogleApiHelper() {
-        return this.googleApiHelper;
     }
 
     public void setTrip(Trip incoming) {
@@ -67,6 +60,14 @@ public class ApplicationClass extends MultiDexApplication {
 
     public void setTripEnded(boolean tripEnded) {
         this.tripEnded = tripEnded;
+    }
+
+    public Location getCurrentLocation() {
+        return mCurrentLocation;
+    }
+
+    public void setCurrentLocation(Location mCurrentLocation) {
+        this.mCurrentLocation = mCurrentLocation;
     }
 }
 

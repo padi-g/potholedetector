@@ -1,13 +1,17 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 
-import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
@@ -21,17 +25,13 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.ResolvableApiException;
-import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
@@ -39,15 +39,10 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragm
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
-import java.util.List;
-
-import pub.devrel.easypermissions.AfterPermissionGranted;
-import pub.devrel.easypermissions.EasyPermissions;
-
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
-        TriplistFragment.OnFragmentInteractionListener, EasyModeFragment.OnFragmentInteractionListener,
-        EasyPermissions.PermissionCallbacks {
+        TriplistFragment.OnFragmentInteractionListener,
+        EasyModeFragment.OnFragmentInteractionListener{
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
@@ -55,14 +50,14 @@ public class MainActivity extends AppCompatActivity
     private static Switch StartsStop;
 
     protected static final String TAG = "Main_Activity";
-    private  static  final int REQUEST_CHECK_SETTINGS = 0x01;
+    private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 389;
 
-    private Intent i;
+    private Intent loggerIntent;
+    private FusedLocationProviderClient mFusedLocationClient;
 
     private FirebaseAuth mAuth;
     private Toolbar toolbar;
     ApplicationClass app;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +65,8 @@ public class MainActivity extends AppCompatActivity
 
         Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
 
         setContentView(R.layout.activity_main);
 
@@ -79,8 +76,18 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setTitle("Road Quality Audit");
 
-        i = new Intent(MainActivity.this, LoggerService.class);
-        settingsrequest();
+        loggerIntent = new Intent(MainActivity.this, LoggerService.class);
+
+        mAuth = FirebaseAuth.getInstance();
+        if(mAuth.getCurrentUser() == null){
+            // Toast
+            Toast.makeText(this, "Please login to start using the app", Toast.LENGTH_LONG).show();
+            // open login activity
+            Intent i = new Intent(this, LoginActivity.class);
+            startActivity(i);
+        }
+
+        // TODO settings request
 
         StartsStop = (Switch) findViewById(R.id.stopSwitch);
         StartsStop.setChecked(false);
@@ -88,13 +95,14 @@ public class MainActivity extends AppCompatActivity
         if (!app.isTripInProgress() && !app.isTripEnded()) {
             // this did not come from intent service
             // Show dialog asking to open
-            buildDialog();
+            if(checkPermissions())
+                buildDialog();
         } else if(app.isTripInProgress() && !app.isTripEnded()) {
             StartsStop.setChecked(true);
         }else if(app.isTripInProgress() && app.isTripEnded()) {
             // case is not possible
         } else /* !ApplicationClass.tripInProgress && ApplicationClass.tripEnded */ {
-            StartsStop.setVisibility(View.GONE);
+            StartsStop.setChecked(false);
         }
 
         /*
@@ -122,17 +130,6 @@ public class MainActivity extends AppCompatActivity
                 new TabLayout.TabLayoutOnPageChangeListener(tabLayout)
         );
 
-        mAuth = FirebaseAuth.getInstance();
-        if(mAuth.getCurrentUser() == null){
-            // Toast
-            Toast.makeText(this, "Please login to start using the app", Toast.LENGTH_LONG).show();
-            // open login activity
-            Intent i = new Intent(this, LoginActivity.class);
-            startActivity(i);
-        }
-        if(mAuth.getCurrentUser() != null)
-            askPermissions();
-
         StartsStop.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -142,21 +139,178 @@ public class MainActivity extends AppCompatActivity
                        //do nothing
                        ;
                    else {
-                       app.setTripInProgress(true);
-                       startLogger();
-                       sendTripLoggingBroadcast(true);
+                       if(checkPermissions()) {
+                           app.setTripInProgress(true);
+                           startLogger();
+                           sendTripLoggingBroadcast(true);
+                       }else {
+                           StartsStop.setChecked(false);
+                           requestPermissions();
+                       }
                    }
 
                 } else {
                    app.setTripInProgress(false);
                     //sendTripLoggingBroadcast(false);   // already being sent from the loggerservice
                     stopLogger();
-                    StartsStop.setVisibility(View.GONE);
-
                 }
             }
         });
 
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        if (!checkPermissions()) {
+            requestPermissions();
+        } else {
+            getLastLocation();
+        }
+    }
+
+    /**
+     * Provides a simple way of getting a device's location and is well suited for
+     * applications that do not require a fine-grained location and that do not need location
+     * updates. Gets the best and most recent location currently available, which may be null
+     * in rare cases when a location is not available.
+     * <p>
+     * Note: this method should be called after location permission has been granted.
+     */
+    @SuppressWarnings("MissingPermission")
+    private void getLastLocation() {
+        mFusedLocationClient.getLastLocation()
+                .addOnCompleteListener(this, new OnCompleteListener<Location>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Location> task) {
+                        if (task.isSuccessful() && task.getResult() != null) {
+                            app.setCurrentLocation(task.getResult());
+                            showSnackbar(task.getResult().toString());
+                        } else {
+                            Log.w(TAG, "getLastLocation:exception", task.getException());
+
+                            showSnackbar(getString(R.string.no_location_detected));
+                        }
+                    }
+                });
+    }
+
+    /**
+     * Shows a {@link Snackbar} using {@code text}.
+     *
+     * @param text The Snackbar text.
+     */
+    private void showSnackbar(final String text) {
+        View container = findViewById(R.id.main_activity_container);
+        if (container != null) {
+            Snackbar.make(container, text, Snackbar.LENGTH_LONG).show();
+        }
+    }
+
+    /**
+     * Shows a {@link Snackbar}.
+     *
+     * @param mainTextStringId The id for the string resource for the Snackbar text.
+     * @param actionStringId   The text of the action item.
+     * @param listener         The listener associated with the Snackbar action.
+     */
+    private void showSnackbar(final int mainTextStringId, final int actionStringId,
+                              View.OnClickListener listener) {
+        Snackbar.make(findViewById(android.R.id.content),
+                getString(mainTextStringId),
+                Snackbar.LENGTH_INDEFINITE)
+                .setAction(getString(actionStringId), listener).show();
+    }
+
+    /**
+     * Return the current state of the permissions needed.
+     */
+    private boolean checkPermissions() {
+        int permissionState = ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION);
+        return permissionState == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void startLocationPermissionRequest() {
+        ActivityCompat.requestPermissions(MainActivity.this,
+                new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                REQUEST_PERMISSIONS_REQUEST_CODE);
+    }
+
+    private void requestPermissions() {
+        boolean shouldProvideRationale =
+                ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION);
+
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationale) {
+            Log.i(TAG, "Displaying permission rationale to provide additional context.");
+
+            showSnackbar(R.string.permission_rationale, android.R.string.ok,
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            // Request permission
+                            startLocationPermissionRequest();
+                        }
+                    });
+
+        } else {
+            Log.i(TAG, "Requesting permission");
+            // Request permission. It's possible this can be auto answered if device policy
+            // sets the permission in a given state or the user denied the permission
+            // previously and checked "Never ask again".
+            startLocationPermissionRequest();
+        }
+    }
+
+    /**
+     * Callback received when a permissions request has been completed.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        Log.i(TAG, "onRequestPermissionResult");
+        if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
+            if (grantResults.length <= 0) {
+                // If user interaction was interrupted, the permission request is cancelled and you
+                // receive empty arrays.
+                Log.i(TAG, "User interaction was cancelled.");
+            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted.
+                getLastLocation();
+                buildDialog();
+            } else {
+                // Permission denied.
+
+                // Notify the user via a SnackBar that they have rejected a core permission for the
+                // app, which makes the Activity useless. In a real app, core permissions would
+                // typically be best requested during a welcome-screen flow.
+
+                // Additionally, it is important to remember that a permission might have been
+                // rejected without asking the user for permission (device policy or "Never ask
+                // again" prompts). Therefore, a user interface affordance is typically implemented
+                // when permissions are denied. Otherwise, your app could appear unresponsive to
+                // touches or interactions which have required permissions.
+                showSnackbar(R.string.permission_denied_explanation, R.string.settings,
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                // Build intent that displays the App settings screen.
+                                Intent intent = new Intent();
+                                intent.setAction(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                Uri uri = Uri.fromParts("package",
+                                        BuildConfig.APPLICATION_ID, null);
+                                intent.setData(uri);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                            }
+                        });
+            }
+        }
     }
 
     void sendTripLoggingBroadcast(boolean status) {
@@ -166,73 +320,6 @@ public class MainActivity extends AppCompatActivity
         l.sendBroadcast(iTemp);
     }
 
-    public void settingsrequest()
-    {
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest);
-        builder.setAlwaysShow(true); //VERY IMPORTANT
-
-        Task<LocationSettingsResponse> task =
-                LocationServices.getSettingsClient(this).checkLocationSettings(builder.build());
-
-        task.addOnCompleteListener(new OnCompleteListener<LocationSettingsResponse>() {
-            @Override
-            public void onComplete(Task<LocationSettingsResponse> task) {
-                try {
-                    LocationSettingsResponse response = task.getResult(ApiException.class);
-                    // All location settings are satisfied. The client can initialize location
-                    // requests here.
-                    // continue
-                } catch (ApiException exception) {
-                    switch (exception.getStatusCode()) {
-                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                            // Location settings are not satisfied. But could be fixed by showing the
-                            // user a dialog.
-                            try {
-                                // Cast to a resolvable exception.
-                                ResolvableApiException resolvable = (ResolvableApiException) exception;
-                                // Show the dialog by calling startResolutionForResult(),
-                                // and check the result in onActivityResult().
-                                resolvable.startResolutionForResult(
-                                        MainActivity.this,
-                                        REQUEST_CHECK_SETTINGS);
-                            } catch (IntentSender.SendIntentException e) {
-                                // Ignore the error.
-                            } catch (ClassCastException e) {
-                                // Ignore, should be an impossible error.
-                            }
-                            break;
-                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                            // Location settings are not satisfied. However, we have no way to fix the
-                            // settings so we won't show the dialog.
-
-                            break;
-                    }
-                }
-            }
-        });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-// Check for the integer request code originally supplied to startResolutionForResult().
-            case REQUEST_CHECK_SETTINGS:
-                switch (resultCode) {
-                    case Activity.RESULT_OK:
-                        // do nothing, continue
-                        break;
-                    case Activity.RESULT_CANCELED:
-                        Toast.makeText(this, "The App needs your location to function properly", Toast.LENGTH_LONG).show();
-                        settingsrequest();//keep asking if imp or do whatever
-                        break;
-                }
-                break;
-        }
-    }
 
 
 
@@ -325,48 +412,12 @@ public class MainActivity extends AppCompatActivity
     */
 
     public void startLogger(){
-        startService(i);
+        startService(loggerIntent);
     }
 
     public void stopLogger(){
-        stopService(i);
+        stopService(loggerIntent);
     }
-
-    @Override
-    public void onPermissionsGranted(int requestCode, List<String> perms) {
-
-    }
-
-    @Override
-    public void onPermissionsDenied(int requestCode, List<String> perms) {
-
-        MainActivity.this.finish();
-        System.exit(0);
-
-    }
-
-    @AfterPermissionGranted(1)
-    private void askPermissions() {
-
-        String[] perms = {android.Manifest.permission.ACCESS_FINE_LOCATION};
-        if (EasyPermissions.hasPermissions(this, perms)) {
-            // Already have permission, do the thing
-            // ...
-        } else {
-            // Do not have permissions, request them now
-            EasyPermissions.requestPermissions(this, "This app will not function without the permissions asked for",
-                    1, perms);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        // Forward results to EasyPermissions
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
-    }
-
 
 }
 

@@ -20,11 +20,11 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
@@ -60,7 +60,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     private Sensor mAccelerometer, mGyroscope, mProximity;
     private static final int ACCURACY_REQUIRED = 25;
 
-    private String AccXvalue, AccYvalue, AccZvalue, GyroXvalue, GyroYvalue, GyroZvalue, e1, e2, Marks;
+    private String Marks;
     float accVals[] = null, gyrVals[] = null;
     protected String LocData, mLastUpdateTime;
     boolean gAvailable = true;
@@ -83,12 +83,13 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     private LocationRequest mLocationRequest;
     private File file;
     private OutputStream out;
+
     private boolean mRequestingLocationUpdates;
-
     private Location mCurrentLocation;
-
     public final long UPDATE_INTERVAL_IN_MILLISECONDS = 0; // Fastest possible limited by hardware
     public final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 0;
+    private FusedLocationProviderClient mFusedLocationClient;
+
 
     private Trip newtrip;
     private FirebaseAuth mAuth;
@@ -102,6 +103,8 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     private double[] prevLoc = new double[2];
 
     ApplicationClass app;
+    private LocationCallback mLocationCallback;
+
 
     public LoggerService() {
         super();
@@ -112,10 +115,10 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         app = ApplicationClass.getInstance();
 
-        GoogleApiClient mGoogleApiClient = app.getGoogleApiHelper().getGoogleApiClient();
 
-        if (!app.getGoogleApiHelper().isConnected())
-            app.getGoogleApiHelper().connect();
+        mCurrentLocation = app.getCurrentLocation();
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         newtrip = new Trip();
         fileid = UUID.randomUUID();
@@ -130,26 +133,13 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         newtrip.setDevice(Build.MANUFACTURER + " " + Build.MODEL + " " + Build.PRODUCT);
         newtrip.setUser_id(mAuth.getCurrentUser().getUid());
 
-        mCurrentLocation = app.getGoogleApiHelper().mCurrentLocation;
 
-        if (mCurrentLocation == null) {
-            // retrieving .....
-            try {
-                mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-                Log.d(TAG, "got initial location data");
-            } catch (SecurityException e) {
-                Log.d(TAG, "Permission not granted for gps");
-            }
-            //mLastUpdateTime = new Date().toString();
-            if (mCurrentLocation != null) {
+        if (mCurrentLocation != null) {
                 mLastUpdateTime = getCurrentTime();
                 LocData = getLocData();
             }
-        }
-        else{
-            mLastUpdateTime = getCurrentTime();
-            LocData = getLocData();
-        }
+        createLocationCallback();
+        createLocationRequest();
         startLocationUpdates();
 
         ///////////// TO MAKE sure that devices without gyroscope dont have null locations
@@ -190,6 +180,58 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         startForeground(1337, notification);
 
     }
+
+    private void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+
+        // Sets the desired interval for active location updates. This interval is
+        // inexact. You may not receive updates at all if no location sources are available, or
+        // you may receive them slower than requested. You may also receive updates faster than
+        // requested if other applications are requesting location at a faster interval.
+        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+
+        // Sets the fastest rate for active location updates. This interval is exact, and your
+        // application will never receive updates faster than this value.
+        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+    private void createLocationCallback() {
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+                Location location = locationResult.getLastLocation();
+
+                locUpdating = true;
+                if (location.getAccuracy() < ACCURACY_REQUIRED && mCurrentLocation != null) {
+                    prevLoc[0] = mCurrentLocation.getLatitude();
+                    prevLoc[1] = mCurrentLocation.getLongitude();
+                    Location.distanceBetween(prevLoc[0], prevLoc[1], location.getLatitude(), location.getLongitude(), results);
+                    distance_travelled += results[0];
+                    gpsPolls.add(MyLocation.locToMyloc(location));
+                }
+                mCurrentLocation = location;
+                mLastUpdateTime = getCurrentTime();
+                LocData = getLocData();
+                //updateLocationUI();
+            }
+        };
+    }
+
+    private void startLocationUpdates() {
+
+        try {
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                    mLocationCallback, Looper.myLooper());
+            mRequestingLocationUpdates = true;
+        }catch (SecurityException e){
+
+        }
+    }
+
 
     private void setupSensors() {
 
@@ -288,7 +330,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
         try {
             out.write(data.getBytes());
-            Log.d(TAG, "Writing " + data);
+            Log.i(TAG, "Writing " + data);
         } catch (IOException e) {
             Log.d(TAG, "File write failed: " + e.toString());
         }
@@ -394,6 +436,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         newtrip.setFilesize(file.length());
         newtrip.setUploaded(false);
         newtrip.setDistanceInKM(distance_travelled/1000);
+        Log.d(TAG, String.valueOf(distance_travelled));
         Uri fileuri = Uri.fromFile(new File(file.getPath()));
 
         newtrip.setDuration(calcTimeTravelledMins());
@@ -412,6 +455,18 @@ public class LoggerService extends Service implements SensorEventListener, Locat
             sendTripLoggingBroadcast(false, null/*, null*/);
         }
 
+    }
+
+    private void stopLocationUpdates() {
+        if (!mRequestingLocationUpdates) {
+            Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
+            return;
+        }
+
+        // It is a good practice to remove location requests when the activity is in a paused or
+        // stopped state. Doing so helps battery performance and is especially
+        // recommended in applications that request frequent location updates.
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
     }
 
     public String getCurrentTime(){
@@ -435,39 +490,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         return d.toString();
     }
 
-    public void startLocationUpdates() {
 
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        try {
-            LocationServices.FusedLocationApi.requestLocationUpdates(
-                    app.getGoogleApiHelper().getGoogleApiClient(),
-                    mLocationRequest,
-                    this, Looper.getMainLooper()
-            ).setResultCallback(new ResultCallback<Status>() {
-                @Override
-                public void onResult(Status status) {
-                    mRequestingLocationUpdates = true;
-                }
-            });
-        } catch (SecurityException | IllegalStateException e) {
-            e.printStackTrace();
-        }
-    }
-
-    protected void stopLocationUpdates() {
-        // It is a good practice to remove location requests when the activity is in a paused or
-        // stopped state. Doing so helps battery performance and is especially
-        // recommended in applications that request frequent location updates.
-
-        LocationServices.FusedLocationApi.removeLocationUpdates(
-                app.getGoogleApiHelper().getGoogleApiClient(),
-                this);
-        app.getGoogleApiHelper().disconnect();
-    }
 
     @Override
     public void onLocationChanged(Location location) {
@@ -556,8 +579,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     }
 
 }
-
-// TODO : Log no. of location updates, locations changed ...
 
 // TODO : Android O Support : fileURI
 

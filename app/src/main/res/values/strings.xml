@@ -27,6 +27,15 @@
     <string name="icons_home"><a href="https://icons8.com/web-app/5572/Home">Home icon credits</a></string>
     <string name="icons_settings"><a href="https://icons8.com/web-app/5590/Settings">Settings icon credits</a></string>
 
+    <string name="no_location_detected">
+        No location detected. Make sure location is enabled on the device.
+    </string>
+
+    <string name="permission_rationale">Location permission is needed for core functionality</string>
+    <string name="permission_denied_explanation">Permission was denied, but is needed for core
+        functionality.</string>
+    <string name="settings">Settings</string>
+
     <string name="trips">All your trips</string>
     <string name="low">Lower Value</string>
     <string name="up">Upper Value</string>

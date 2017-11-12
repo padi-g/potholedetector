@@ -1,17 +1,13 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
-import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,23 +17,17 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnPausedListener;
-import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.UploadTasksService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.UploadTasksService;
 
 import java.util.List;
-
-import static android.content.Context.NOTIFICATION_SERVICE;
 
 
 /**
@@ -64,12 +54,10 @@ public class EasyModeFragment extends Fragment {
     static public Uri uploadFileUri;
     private View bgframe;
     private TextView statusIndicatorText;
-    private StorageReference mStorageRef;
 
     private StorageReference fileRef = null;
     private Button restartButton;
 
-    private FirebaseAuth mAuth;
     ApplicationClass app;
 
     public EasyModeFragment() {
@@ -108,8 +96,6 @@ public class EasyModeFragment extends Fragment {
         }
 
         app = ApplicationClass.getInstance();
-        mStorageRef = FirebaseStorage.getInstance().getReference();
-        mAuth = FirebaseAuth.getInstance();
 
     }
 
@@ -281,102 +267,4 @@ public class EasyModeFragment extends Fragment {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
-
-    private class MyUploadTask extends AsyncTask<Uri, Integer, Void>{
-
-        NotificationManager mNotifyMgr;
-        int mNotificationId = 101;
-        NotificationCompat.Builder mBuilder;
-        int uploadProgress = 0;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-
-             mBuilder = new NotificationCompat.Builder(getContext())
-                            .setSmallIcon(R.drawable.ic_upload)
-                            .setContentTitle("Road Quality Audit")
-                            .setContentText("Data is being Uploaded");
-
-            mNotifyMgr =
-                    (NotificationManager) getActivity().getSystemService(NOTIFICATION_SERVICE);
-            mNotifyMgr.notify(mNotificationId, mBuilder.build());
-
-        }
-
-        @Override
-        protected Void doInBackground(Uri... files) {
-
-            mNotifyMgr.notify(mNotificationId, mBuilder.build());
-            uploadFile(files[0]);
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-            if(values[0] == -1)
-                mBuilder.setContentText("Upload paused");
-            else if(values[0] == -2)
-                mBuilder.setContentText("Upload failed");
-            else {
-                mBuilder.setProgress(100, values[0], false);
-                if (values[0] == 100)
-                    mBuilder.setContentText("Upload Complete");
-            }
-            mNotifyMgr.notify(mNotificationId, mBuilder.build());
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            mNotifyMgr.notify(mNotificationId, mBuilder.build());
-        }
-
-        public void uploadFile(Uri uri){
-
-            String filename = uri.toString().substring(uri.toString().lastIndexOf('/')) ;
-
-            StorageReference fileRef = mStorageRef.child("logs/" + mAuth.getCurrentUser().getUid() + filename);
-
-            UploadTask uploadTask = fileRef.putFile(uri);
-
-            uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                    Log.d("Uploading ", progress + "% done");
-                    uploadProgress = (int) progress;
-                    publishProgress(uploadProgress);
-                }
-
-            }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
-                    System.out.println("Upload is paused");
-                    publishProgress(-1);  // paused code
-                }
-
-            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-
-                    publishProgress(100);
-                    // update to database object uploaded = true
-
-                    }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    // Handle unsuccessful uploads
-                    publishProgress(-2);  // failed code
-                }
-            });
-
-        }
-
-    }
 }
-
-/// TODO: Fix uploads

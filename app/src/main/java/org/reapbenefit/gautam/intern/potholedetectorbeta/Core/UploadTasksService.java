@@ -1,4 +1,4 @@
-package org.reapbenefit.gautam.intern.potholedetectorbeta;
+package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
@@ -16,6 +16,8 @@ import com.google.firebase.storage.OnPausedListener;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+
+import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 /**
  * Created by gautam on 13/09/17.

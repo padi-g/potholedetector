@@ -109,7 +109,7 @@
             android:enabled="true" />
 
         <service
-            android:name=".UploadTasksService"
+            android:name=".Core.UploadTasksService"
             android:enabled="true" />
 
 
