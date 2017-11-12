@@ -19,12 +19,6 @@
         android:theme="@style/AppTheme">
         <activity android:name=".Activities.MainActivity"
             android:screenOrientation="portrait">
-            <!-- temporary disabling
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            -->
         </activity>
 
         <activity android:name=".Activities.SplashActivity"
@@ -99,6 +93,9 @@
                 android:value="org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity" />
 
         </activity>
+
+        <activity android:name=".Activities.OnboardingActivity"
+            android:screenOrientation="portrait"/>
 
         <service
             android:name=".Core.LoggerService"

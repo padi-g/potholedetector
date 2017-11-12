@@ -56,7 +56,6 @@ public class EasyModeFragment extends Fragment {
     private TextView statusIndicatorText;
 
     private StorageReference fileRef = null;
-    private Button restartButton;
 
     ApplicationClass app;
 
@@ -110,12 +109,10 @@ public class EasyModeFragment extends Fragment {
             }else {
                 uploadFileUri = intent.getParcelableExtra("filename");
                 if(uploadFileUri == null){
-                    restartButton.setVisibility(View.VISIBLE);
                     statusIndicatorText.setText("Sorry, we could not detect your location accurately");
                 }else {
                     Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
-                    statusIndicatorText.setText("Thanks for your contribution! \n\n Come back again");
-                    restartButton.setVisibility(View.VISIBLE);
+                    statusIndicatorText.setText("Thanks for your contribution!");
                     //new MyUploadTask().execute(uploadFileUri);
                     startUploadService();
                     openMap();
@@ -156,20 +153,12 @@ public class EasyModeFragment extends Fragment {
 
         bgframe = (RelativeLayout) v.findViewById(R.id.easyframe);
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
-        restartButton = (Button) v.findViewById(R.id.restart);
-        restartButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getActivity().finish();
-                System.exit(0);
-            }
-        });
+
         if(app.isTripInProgress()){
             bgframe.setBackgroundResource(R.drawable.logging_bg);
             statusIndicatorText.setText(getResources().getString(R.string.detecting));
         }else if(app.isTripEnded()){
-            statusIndicatorText.setText("Thanks for your contribution! \n\n Come back again");
-            restartButton.setVisibility(View.VISIBLE);
+            statusIndicatorText.setText("Thanks for your contribution!");
         }
 
         return v;

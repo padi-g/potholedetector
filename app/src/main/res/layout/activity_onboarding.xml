@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary">
+
+    <com.google.android.gms.common.SignInButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:id="@+id/start_sign_in">
+
+    </com.google.android.gms.common.SignInButton>
+
+    <TextView
+        android:text="Hello"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="70dp"
+        android:id="@+id/status"
+        android:textSize="30sp"
+        android:textStyle="normal|bold|italic"
+        android:layout_centerHorizontal="true"
+        android:textColor="@color/icons"/>
+
+    <TextView
+        android:text="TextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/status"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/name"
+        android:textSize="36sp"
+        android:textColor="@color/icons"
+        android:textAllCaps="false"
+        android:fontFamily="sans-serif-condensed"
+        android:visibility="invisible" />
+
+    <Button
+        android:text="Continue"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/colorAccent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/confirm_button"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/start_sign_in"
+        android:textStyle="normal|bold"
+        android:drawableRight="@drawable/ic_chevron_right"
+        android:drawableTint="@color/colorAccent"
+        android:textSize="30sp"
+        android:visibility="gone"
+        android:layout_marginTop="67dp" />
+
+
+</RelativeLayout>

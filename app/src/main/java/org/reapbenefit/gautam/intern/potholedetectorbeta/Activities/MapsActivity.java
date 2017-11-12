@@ -61,7 +61,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Trip finishedTrip;
     private HashMap<Integer, String> pointsOfInterest = new HashMap<>();
     private int accuracy_result = 0;
-    // TODO : set validation rules for troublesome values like accuracy
 
     @Override
     protected void onDestroy() {

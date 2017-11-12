@@ -87,8 +87,6 @@ public class MainActivity extends AppCompatActivity
             startActivity(i);
         }
 
-        // TODO settings request
-
         StartsStop = (Switch) findViewById(R.id.stopSwitch);
         StartsStop.setChecked(false);
 
@@ -186,7 +184,8 @@ public class MainActivity extends AppCompatActivity
                     public void onComplete(@NonNull Task<Location> task) {
                         if (task.isSuccessful() && task.getResult() != null) {
                             app.setCurrentLocation(task.getResult());
-                            showSnackbar(task.getResult().toString());
+                            if(task.getResult().getAccuracy() < 25 && app.isTripEnded())
+                                showSnackbar("Location detected");
                         } else {
                             Log.w(TAG, "getLastLocation:exception", task.getException());
 
