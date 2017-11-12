@@ -3,6 +3,7 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
@@ -25,9 +26,19 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.CommonStatusCodes;
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -51,6 +62,7 @@ public class MainActivity extends AppCompatActivity
 
     protected static final String TAG = "Main_Activity";
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 389;
+    private static final int REQUEST_CHECK_SETTINGS = 23;
 
     private Intent loggerIntent;
     private FusedLocationProviderClient mFusedLocationClient;
@@ -66,7 +78,6 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
 
         setContentView(R.layout.activity_main);
 
@@ -90,11 +101,14 @@ public class MainActivity extends AppCompatActivity
         StartsStop = (Switch) findViewById(R.id.stopSwitch);
         StartsStop.setChecked(false);
 
+        settingsRequest();
+
         if (!app.isTripInProgress() && !app.isTripEnded()) {
             // this did not come from intent service
             // Show dialog asking to open
-            if(checkPermissions())
+            if(checkPermissions()) {
                 buildDialog();
+            }
         } else if(app.isTripInProgress() && !app.isTripEnded()) {
             StartsStop.setChecked(true);
         }else if(app.isTripInProgress() && app.isTripEnded()) {
@@ -133,11 +147,13 @@ public class MainActivity extends AppCompatActivity
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                if (b) {
                    if(app.isTripInProgress())
+                       settingsRequest();
                        // coming from dialog
                        //do nothing
-                       ;
+
                    else {
                        if(checkPermissions()) {
+                           settingsRequest();
                            app.setTripInProgress(true);
                            startLogger();
                            sendTripLoggingBroadcast(true);
@@ -155,6 +171,49 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+    }
+
+    private void settingsRequest(){
+        LocationRequest mLocationRequest = new LocationRequest();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest);
+        SettingsClient client = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+
+        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+            @Override
+            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                // All location settings are satisfied. The client can initialize
+                // location requests now.
+            }
+        });
+
+        task.addOnFailureListener(this, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                int statusCode = ((ApiException) e).getStatusCode();
+                switch (statusCode) {
+                    case CommonStatusCodes.RESOLUTION_REQUIRED:
+                        // Location settings are not satisfied, but this can be fixed
+                        // by showing the user a dialog.
+                        try {
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            ResolvableApiException resolvable = (ResolvableApiException) e;
+                            resolvable.startResolutionForResult(MainActivity.this,
+                                    REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException sendEx) {
+                            // Ignore the error.
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        // Location settings are not satisfied. However, we have no way
+                        // to fix the settings so we won't show the dialog.
+                        break;
+                }
+            }
+        });
     }
 
     @Override
