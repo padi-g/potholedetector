@@ -36,7 +36,7 @@ public class CreditsActivity extends AppCompatActivity {
     public void sendEmail(View v){
         Intent intent = new Intent(Intent.ACTION_SENDTO);
         intent.setData(Uri.parse("mailto:")); // only email apps should handle this
-        intent.putExtra(Intent.EXTRA_EMAIL, "gp712@snu.edu.in");
+        intent.putExtra(Intent.EXTRA_EMAIL, "intern.gautam@reapbenefit.org");
         intent.putExtra(Intent.EXTRA_SUBJECT, "Regarding Road Quality Audit android app");
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);

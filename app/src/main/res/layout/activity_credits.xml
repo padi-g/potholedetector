@@ -89,7 +89,7 @@
                 android:paddingTop="10dp" />
 
             <TextView
-                android:text="gp712@snu.edu.in"
+                android:text="intern.gautam@reapbenefit.org"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="start"

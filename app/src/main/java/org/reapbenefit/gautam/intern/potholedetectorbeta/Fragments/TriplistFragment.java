@@ -24,8 +24,13 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.Locale;
 
 
 /**
@@ -62,6 +67,7 @@ public class TriplistFragment extends Fragment {
 
     private long timeScore = 0;  // calculated based on time logged
     private long distanceScore = 0;  // calculated based on distance logged
+    private CustomTripComparator comparator;
 
 
     public TriplistFragment() {
@@ -94,6 +100,7 @@ public class TriplistFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
+        comparator = new CustomTripComparator();
         try {   // thrown when the user is not signed in
             myRef = myRef.child(mAuth.getCurrentUser().getUid());
             profileRef = profileRef.child("profiles").child(mAuth.getCurrentUser().getUid());
@@ -137,8 +144,20 @@ public class TriplistFragment extends Fragment {
         }
     }
 
+
+
+    private long getTime(String date) throws ParseException{
+
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
+        Date d = sdf.parse(date);
+        Log.d("Times", String.valueOf(d.getTime())+d.toString());
+        return d.getTime();
+
+    }
+
     private void createListView(){
         if(!trips.isEmpty() && getActivity()!=null) {
+            Collections.sort(trips, new CustomTripComparator());
             adapter = new TripListAdapter(getActivity(), trips);
             l.setAdapter(new TripListAdapter(getActivity(), trips));
         }
@@ -235,10 +254,15 @@ public class TriplistFragment extends Fragment {
         void onFragmentInteraction(Uri uri);
     }
 
-    class CustomComparator implements Comparator<Trip> {
+    public class CustomTripComparator implements Comparator<Trip> {
         @Override
-        public int compare(Trip o1, Trip o2) {
-            return 0;
+        public int compare(Trip o2, Trip o1) {
+            try{
+                return Long.valueOf(getTime(o1.getEndTime())).compareTo(Long.valueOf(getTime(o2.getEndTime())));
+            }catch (ParseException e){
+                Log.d("Times", e.getMessage());
+                return 0;
+            }
         }
     }
 }
