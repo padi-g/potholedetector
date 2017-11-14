@@ -1,10 +1,13 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by gautam on 29/06/17.
  */
 
-public class Trip {
+public class Trip implements Parcelable {
 
     private String trip_id;  // unique id for trip and name for the file
     private String user_id;  // user who created this trip
@@ -47,13 +50,7 @@ public class Trip {
         this.userRating = t.userRating;
     }  // copy constructor
 
-    public void writeToJsonFile() {
 
-        // load all trip objects to an arraylist of trips
-        // search for relevant trip object
-        // write new data to it
-
-    }
 
     public String getTrip_id() {
         return trip_id;
@@ -182,4 +179,60 @@ public class Trip {
     public void setPotholeCount(int potholeCount) {
         this.potholeCount = potholeCount;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.trip_id);
+        dest.writeString(this.user_id);
+        dest.writeLong(this.filesize);
+        dest.writeByte(this.uploaded ? (byte) 1 : (byte) 0);
+        dest.writeString(this.startTime);
+        dest.writeString(this.endTime);
+        dest.writeParcelable(this.startLoc, flags);
+        dest.writeParcelable(this.endLoc, flags);
+        dest.writeInt(this.no_of_lines);
+        dest.writeFloat(this.distanceInKM);
+        dest.writeLong(this.duration);
+        dest.writeString(this.device);
+        dest.writeInt(this.userRating);
+        dest.writeString(this.axis);
+        dest.writeFloat(this.threshold);
+        dest.writeInt(this.potholeCount);
+    }
+
+    protected Trip(Parcel in) {
+        this.trip_id = in.readString();
+        this.user_id = in.readString();
+        this.filesize = in.readLong();
+        this.uploaded = in.readByte() != 0;
+        this.startTime = in.readString();
+        this.endTime = in.readString();
+        this.startLoc = in.readParcelable(MyLocation.class.getClassLoader());
+        this.endLoc = in.readParcelable(MyLocation.class.getClassLoader());
+        this.no_of_lines = in.readInt();
+        this.distanceInKM = in.readFloat();
+        this.duration = in.readLong();
+        this.device = in.readString();
+        this.userRating = in.readInt();
+        this.axis = in.readString();
+        this.threshold = in.readFloat();
+        this.potholeCount = in.readInt();
+    }
+
+    public static final Creator<Trip> CREATOR = new Creator<Trip>() {
+        @Override
+        public Trip createFromParcel(Parcel source) {
+            return new Trip(source);
+        }
+
+        @Override
+        public Trip[] newArray(int size) {
+            return new Trip[size];
+        }
+    };
 }

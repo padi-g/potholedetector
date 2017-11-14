@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -53,7 +54,7 @@ import java.util.concurrent.TimeUnit;
  * This service does all the data logging
  */
 
-public class LoggerService extends Service implements SensorEventListener, LocationListener {
+public class LoggerService extends Service implements SensorEventListener {
 
     protected String TAG = "Logger_Service";
     private SensorManager mSensorManager;
@@ -89,6 +90,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
     public final long UPDATE_INTERVAL_IN_MILLISECONDS = 0; // Fastest possible limited by hardware
     public final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 0;
     private FusedLocationProviderClient mFusedLocationClient;
+    private long inaccurateTiming = SystemClock.elapsedRealtimeNanos();
 
 
     private Trip newtrip;
@@ -207,18 +209,28 @@ public class LoggerService extends Service implements SensorEventListener, Locat
 
                 locUpdating = true;
                 if (location.getAccuracy() < ACCURACY_REQUIRED && mCurrentLocation != null) {
-                    prevLoc[0] = mCurrentLocation.getLatitude();
-                    prevLoc[1] = mCurrentLocation.getLongitude();
-                    Location.distanceBetween(prevLoc[0], prevLoc[1], location.getLatitude(), location.getLongitude(), results);
-                    distance_travelled += results[0];
-                    gpsPolls.add(MyLocation.locToMyloc(location));
+                    if(age_minutes(mCurrentLocation) < 1) {
+                        prevLoc[0] = mCurrentLocation.getLatitude();
+                        prevLoc[1] = mCurrentLocation.getLongitude();
+                        Location.distanceBetween(prevLoc[0], prevLoc[1], location.getLatitude(), location.getLongitude(), results);
+                        distance_travelled += results[0];
+                        gpsPolls.add(MyLocation.locToMyloc(location));
+                    }
                 }
                 mCurrentLocation = location;
                 mLastUpdateTime = getCurrentTime();
                 LocData = getLocData();
-                //updateLocationUI();
             }
         };
+    }
+
+    private long age_ms(Location last) {
+        return (SystemClock.elapsedRealtimeNanos() - last
+                .getElapsedRealtimeNanos()) / 1000000;
+    }
+
+    public int age_minutes(Location last) {
+        return (int)age_ms(last)/(60*1000);
     }
 
     private void startLocationUpdates() {
@@ -314,6 +326,7 @@ public class LoggerService extends Service implements SensorEventListener, Locat
                 writeToFile(accVals, gyrVals, LocData);
             } else {
                 Log.i(TAG, "Location accuracy not hit " + mCurrentLocation.getAccuracy());
+                // do some timing
             }
         }
 
@@ -490,22 +503,6 @@ public class LoggerService extends Service implements SensorEventListener, Locat
         return d.toString();
     }
 
-
-
-    @Override
-    public void onLocationChanged(Location location) {
-        locUpdating = true;
-        if (location.getAccuracy() < ACCURACY_REQUIRED && mCurrentLocation != null) {
-            prevLoc[0] = mCurrentLocation.getLatitude();
-            prevLoc[1] = mCurrentLocation.getLongitude();
-            Location.distanceBetween(prevLoc[0], prevLoc[1], location.getLatitude(), location.getLongitude(), results);
-            distance_travelled += results[0];
-            gpsPolls.add(MyLocation.locToMyloc(location));
-        }
-        mCurrentLocation = location;
-        mLastUpdateTime = getCurrentTime();
-        LocData = getLocData();
-    }
 
     public String getLocData() {
 

@@ -418,24 +418,21 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
 
         int id = item.getItemId();
-
+        Intent intent = new Intent();
         if (id == R.id.actions_about) {
-            Intent intent = new Intent(this, AboutActivity.class);
-            startActivity(intent);
+            intent = new Intent(this, AboutActivity.class);
         }
         if (id == R.id.actions_credits) {
-            Intent intent = new Intent(this, CreditsActivity.class);
-            startActivity(intent);
+            intent = new Intent(this, CreditsActivity.class);
         }
         if (id == R.id.actions_partners) {
-            Intent intent = new Intent(this, PartnersActivity.class);
-            startActivity(intent);
+            intent = new Intent(this, PartnersActivity.class);
         }
         if (id == R.id.actions_login) {
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
+            intent = new Intent(this, LoginActivity.class);
         }
 
+        startActivity(intent);
         return super.onOptionsItemSelected(item);
     }
 

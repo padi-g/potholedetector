@@ -1,11 +1,13 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.location.Location;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * Created by gautam on 11/10/17.
  */
-public class MyLocation  {
+public class MyLocation implements Parcelable {
 
 
     private float accuracy;
@@ -49,4 +51,33 @@ public class MyLocation  {
         this.longitude = longitude;
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeFloat(this.accuracy);
+        dest.writeDouble(this.latitude);
+        dest.writeDouble(this.longitude);
+    }
+
+    protected MyLocation(Parcel in) {
+        this.accuracy = in.readFloat();
+        this.latitude = in.readDouble();
+        this.longitude = in.readDouble();
+    }
+
+    public static final Parcelable.Creator<MyLocation> CREATOR = new Parcelable.Creator<MyLocation>() {
+        @Override
+        public MyLocation createFromParcel(Parcel source) {
+            return new MyLocation(source);
+        }
+
+        @Override
+        public MyLocation[] newArray(int size) {
+            return new MyLocation[size];
+        }
+    };
 }

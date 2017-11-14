@@ -1,6 +1,7 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -11,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -20,10 +22,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
 
+import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -68,6 +73,7 @@ public class TriplistFragment extends Fragment {
     private long timeScore = 0;  // calculated based on time logged
     private long distanceScore = 0;  // calculated based on distance logged
     private CustomTripComparator comparator;
+    ApplicationClass app;
 
 
     public TriplistFragment() {
@@ -100,6 +106,7 @@ public class TriplistFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
+        app = ApplicationClass.getInstance();
         comparator = new CustomTripComparator();
         try {   // thrown when the user is not signed in
             myRef = myRef.child(mAuth.getCurrentUser().getUid());
@@ -160,6 +167,21 @@ public class TriplistFragment extends Fragment {
             Collections.sort(trips, new CustomTripComparator());
             adapter = new TripListAdapter(getActivity(), trips);
             l.setAdapter(new TripListAdapter(getActivity(), trips));
+            l.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+            l.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Trip t = trips.get(position);
+                    File file = new File(getActivity().getApplicationContext().getFilesDir(), "analysis/" + t.getTrip_id() + ".csv");
+                    if(!app.isTripInProgress() && file.exists()){ // check if file of same name is available in the analytics folder
+                        Intent i = new Intent(getActivity(), MapsActivity.class);
+                        i.putExtra("trip", t);
+                        startActivity(i);
+                    }else{
+                        //Toast.makeText(getActivity(), )
+                    }
+                }
+            });
         }
     }
 

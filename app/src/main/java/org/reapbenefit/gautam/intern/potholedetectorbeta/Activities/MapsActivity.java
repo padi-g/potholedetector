@@ -1,5 +1,6 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -82,10 +83,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         logAnalytics("map_opened");
-        finishedTrip = ApplicationClass.getInstance().getTrip();
+
+        Intent i = getIntent();
+        finishedTrip = i.getParcelableExtra("trip");
+        if (finishedTrip == null) {
+            finishedTrip = ApplicationClass.getInstance().getTrip();
+        }
+
         tripID = finishedTrip.getTrip_id();
-        linesPerPeriod = finishedTrip.getNo_of_lines()*3;
-        threshold = finishedTrip.getThreshold()*9;
+        linesPerPeriod = finishedTrip.getNo_of_lines() * 3;
+        threshold = finishedTrip.getThreshold() * 9;
         axisOfInterest = finishedTrip.getAxis();
 
         spinner = (ProgressBar) findViewById(R.id.indeterminateBar);
@@ -126,12 +133,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         BufferedReader bufferedReader = new BufferedReader(isr);
         String line;
         try {
-            while((line = bufferedReader.readLine()) != null ){
+            while ((line = bufferedReader.readLine()) != null) {
                 String tokens[] = line.split(",");
                 latLngs.add(new LatLng(Double.valueOf(tokens[0]), Double.valueOf(tokens[1])));
             }
-        }
-        catch (Exception e){
+        } catch (Exception e) {
 
         }
 
@@ -142,7 +148,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapFragment.getMapAsync(this);
 
         // setup action bar
-    }
+        }
+
+
 
     public void populatePotholeMarkerPoints(){
 
@@ -275,10 +283,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             super.onPostExecute(result);
             setPotholeCount(result);
             spinner.setVisibility(View.GONE);
-            distance.setText("Distance Travelled : " + roundTwoDecimals(finishedTrip.getDistanceInKM()) + "km");
+            if(finishedTrip.getDistanceInKM() < 0.5){
+                distance.setText("Distance Travelled : " + " < 0.5km");
+                potholecount.setText("Potholes Detected : sorry, you must travel at least 0.5km");
+            }else {
+                distance.setText("Distance Travelled : " + roundTwoDecimals(finishedTrip.getDistanceInKM()) + "km");
+                potholecount.setText("Potholes Detected : " + result);
+                // TODO : Handle old location increasing distance problem
+            }
             duration.setText("Trip Duration : " + finishedTrip.getDuration() + " mins");
             date.setText("Date : " + finishedTrip.getStartTime().substring(0,11));
-            potholecount.setText("Potholes Detected : " + result);
             distance.setVisibility(View.VISIBLE);
             duration.setVisibility(View.VISIBLE);
             date.setVisibility(View.VISIBLE);
