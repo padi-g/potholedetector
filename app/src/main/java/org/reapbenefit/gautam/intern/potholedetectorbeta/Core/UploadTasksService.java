@@ -11,6 +11,8 @@ import android.util.Log;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnPausedListener;
 import com.google.firebase.storage.OnProgressListener;
@@ -35,6 +37,9 @@ public class UploadTasksService extends IntentService {
 
     private StorageReference mStorageRef;
     private FirebaseAuth mAuth;
+    private DatabaseReference db;
+    private String filename;
+
 
     public UploadTasksService(){
         super("UploadService");
@@ -72,7 +77,7 @@ public class UploadTasksService extends IntentService {
 
     public void uploadFile(Uri uri){
 
-        String filename = uri.toString().substring(uri.toString().lastIndexOf('/')) ;
+        filename = uri.toString().substring(uri.toString().lastIndexOf('/')) ;
 
         StorageReference fileRef = mStorageRef.child("logs/" + mAuth.getCurrentUser().getUid() + filename);
 
@@ -99,8 +104,7 @@ public class UploadTasksService extends IntentService {
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 
                 publishProgress(100);
-                // update to database object uploaded = true
-
+                setIsUploaded(true);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -124,4 +128,12 @@ public class UploadTasksService extends IntentService {
         }
         mNotifyMgr.notify(mNotificationId, mBuilder.build());
     }
+
+    private void setIsUploaded(boolean a){
+        db = FirebaseDatabase.getInstance().getReference();
+        db = db.child(mAuth.getCurrentUser().getUid()).child(filename.replace(".csv", "").replace("/", "")).child("uploaded");
+        ApplicationClass.getInstance().getTrip().setUploaded(a);
+        db.setValue(a);
+    }
+
 }

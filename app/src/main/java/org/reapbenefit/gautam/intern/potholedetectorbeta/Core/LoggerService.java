@@ -374,7 +374,7 @@ public class LoggerService extends Service implements SensorEventListener {
         Log.i(TAG, "start" + String.valueOf(newtrip.getStartTime()));
 
         String path = "/logs/";
-        File temp = new File(getApplicationContext().getFilesDir() + path);
+        File temp = new File(getApplicationContext().getFilesDir() + "/logs/");
         temp.mkdir();
         file = new File(temp.getPath(), fileid.toString()+ ".csv");
 

@@ -40,7 +40,7 @@
 
     <Button
         android:text="Continue"
-        android:background="@drawable/button_border"
+        android:background="@drawable/onboard_button_border"
         android:textColor="@color/colorAccent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

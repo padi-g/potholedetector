@@ -167,7 +167,6 @@ public class TriplistFragment extends Fragment {
             Collections.sort(trips, new CustomTripComparator());
             adapter = new TripListAdapter(getActivity(), trips);
             l.setAdapter(new TripListAdapter(getActivity(), trips));
-            l.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
             l.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
