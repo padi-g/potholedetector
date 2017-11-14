@@ -33,43 +33,67 @@
                 android:textStyle="normal|bold" />
 
             <TextView
-                android:text="with \n Android Studio + Firebase"
+                android:text="using \n Android Studio + Firebase"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:textAlignment="center"
+                android:textColor="#000"/>
+
+
+            <TextView
+                android:paddingTop="10dp"
+                android:text="Logo"
+                android:textSize="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:textAlignment="center"
+                android:textColor="#000"/>
+
+            <TextView
+                android:text="by Aniruddha Mysore"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:textAlignment="center"
+                android:paddingBottom="10dp" />
+
+            <TextView
+                android:paddingTop="10dp"
+                android:textSize="20dp"
+                android:text="Data analytics"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:textAlignment="center"
+                android:textColor="#000"/>
+
+            <TextView
+                android:paddingBottom="10dp"
+                android:text="by Sankarshan Baliga \n @reapBenefit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:textAlignment="center" />
 
             <TextView
-                android:paddingTop="25dp"
-                android:text="Contributions by: "
+                android:paddingTop="10dp"
+                android:text="Mentors"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                android:textSize="20dp"
+                android:textColor="#000"/>
 
             <TextView
-                android:padding="10dp"
-                android:text="Logo \n by Aniruddha Mysore"
+                android:paddingBottom="10dp"
+                android:text="Gautam Prakash \n Kuldeep Dantewadia \n Saurabh Chakravarty"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:textAlignment="center" />
-            <TextView
-                android:padding="10dp"
-                android:text="Data analytics \n by Sankarshan Baliga \n @reapBenefit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:textAlignment="center" />
-
-            <TextView
-                android:padding="10dp"
-                android:text="Mentors \n Gautam Prakash \n Kuldeep Dantewadia \n Saurabh Chakravarty"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:textAlignment="center" />
-
 
             <TextView
                 android:text="Copyright 2017"
@@ -85,17 +109,16 @@
                 android:text="Contact Us"
                 android:textAlignment="center"
                 android:textStyle="normal|bold"
-                android:fontFamily="serif"
+                android:fontFamily="bold"
                 android:paddingTop="10dp" />
 
             <TextView
-                android:text="intern.gautam@reapbenefit.org"
+                android:text="intern.gautam@reapbenefit.org\n"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="start"
                 android:typeface="serif"
                 android:textAppearance="@style/TextAppearance.AppCompat"
-                android:fontFamily="serif"
                 android:textAlignment="center"
                 android:textStyle="normal|bold|italic"
                 android:onClick="sendEmail"/>

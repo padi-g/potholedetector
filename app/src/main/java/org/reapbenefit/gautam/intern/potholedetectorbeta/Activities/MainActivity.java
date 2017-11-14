@@ -378,9 +378,6 @@ public class MainActivity extends AppCompatActivity
         l.sendBroadcast(iTemp);
     }
 
-
-
-
     void buildDialog() {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

@@ -10,6 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
+        android:visibility="visible"
         android:id="@+id/start_sign_in">
 
     </com.google.android.gms.common.SignInButton>
@@ -26,7 +27,6 @@
         android:textColor="@color/icons"/>
 
     <TextView
-        android:text="TextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/status"
@@ -40,7 +40,7 @@
 
     <Button
         android:text="Continue"
-        android:background="@color/colorPrimary"
+        android:background="@drawable/button_border"
         android:textColor="@color/colorAccent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -52,8 +52,8 @@
         android:drawableRight="@drawable/ic_chevron_right"
         android:drawableTint="@color/colorAccent"
         android:textSize="30sp"
+        android:padding="15dp"
         android:visibility="gone"
         android:layout_marginTop="67dp" />
-
 
 </RelativeLayout>
