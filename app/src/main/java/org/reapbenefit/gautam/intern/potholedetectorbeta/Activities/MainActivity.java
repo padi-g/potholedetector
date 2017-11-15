@@ -397,7 +397,7 @@ public class MainActivity extends AppCompatActivity
                         startLogger();
                     }
                 });
-        builder.setIcon(R.drawable.ic_launcher);
+        builder.setIcon(R.drawable.launcher_with_bg);
         builder.setNegativeButton(R.string.dialog_negative,
                 new DialogInterface.OnClickListener() {
                     @Override

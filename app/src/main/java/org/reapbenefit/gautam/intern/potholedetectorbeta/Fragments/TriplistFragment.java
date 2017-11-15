@@ -199,6 +199,7 @@ public class TriplistFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 createListView();
+                Toast.makeText(getActivity(), "Refreshed", Toast.LENGTH_SHORT).show();
             }
         });
 

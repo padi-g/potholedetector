@@ -22,9 +22,10 @@
         android:layout_marginTop="70dp"
         android:id="@+id/status"
         android:textSize="30sp"
+        android:textAllCaps="true"
         android:textStyle="normal|bold|italic"
         android:layout_centerHorizontal="true"
-        android:textColor="@color/icons"/>
+        android:textColor="#fff"/>
 
     <TextView
         android:layout_width="wrap_content"
