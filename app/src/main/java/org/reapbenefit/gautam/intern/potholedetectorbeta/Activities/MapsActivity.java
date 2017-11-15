@@ -13,6 +13,7 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -32,6 +33,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
@@ -238,44 +240,44 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             File file = new File(getApplicationContext().getFilesDir(), "logs/" + tripID + ".csv");
             try {
                 is = new FileInputStream(file);
-            } catch (Exception e) {
-                System.out.println("Exception_raised " + e.toString());
-            }
+                InputStreamReader isr = new InputStreamReader(is);
+                BufferedReader bufferedReader = new BufferedReader(isr);
+                String line;
+                try {
 
-            InputStreamReader isr = new InputStreamReader(is);
-            BufferedReader bufferedReader = new BufferedReader(isr);
-            String line;
-            try {
+                    // extracting the index of the value to be compared in a given line of data
+                    line = bufferedReader.readLine();
+                    String tokens[] = line.split(",");
+                    for (int i = 0; i < tokens.length; i++) {
+                        if (tokens[i].contains(axisOfInterest)) {
+                            axisIndex = i;
+                        }
+                        if(tokens[i].contains("latitude")){
+                            locIndex = i;
+                        }
+                    }
 
-                // extracting the index of the value to be compared in a given line of data
-                line = bufferedReader.readLine();
-                String tokens[] = line.split(",");
-                for (int i = 0; i < tokens.length; i++) {
-                    if (tokens[i].contains(axisOfInterest)) {
-                        axisIndex = i;
+                    // populating our set of the points we are interested in
+                    while ((line = bufferedReader.readLine()) != null) {
+                        String values[] = line.split(",");
+                        lineNumber++;
+                        if(Float.valueOf(values[axisIndex]) > threshold && lineNumber>prevLineNumber+ linesPerPeriod){
+                            // this ignores the first period of data
+                            pointsOfInterest.put(lineNumber, line);
+                            prevLineNumber = lineNumber;
+                        }
                     }
-                    if(tokens[i].contains("latitude")){
-                        locIndex = i;
-                    }
+
+                }
+                catch (Exception e){
+
                 }
 
-                // populating our set of the points we are interested in
-                while ((line = bufferedReader.readLine()) != null) {
-                    String values[] = line.split(",");
-                    lineNumber++;
-                    if(Float.valueOf(values[axisIndex]) > threshold && lineNumber>prevLineNumber+ linesPerPeriod){
-                        // this ignores the first period of data
-                        pointsOfInterest.put(lineNumber, line);
-                        prevLineNumber = lineNumber;
-                    }
-                }
-
-            }
-            catch (Exception e){
-
+                return pointsOfInterest.size();
+            } catch (FileNotFoundException e) {
+                return 0;
             }
 
-            return pointsOfInterest.size();
         }
 
         @Override
@@ -283,14 +285,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             super.onPostExecute(result);
             setPotholeCount(result);
             spinner.setVisibility(View.GONE);
-            if(finishedTrip.getDistanceInKM() < 0.5){
-                distance.setText("Distance Travelled : " + " < 0.5km");
-                potholecount.setText("Potholes Detected : sorry, you must travel at least 0.5km");
-            }else {
-                distance.setText("Distance Travelled : " + roundTwoDecimals(finishedTrip.getDistanceInKM()) + "km");
-                potholecount.setText("Potholes Detected : " + result);
-                // TODO : Handle old location increasing distance problem
-            }
             duration.setText("Trip Duration : " + finishedTrip.getDuration() + " mins");
             date.setText("Date : " + finishedTrip.getStartTime().substring(0,11));
             distance.setVisibility(View.VISIBLE);
@@ -299,10 +293,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             potholecount.setVisibility(View.VISIBLE);
             accuracySeekbar.setVisibility(View.VISIBLE);
             submitButton.setVisibility(View.VISIBLE);
-            populatePotholeMarkerPoints();
-            mapFragment.getMapAsync(MapsActivity.this);
+            if(finishedTrip.getDistanceInKM() < 0.5){
+                distance.setText("Distance Travelled : " + " < 0.5km");
+                potholecount.setText("Potholes Detected : sorry, you must travel at least 0.5km");
+            }else {
+                distance.setText("Distance Travelled : " + roundTwoDecimals(finishedTrip.getDistanceInKM()) + "km");
+                potholecount.setText("Potholes Detected : " + result);
+                populatePotholeMarkerPoints();
+                mapFragment.getMapAsync(MapsActivity.this);
+            }
         }
     }
 }
-
-

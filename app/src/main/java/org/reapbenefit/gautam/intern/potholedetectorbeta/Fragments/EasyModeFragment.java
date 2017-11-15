@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -16,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.storage.FirebaseStorage;
@@ -113,8 +116,11 @@ public class EasyModeFragment extends Fragment {
                 }else {
                     Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
                     statusIndicatorText.setText("Thanks for your contribution!");
-                    //new MyUploadTask().execute(uploadFileUri);
-                    startUploadService();
+                    if(internetAvailable()) {
+                        startUploadService();
+                    }else{
+                        Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_LONG).show();
+                    }
                     openMap();
                 }
                 bgframe.setBackgroundResource(R.drawable.notlogging_bg);
@@ -122,6 +128,19 @@ public class EasyModeFragment extends Fragment {
             }
         }
     };
+
+    private boolean internetAvailable(){
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        boolean isWifiConn = networkInfo.isConnected();
+        networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        boolean isMobileConn = networkInfo.isConnected();
+        if(isMobileConn || isWifiConn)
+            return true;
+        else
+            return false;
+    }
 
     public void startUploadService(){
         Intent intent = new Intent(getContext(), UploadTasksService.class);

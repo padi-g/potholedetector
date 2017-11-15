@@ -21,5 +21,11 @@
         android:title="@string/menu_login"
         android:orderInCategory="400"
         ></item>
+    <item
+        android:id="@+id/actions_settings"
+        android:title="Settings"
+        android:orderInCategory="500">
+
+    </item>
 
 </menu>

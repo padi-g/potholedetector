@@ -3,6 +3,7 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
@@ -20,6 +21,8 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+
+import java.io.File;
 
 /**
  * Created by gautam on 13/09/17.
@@ -39,6 +42,7 @@ public class UploadTasksService extends IntentService {
     private FirebaseAuth mAuth;
     private DatabaseReference db;
     private String filename;
+    SharedPreferences prefs;
 
 
     public UploadTasksService(){
@@ -56,6 +60,8 @@ public class UploadTasksService extends IntentService {
 
         mStorageRef = FirebaseStorage.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
+        prefs = getSharedPreferences("uploads" ,MODE_PRIVATE);
+        Log.d("Preferences", "Inside onHandleIntent Found file_delete = " + prefs.getBoolean("file_delete", false));
 
         mBuilder = new NotificationCompat.Builder(getApplicationContext())
                 .setSmallIcon(R.drawable.ic_upload)
@@ -105,6 +111,8 @@ public class UploadTasksService extends IntentService {
 
                 publishProgress(100);
                 setIsUploaded(true);
+                if(prefs.getBoolean("file_delete", false))
+                    myDeleteFile();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -134,6 +142,11 @@ public class UploadTasksService extends IntentService {
         db = db.child(mAuth.getCurrentUser().getUid()).child(filename.replace(".csv", "").replace("/", "")).child("uploaded");
         ApplicationClass.getInstance().getTrip().setUploaded(a);
         db.setValue(a);
+    }
+
+    private void myDeleteFile(){
+        File file = new File(getApplicationContext().getFilesDir(), "logs/" + filename);
+        file.delete();
     }
 
 }

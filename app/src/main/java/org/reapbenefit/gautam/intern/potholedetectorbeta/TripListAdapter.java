@@ -11,6 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
@@ -41,7 +42,7 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
 
 
     @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, final View convertView, ViewGroup parent) {
         LayoutInflater inflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -79,13 +80,18 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
                 mapButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        File datafile = new File(context.getApplicationContext().getFilesDir(), "logs/" + trip.getTrip_id() + ".csv");
                         File file = new File(context.getApplicationContext().getFilesDir(), "analysis/" + trip.getTrip_id() + ".csv");
-                        if(!app.isTripInProgress() && file.exists()){ // check if file of same name is available in the analytics folder
-                            Intent i = new Intent(context, MapsActivity.class);
-                            i.putExtra("trip", trip);
-                            context.startActivity(i);
+                        if(datafile.exists()) {
+                            if (!app.isTripInProgress() && file.exists()) { // check if file of same name is available in the analytics folder
+                                Intent i = new Intent(context, MapsActivity.class);
+                                i.putExtra("trip", trip);
+                                context.startActivity(i);
+                            } else {
+                                //Toast.makeText(getActivity(), )
+                            }
                         }else{
-                            //Toast.makeText(getActivity(), )
+                            Toast.makeText(context, "Sorry, file has been deleted", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

@@ -4,6 +4,7 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
@@ -171,6 +172,9 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        SharedPreferences prefs = getSharedPreferences("uploads", MODE_PRIVATE);
+        if(!prefs.contains("file_delete"))
+            prefs.edit().putBoolean("file_delete", false);
     }
 
     private void settingsRequest(){
@@ -427,6 +431,9 @@ public class MainActivity extends AppCompatActivity
         }
         if (id == R.id.actions_login) {
             intent = new Intent(this, LoginActivity.class);
+        }
+        if(id == R.id.actions_settings){
+            intent = new Intent(this, SettingsActivity.class);
         }
 
         startActivity(intent);
