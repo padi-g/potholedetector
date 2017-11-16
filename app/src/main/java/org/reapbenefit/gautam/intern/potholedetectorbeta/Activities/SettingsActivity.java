@@ -61,6 +61,36 @@ public class SettingsActivity extends AppCompatActivity {
                 deleteChkBox.setChecked(false);
             }
         }
+
+        CheckBox autoUploadChkBox = (CheckBox) findViewById(R.id.auto_upload_checkbox);
+        autoUploadChkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                    prefs.edit().putBoolean("auto_upload", true).commit();
+                    Log.d("Preferences", "Inside isChecked Found auto_upload = " + prefs.getBoolean("auto_upload", true));
+                    // set pref to delete
+                }else {
+                    prefs.edit().putBoolean("auto_upload", false).commit();
+                    Log.d("Preferences", "Inside isNotChecked Found auto_upload = " + prefs.getBoolean("auto_upload", false));
+                    // set pref to no_delete
+                }
+            }
+        });
+
+        if(prefs.contains("auto_upload")){
+            Log.d("Preferences", "auto_upload is found on prefs");
+            if(prefs.getBoolean("auto_upload", true)){
+                Log.d("Preferences", "prefs are true");
+                autoUploadChkBox.setChecked(true);
+            }else {
+                Log.d("Preferences", "prefs are false");
+                autoUploadChkBox.setChecked(false);
+            }
+        }else {
+            Log.d("Preferences", "auto_upload is not found on prefs");
+            prefs.edit().putBoolean("auto_upload", true).commit();
+        }
     }
 
 }

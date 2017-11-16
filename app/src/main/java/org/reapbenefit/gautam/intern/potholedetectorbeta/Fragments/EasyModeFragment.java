@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -31,6 +32,8 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.UploadTasksService
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 import java.util.List;
+
+import static android.content.Context.MODE_PRIVATE;
 
 
 /**
@@ -116,11 +119,12 @@ public class EasyModeFragment extends Fragment {
                 }else {
                     Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
                     statusIndicatorText.setText("Thanks for your contribution!");
-                    if(internetAvailable()) {
+                    if(internetAvailable() && autoUploadOn()) {
                         startUploadService();
-                    }else{
+                    }else if(!internetAvailable()){
                         Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_LONG).show();
-                    }
+                    }else if(!autoUploadOn())
+                        Toast.makeText(getActivity().getApplicationContext(), "Auto is Upload turned off. You can upload manually later", Toast.LENGTH_LONG).show();
                     openMap();
                 }
                 bgframe.setBackgroundResource(R.drawable.notlogging_bg);
@@ -140,6 +144,10 @@ public class EasyModeFragment extends Fragment {
             return true;
         else
             return false;
+    }
+    private boolean autoUploadOn(){
+        SharedPreferences prefs = getActivity().getSharedPreferences("uploads", MODE_PRIVATE);
+        return prefs.getBoolean("auto_upload", true);
     }
 
     public void startUploadService(){
