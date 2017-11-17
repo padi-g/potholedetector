@@ -9,9 +9,5 @@
     app:titleTextAppearance="@style/MyActionBarTitleText"
     app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
 
-    <Switch
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/stopSwitch"/>
 
     </android.support.v7.widget.Toolbar>

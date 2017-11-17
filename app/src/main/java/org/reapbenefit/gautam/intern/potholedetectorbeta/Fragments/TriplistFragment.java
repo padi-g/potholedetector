@@ -2,6 +2,8 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -57,8 +59,6 @@ public class TriplistFragment extends Fragment {
     private String mParam2;
 
     private OnFragmentInteractionListener mListener;
-
-    private TripListAdapter adapter;
 
     private ListView l;
     private ImageButton refreshButton;
@@ -162,10 +162,22 @@ public class TriplistFragment extends Fragment {
 
     }
 
+    private boolean internetAvailable(){
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        boolean isWifiConn = networkInfo.isConnected();
+        networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        boolean isMobileConn = networkInfo.isConnected();
+        if(isMobileConn || isWifiConn)
+            return true;
+        else
+            return false;
+    }
+
     private void createListView(){
         if(!trips.isEmpty() && getActivity()!=null) {
             Collections.sort(trips, new CustomTripComparator());
-            adapter = new TripListAdapter(getActivity(), trips);
             l.setAdapter(new TripListAdapter(getActivity(), trips));
             l.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -199,7 +211,13 @@ public class TriplistFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 createListView();
-                Toast.makeText(getActivity(), "Refreshed", Toast.LENGTH_SHORT).show();
+                if(internetAvailable() && !trips.isEmpty())
+                    Toast.makeText(getActivity(), "Refreshed", Toast.LENGTH_SHORT).show();
+                else if(trips.isEmpty())
+                    Toast.makeText(getActivity(), "Refreshing", Toast.LENGTH_SHORT).show();
+                else
+                    Toast.makeText(getActivity(), "Internet not available, try later", Toast.LENGTH_SHORT).show();
+
             }
         });
 

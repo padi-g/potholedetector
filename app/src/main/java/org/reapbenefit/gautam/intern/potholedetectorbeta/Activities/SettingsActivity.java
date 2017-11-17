@@ -28,8 +28,6 @@ public class SettingsActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(R.string.settings);
-        Switch s = (Switch) toolbar.findViewById(R.id.stopSwitch);
-        s.setVisibility(View.GONE);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         prefs = getSharedPreferences("uploads",MODE_PRIVATE);
@@ -92,5 +90,7 @@ public class SettingsActivity extends AppCompatActivity {
             prefs.edit().putBoolean("auto_upload", true).commit();
         }
     }
+
+    // TODO: add analytics events in all new activities
 
 }

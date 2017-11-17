@@ -59,8 +59,6 @@ public class MainActivity extends AppCompatActivity
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
-    private static Switch StartsStop;
-
     protected static final String TAG = "Main_Activity";
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 389;
     private static final int REQUEST_CHECK_SETTINGS = 23;
@@ -88,7 +86,6 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setTitle("Road Quality Audit");
 
-        loggerIntent = new Intent(MainActivity.this, LoggerService.class);
 
         mAuth = FirebaseAuth.getInstance();
         if(mAuth.getCurrentUser() == null){
@@ -99,29 +96,8 @@ public class MainActivity extends AppCompatActivity
             startActivity(i);
         }
 
-        StartsStop = (Switch) findViewById(R.id.stopSwitch);
-        StartsStop.setChecked(false);
-
         settingsRequest();
-
-        if (!app.isTripInProgress() && !app.isTripEnded()) {
-            // this did not come from intent service
-            // Show dialog asking to open
-            if(checkPermissions()) {
-                buildDialog();
-            }
-        } else if(app.isTripInProgress() && !app.isTripEnded()) {
-            StartsStop.setChecked(true);
-        }else if(app.isTripInProgress() && app.isTripEnded()) {
-            // case is not possible
-        } else /* !ApplicationClass.tripInProgress && ApplicationClass.tripEnded */ {
-            StartsStop.setChecked(false);
-        }
-
-        /*
-        * If not from coming from service, show dialog asking driving state.
-        * if coming from service, or driving confirmed, show a nice UI with
-        * */
+        checkPermissions();
 
         //Initializing the tablayout
         tabLayout = (TabLayout) findViewById(R.id.tabLayout);
@@ -142,35 +118,6 @@ public class MainActivity extends AppCompatActivity
         viewPager.addOnPageChangeListener(
                 new TabLayout.TabLayoutOnPageChangeListener(tabLayout)
         );
-
-        StartsStop.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-               if (b) {
-                   if(app.isTripInProgress())
-                       settingsRequest();
-                       // coming from dialog
-                       //do nothing
-
-                   else {
-                       if(checkPermissions()) {
-                           settingsRequest();
-                           app.setTripInProgress(true);
-                           startLogger();
-                           sendTripLoggingBroadcast(true);
-                       }else {
-                           StartsStop.setChecked(false);
-                           requestPermissions();
-                       }
-                   }
-
-                } else {
-                   app.setTripInProgress(false);
-                    //sendTripLoggingBroadcast(false);   // already being sent from the loggerservice
-                    stopLogger();
-                }
-            }
-        });
 
         SharedPreferences prefs = getSharedPreferences("uploads", MODE_PRIVATE);
         if(!prefs.contains("file_delete"))
@@ -229,6 +176,8 @@ public class MainActivity extends AppCompatActivity
         } else {
             getLastLocation();
         }
+        settingsRequest();
+
     }
 
     /**
@@ -343,7 +292,7 @@ public class MainActivity extends AppCompatActivity
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted.
                 getLastLocation();
-                buildDialog();
+                //buildDialog();
             } else {
                 // Permission denied.
 
@@ -373,39 +322,6 @@ public class MainActivity extends AppCompatActivity
                         });
             }
         }
-    }
-
-    void sendTripLoggingBroadcast(boolean status) {
-        Intent iTemp = new Intent("tripstatus");
-        iTemp.putExtra("LoggingStatus", status);
-        LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
-        l.sendBroadcast(iTemp);
-    }
-
-    void buildDialog() {
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        builder.setTitle(R.string.dialog_question);
-        builder.setPositiveButton(R.string.dialog_positive,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        app.setTripInProgress(true);
-                        StartsStop.setChecked(true);
-                        sendTripLoggingBroadcast(true);
-                        startLogger();
-                    }
-                });
-        builder.setIcon(R.drawable.launcher_with_bg);
-        builder.setNegativeButton(R.string.dialog_negative,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        // leave as it it
-                    }
-                });
-        builder.show();
     }
 
     @Override
@@ -470,19 +386,9 @@ public class MainActivity extends AppCompatActivity
     }
     */
 
-    public void startLogger(){
-        startService(loggerIntent);
-    }
-
-    public void stopLogger(){
-        stopService(loggerIntent);
-    }
-
 }
 
 // Make file names based on start-end location
 // eg koramangala to indiranagar
 
 //  https://coolors.co/6da34d-c9cba3-202030-39304a-52528c  for colours
-
-// TODO : Internet checking

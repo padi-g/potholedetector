@@ -79,8 +79,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Trip Summary");
-        Switch s = (Switch) toolbar.findViewById(R.id.stopSwitch);
-        s.setVisibility(View.GONE);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);

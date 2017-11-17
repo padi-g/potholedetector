@@ -2,6 +2,8 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -72,8 +74,12 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
                 uploadButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        uploadFileUri = Uri.fromFile(new File(context.getApplicationContext().getFilesDir() + "/logs/" + trip.getTrip_id() + ".csv"));
-                        startUploadService();
+                        if(internetAvailable()) {
+                            uploadFileUri = Uri.fromFile(new File(context.getApplicationContext().getFilesDir() + "/logs/" + trip.getTrip_id() + ".csv"));
+                            startUploadService();
+                        }else {
+                            Toast.makeText(context.getApplicationContext(), "Internet not available. Try again later", Toast.LENGTH_LONG).show();
+                        }
                     }
                 });
 
@@ -128,6 +134,19 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
     float roundTwoDecimals(float f) {
         DecimalFormat twoDForm = new DecimalFormat("#.##");
         return Float.valueOf(twoDForm.format(f));
+    }
+
+    private boolean internetAvailable(){
+        ConnectivityManager connMgr = (ConnectivityManager)
+                context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        boolean isWifiConn = networkInfo.isConnected();
+        networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        boolean isMobileConn = networkInfo.isConnected();
+        if(isMobileConn || isWifiConn)
+            return true;
+        else
+            return false;
     }
 
     public void startUploadService(){

@@ -25,8 +25,6 @@ public class AboutActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(R.string.menu_about);
-        Switch s = (Switch) toolbar.findViewById(R.id.stopSwitch);
-        s.setVisibility(View.GONE);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);

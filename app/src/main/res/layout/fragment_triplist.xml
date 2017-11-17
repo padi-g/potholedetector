@@ -14,26 +14,28 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="10dp"
-        android:columnCount="3"
-        android:rowCount="6"
+        android:columnCount="2"
+        android:rowCount="1"
         android:background="@color/colorPrimaryDark"
         android:layout_gravity="top">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_row="4"
+            android:layout_row="0"
             android:layout_column="0"
             android:text="@string/trips"
             android:textColor="#fff"
             android:textSize="25dp"
+            android:layout_columnWeight="5"
             android:paddingLeft="@dimen/activity_horizontal_margin"/>
 
         <ImageButton
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_row="4"
-            android:layout_column="2"
+            android:layout_height="wrap_content"
+            android:layout_row="0"
+            android:layout_column="1"
+            android:layout_columnWeight="1"
             android:backgroundTint="@color/colorPrimaryDark"
             app:srcCompat="@drawable/quantum_ic_refresh_white_24"
             android:id="@+id/refreshButton" />
