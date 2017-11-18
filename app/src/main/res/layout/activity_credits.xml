@@ -28,7 +28,7 @@
                 android:layout_marginTop="50dp"
                 android:textAlignment="center"
                 android:textAppearance="@style/TextAppearance.AppCompat"
-                android:fontFamily="sans-serif"
+                android:fontFamily="sans-serif-condensed"
                 android:textSize="18sp"
                 android:textStyle="normal|bold" />
 
@@ -37,8 +37,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                android:textAlignment="center"
-                android:textColor="#000"/>
+                android:textAlignment="center"/>
 
 
             <TextView
@@ -49,10 +48,11 @@
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:textAlignment="center"
+                android:fontFamily="sans-serif-condensed"
                 android:textColor="#000"/>
 
             <TextView
-                android:text="by Aniruddha Mysore"
+                android:text="Aniruddha Mysore"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
@@ -61,35 +61,18 @@
 
             <TextView
                 android:paddingTop="10dp"
-                android:textSize="20dp"
-                android:text="Data analytics"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:textAlignment="center"
-                android:textColor="#000"/>
-
-            <TextView
-                android:paddingBottom="10dp"
-                android:text="by Sankarshan Baliga \n @reapBenefit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:textAlignment="center" />
-
-            <TextView
-                android:paddingTop="10dp"
                 android:text="Mentors"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:textAlignment="center"
-                android:textSize="20dp"
+                android:textSize="25dp"
+                android:fontFamily="sans-serif-condensed"
                 android:textColor="#000"/>
 
             <TextView
                 android:paddingBottom="10dp"
-                android:text="Gautam Prakash \n Kuldeep Dantewadia \n Saurabh Chakravarty"
+                android:text="Gautam Prakash \n Kuldeep Dantewadia \n Sankarshan Baliga \n Saurabh Chakravarty"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
@@ -113,13 +96,13 @@
                 android:paddingTop="10dp" />
 
             <TextView
-                android:text="intern.gautam@reapbenefit.org\n"
+                android:text="intern.gautam@reapbenefit.org\n\n"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="start"
-                android:typeface="serif"
                 android:textAppearance="@style/TextAppearance.AppCompat"
                 android:textAlignment="center"
+                android:fontFamily="sans-serif"
                 android:textStyle="normal|bold|italic"
                 android:onClick="sendEmail"/>
 

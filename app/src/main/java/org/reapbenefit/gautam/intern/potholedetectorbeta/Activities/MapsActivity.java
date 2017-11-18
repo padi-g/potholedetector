@@ -9,6 +9,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.Switch;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -45,7 +47,7 @@ import java.util.Map;
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    SupportMapFragment mapFragment;
+    MapFragment mapFragment;
     private ArrayList<LatLng> latLngs = new ArrayList<>();
     private ArrayList<LatLng> potholelatLngs = new ArrayList<>();
     private InputStream inputStream;
@@ -64,6 +66,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Trip finishedTrip;
     private HashMap<Integer, String> pointsOfInterest = new HashMap<>();
     private int accuracy_result = 0;
+    private GridLayout resultGrid;
 
     @Override
     protected void onDestroy() {
@@ -95,6 +98,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         threshold = finishedTrip.getThreshold() * 9;
         axisOfInterest = finishedTrip.getAxis();
 
+        resultGrid = (GridLayout) findViewById(R.id.map_result_grid);
         spinner = (ProgressBar) findViewById(R.id.indeterminateBar);
         date = (TextView) findViewById(R.id.tripdate);
         duration = (TextView) findViewById(R.id.duration);
@@ -114,6 +118,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 textview.setVisibility(View.GONE);
             }
         });
+
 
         ProcessFileTask task = new ProcessFileTask();
         task.execute(tripID);
@@ -142,8 +147,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        mapFragment = (MapFragment) getFragmentManager()
+                .findFragmentById(R.id.trip_map);
 
         mapFragment.getMapAsync(this);
 
@@ -283,20 +288,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             super.onPostExecute(result);
             setPotholeCount(result);
             spinner.setVisibility(View.GONE);
-            duration.setText("Trip Duration : " + finishedTrip.getDuration() + " mins");
-            date.setText("Date : " + finishedTrip.getStartTime().substring(0,11));
-            distance.setVisibility(View.VISIBLE);
-            duration.setVisibility(View.VISIBLE);
-            date.setVisibility(View.VISIBLE);
-            potholecount.setVisibility(View.VISIBLE);
+            duration.setText(finishedTrip.getDuration() + " mins");
+            date.setText(finishedTrip.getStartTime().substring(0,11));
+            resultGrid.setVisibility(View.VISIBLE);
             accuracySeekbar.setVisibility(View.VISIBLE);
             submitButton.setVisibility(View.VISIBLE);
             if(finishedTrip.getDistanceInKM() < 0.5){
-                distance.setText("Distance Travelled : " + " < 0.5km");
-                potholecount.setText("Potholes Detected : sorry, you must travel at least 0.5km");
+                distance.setText(" < 0.5km");
+                potholecount.setText("sorry, you must travel at least 0.5km");
             }else {
-                distance.setText("Distance Travelled : " + roundTwoDecimals(finishedTrip.getDistanceInKM()) + "km");
-                potholecount.setText("Potholes Detected : " + result);
+                distance.setText(roundTwoDecimals(finishedTrip.getDistanceInKM()) + "km");
+                potholecount.setText(result);
                 populatePotholeMarkerPoints();
                 mapFragment.getMapAsync(MapsActivity.this);
             }

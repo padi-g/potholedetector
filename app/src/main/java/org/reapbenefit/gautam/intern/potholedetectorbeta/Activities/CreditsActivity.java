@@ -23,7 +23,7 @@ public class CreditsActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(R.string.menu_about);
+        getSupportActionBar().setTitle(R.string.menu_credits);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);

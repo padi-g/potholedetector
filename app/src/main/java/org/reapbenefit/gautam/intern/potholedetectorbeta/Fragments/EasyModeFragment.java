@@ -55,7 +55,6 @@ import java.util.List;
 
 import static android.content.Context.MODE_PRIVATE;
 
-
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
@@ -64,6 +63,7 @@ import static android.content.Context.MODE_PRIVATE;
  * Use the {@link EasyModeFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
+
 public class EasyModeFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -80,7 +80,7 @@ public class EasyModeFragment extends Fragment {
     static public Uri uploadFileUri;
     private View bgframe;
     private TextView statusIndicatorText;
-    private Switch StartStop;
+    private Button startButton, stopButton;
     private Intent loggerIntent;
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 389;
 
@@ -138,39 +138,53 @@ public class EasyModeFragment extends Fragment {
 
         bgframe = (RelativeLayout) v.findViewById(R.id.easyframe);
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
-        StartStop = (Switch) v.findViewById(R.id.start_stop_switch);
+        startButton = (Button) v.findViewById(R.id.start_trip_button);
+        stopButton = (Button) v.findViewById(R.id.stop_trip_button);
 
         if(!app.isTripInProgress() && !app.isTripEnded()){
-            statusIndicatorText.setText("Start Trip");
+            startButton.setVisibility(View.VISIBLE);
+            stopButton.setVisibility(View.GONE);
+            bgframe.setBackgroundResource(R.drawable.notlogging_bg);
         }else if(app.isTripInProgress()){       // This case handles both the first trip and trips after that during the same app launch
-            StartStop.setChecked(true);
+            startButton.setVisibility(View.GONE);
+            stopButton.setVisibility(View.VISIBLE);
             bgframe.setBackgroundResource(R.drawable.logging_bg);
             statusIndicatorText.setText(getResources().getString(R.string.detecting));
-        }else if(!app.isTripInProgress() && app.isTripEnded())
-            statusIndicatorText.setText("Thanks for your contribution!\n Start Trip");
+        }else if(!app.isTripInProgress() && app.isTripEnded()) {
+            statusIndicatorText.setText("Thanks for your contribution!");
+        }
 
-        StartStop.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        startButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    if (!app.isTripInProgress() && checkPermissions()) {
-                        app.setTripInProgress(true);
-                        startLogger();
-                        bgframe.setBackgroundResource(R.drawable.logging_bg);
-                        statusIndicatorText.setText(getResources().getString(R.string.detecting));
-                    } else if(!checkPermissions()) {
-                        StartStop.setChecked(false);
-                        requestPermissions();
-                    }
-
-                } else {
-                    app.setTripInProgress(false);
-                    //sendTripLoggingBroadcast(false);   // already being sent from the loggerservice
-                    stopLogger();
+            public void onClick(View v) {
+                if (!app.isTripInProgress() && checkPermissions()) {
+                    app.setTripInProgress(true);
+                    startLogger();
+                    bgframe.setBackgroundResource(R.drawable.logging_bg);
+                    statusIndicatorText.setText(getResources().getString(R.string.detecting));
+                    startButton.setVisibility(View.GONE);
+                    stopButton.setVisibility(View.VISIBLE);
+                } else if(!checkPermissions()) {
+                    requestPermissions();
+                    startButton.setVisibility(View.VISIBLE);
+                    stopButton.setVisibility(View.GONE);
+                    bgframe.setBackgroundResource(R.drawable.notlogging_bg);
                 }
             }
-
         });
+
+        stopButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                app.setTripInProgress(false);
+                stopLogger();
+                startButton.setVisibility(View.VISIBLE);
+                stopButton.setVisibility(View.GONE);
+                statusIndicatorText.setText("");
+                bgframe.setBackgroundResource(R.drawable.notlogging_bg);
+            }
+        });
+
         return v;
     }
 
@@ -190,7 +204,7 @@ public class EasyModeFragment extends Fragment {
                     statusIndicatorText.setText("Sorry, we could not detect your location accurately");
                 }else {
                     Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
-                    statusIndicatorText.setText("Thanks for your contribution!\nStart Trip");
+                    statusIndicatorText.setText("Thanks for your contribution!");
                     if(internetAvailable() && autoUploadOn()) {
                         startUploadService();
                     }else if(!internetAvailable()){
@@ -199,8 +213,11 @@ public class EasyModeFragment extends Fragment {
                         Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_LONG).show();
                     openMap();
                 }
+                ////////// redundant
                 bgframe.setBackgroundResource(R.drawable.notlogging_bg);
-
+                startButton.setVisibility(View.VISIBLE);
+                stopButton.setVisibility(View.GONE);
+                ////////// redundant
             }
         }
     };
@@ -349,3 +366,5 @@ public class EasyModeFragment extends Fragment {
         void onFragmentInteraction(Uri uri);
     }
 }
+
+// TODO Annoying glitch, there's a delay between the button getting replaced and the nackground getting replaced from the broadcast

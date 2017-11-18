@@ -27,6 +27,8 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="45dp"
         android:textSize="20dp"
+        android:fontFamily="sans-serif-condensed"
+        android:textColor="#fff"
         android:id="@+id/textView5" />
 
     <Button
@@ -36,6 +38,7 @@
         android:id="@+id/start_sign_out"
         android:layout_below="@+id/login_details"
         android:layout_centerHorizontal="true"
+        android:fontFamily="sans-serif-condensed"
         android:visibility="gone"/>
 
     <TextView
@@ -44,6 +47,11 @@
         android:textAlignment="center"
         android:id="@+id/login_details"
         android:layout_below="@+id/imageView"
+        android:fontFamily="sans-serif-condensed"
+        android:textColor="#fff"
+        android:textSize="15dp"
+        android:visibility="gone"
+        android:padding="@dimen/activity_vertical_margin"
         android:layout_centerHorizontal="true" />
 
     <com.google.android.gms.common.SignInButton
@@ -51,13 +59,17 @@
         android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:id="@+id/start_sign_in"
+        android:fontFamily="sans-serif-condensed"
+        android:textColor="#fff"
         android:layout_below="@+id/login_details"
         android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="40dp"
+        android:textSize="35dp"
+        android:fontFamily="sans-serif-condensed"
+        android:textColor="#fff"
         android:id="@+id/users_name"
         android:text="Please sign-in"
         android:layout_above="@+id/imageView"

@@ -196,8 +196,10 @@ public class MainActivity extends AppCompatActivity
                     public void onComplete(@NonNull Task<Location> task) {
                         if (task.isSuccessful() && task.getResult() != null) {
                             app.setCurrentLocation(task.getResult());
-                            if(task.getResult().getAccuracy() < 25 && app.isTripEnded())
-                                showSnackbar("Location detected");
+                            if(task.getResult().getAccuracy() < 25 && app.isTripEnded()) {
+                                //showSnackbar("Location detected");
+                                Log.d(TAG, "Location Detected");
+                            }
                         } else {
                             Log.w(TAG, "getLastLocation:exception", task.getException());
 

@@ -104,9 +104,10 @@ public class LoginActivity extends AppCompatActivity {
 
         if(signedIn) {
             mUser_nameTextView.setText(mAuth.getCurrentUser().getDisplayName());
-            mStatusTextView.setText("You have been signed in using " + mAuth.getCurrentUser().getEmail());
+            mStatusTextView.setText("You have been signed in using \n" + mAuth.getCurrentUser().getEmail());
+            mStatusTextView.setVisibility(View.VISIBLE);
         }else{
-            mStatusTextView.setText("");
+            mStatusTextView.setVisibility(View.GONE);
         }
 
         SignIn.setOnClickListener(new View.OnClickListener() {
@@ -158,6 +159,7 @@ public class LoginActivity extends AppCompatActivity {
         if (result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
+            mStatusTextView.setVisibility(View.VISIBLE);
             mStatusTextView.setText("You have been signed in using " + acct.getEmail());
             mUser_nameTextView.setText(acct.getDisplayName());
 
@@ -187,7 +189,7 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onResult(Status status) {
                         Log.i("Sign out", "yes");
-                        mStatusTextView.setText("");
+                        mStatusTextView.setVisibility(View.GONE);
                         mUser_nameTextView.setText("Please SIGN IN");
 
                     }

@@ -19,36 +19,62 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
+        android:visibility="gone"
         android:id="@+id/start_stop_switch"/>
 
-    <TextView
+    <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/easytext"
-        android:layout_margin="@dimen/activity_vertical_margin"
-        android:layout_below="@+id/start_stop_switch"
         android:layout_centerHorizontal="true"
-        android:textColor="#fff"/>
+        android:layout_centerInParent="true"
+        android:id="@+id/button_frame">
 
     <Button
+        android:id="@+id/start_trip_button"
         android:text="Start Trip"
         android:background="@drawable/button_border"
         android:textColor="@color/colorAccent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/start_trip_button"
         style="?android:attr/borderlessButtonStyle"
-        android:layout_centerHorizontal="true"
         android:textStyle="normal|bold"
         android:drawableRight="@drawable/ic_media_play_dark"
         android:drawableTint="@color/colorAccent"
+        android:fontFamily="sans-serif-condensed"
         android:textSize="30sp"
-        android:visibility="gone"
-        android:layout_centerInParent="true"
         android:padding="15dp" />
 
+    <Button
+        android:id="@+id/stop_trip_button"
+        android:text="Stop Trip"
+        android:background="@drawable/stop_button_border"
+        android:textColor="@color/colorAccent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="?android:attr/borderlessButtonStyle"
+        android:textStyle="normal|bold"
+        android:drawableRight="@drawable/ic_highlight_off"
+        android:drawableTint="@color/colorAccent"
+        android:fontFamily="sans-serif-condensed"
+        android:textSize="30sp"
+        android:padding="15dp"
+        android:visibility="gone"/>
 
+    </FrameLayout>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/easytext"
+        android:textSize="30dp"
+        android:layout_margin="@dimen/activity_vertical_margin"
+        android:layout_below="@+id/button_frame"
+        android:layout_centerHorizontal="true"
+        android:textColor="#fff"
+        android:fontFamily="sans-serif-condensed"
+        android:textAlignment="center"
+        android:textStyle="normal|bold"
+        android:textAllCaps="false" />
 
 
 </RelativeLayout>

@@ -3,7 +3,7 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:id="@+id/file_delete_element"
+    android:id="@+id/auto_upload_element"
     android:layout_marginBottom="@dimen/activity_vertical_margin">
 
     <LinearLayout
@@ -15,9 +15,9 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Delete after Upload"
-            android:textStyle="bold"
+            android:text="Auto upload"
             android:fontFamily="sans-serif-condensed"
+            android:textStyle="bold"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
         <TextView
@@ -26,8 +26,7 @@
             android:textSize="15dp"
             android:scrollHorizontally="false"
             android:fontFamily="sans-serif-condensed"
-
-            android:text="You will only be able to view the map once after each trip" />
+            android:text="If you uncheck this you will need to manually upload after every trip" />
 
     </LinearLayout>
 
@@ -35,7 +34,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end"
-        android:id="@+id/delete_checkbox"
+        android:id="@+id/auto_upload_checkbox"
         android:layout_weight="1"/>
 
 </LinearLayout>
