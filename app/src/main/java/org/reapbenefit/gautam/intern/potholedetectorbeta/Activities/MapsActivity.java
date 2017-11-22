@@ -298,7 +298,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 potholecount.setText("sorry, you must travel at least 0.5km");
             }else {
                 distance.setText(roundTwoDecimals(finishedTrip.getDistanceInKM()) + "km");
-                potholecount.setText(result);
+                potholecount.setText(Integer.toString(result));
                 populatePotholeMarkerPoints();
                 mapFragment.getMapAsync(MapsActivity.this);
             }

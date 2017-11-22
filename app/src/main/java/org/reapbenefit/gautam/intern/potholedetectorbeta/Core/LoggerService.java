@@ -440,8 +440,11 @@ public class LoggerService extends Service implements SensorEventListener {
 
         newtrip.setEndTime(getCurrentDateTime());
         endTime = new Date();
-        newtrip.setNo_of_lines((int)(no_of_lines/calcTimeTravelledSecs()));
-
+        try {
+            newtrip.setNo_of_lines((int) (no_of_lines / calcTimeTravelledSecs()));
+        }catch (ArithmeticException ae){
+            newtrip.setNo_of_lines(0);
+        }
         Log.i(TAG+" endtime", String.valueOf(newtrip.getEndTime()));
         mp.stop();
         mSensorManager.unregisterListener(this);
@@ -578,5 +581,3 @@ public class LoggerService extends Service implements SensorEventListener {
 }
 
 // TODO : Android O Support : fileURI
-
-// upload using wifi

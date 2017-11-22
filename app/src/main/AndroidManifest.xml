@@ -102,6 +102,9 @@
         <service
             android:name=".Core.UploadTasksService"
             android:enabled="true" />
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:enabled="true" />
 
         <activity android:name=".Activities.SettingsActivity">
             android:screenOrientation="portrait">

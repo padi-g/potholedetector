@@ -13,7 +13,7 @@
         app:srcCompat="@drawable/ic_launcher"
         android:id="@+id/imageView"
         android:layout_centerHorizontal="true"
-        android:layout_above="@+id/start_trip_button"/>
+        android:layout_above="@+id/button_frame"/>
 
     <Switch
         android:layout_width="wrap_content"
