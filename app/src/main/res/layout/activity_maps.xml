@@ -128,7 +128,7 @@
             android:layout_margin="10dp"
             style="@style/Widget.AppCompat.SeekBar.Discrete"
             android:id="@+id/accuracy_seek"
-            android:thumb="@drawable/ic_location_on"
+            android:thumb="@drawable/right_arrow"
             android:layout_weight="90"
             android:max="9" />
 

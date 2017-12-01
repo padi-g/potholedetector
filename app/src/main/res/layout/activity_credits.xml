@@ -61,6 +61,25 @@
 
             <TextView
                 android:paddingTop="10dp"
+                android:text="Design"
+                android:textSize="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:textAlignment="center"
+                android:fontFamily="sans-serif-condensed"
+                android:textColor="#000"/>
+
+            <TextView
+                android:text="Aabharan Hemanth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:textAlignment="center"
+                android:paddingBottom="10dp" />
+
+            <TextView
+                android:paddingTop="10dp"
                 android:text="Mentors"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

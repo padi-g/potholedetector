@@ -138,6 +138,7 @@ public class EasyModeFragment extends Fragment {
 
         bgframe = (RelativeLayout) v.findViewById(R.id.easyframe);
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
+        statusIndicatorText.setText(R.string.warnings);
         startButton = (Button) v.findViewById(R.id.start_trip_button);
         stopButton = (Button) v.findViewById(R.id.stop_trip_button);
 

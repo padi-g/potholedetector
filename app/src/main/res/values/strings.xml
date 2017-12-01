@@ -14,6 +14,10 @@
     <string name="menu_login">Login</string>
     <string name="menu_partners">Partners</string>
 
+    <string name="warnings">We are currently facing issues in detecting potholes in bumper to bumper and slow moving traffic\n
+        Please bear with this while this is improved\n\n
+        Please clamp the device on a mobile holder for the best accuracy</string>
+
     <string name="about1">Potholes are a major source of a lot of problems we see on Indian roads. Slow moving traffic, lower mileage, high maintenance
         and injuries, all of these issues are linked to potholes and poor roads.
     </string>

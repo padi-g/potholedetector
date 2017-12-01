@@ -5,10 +5,10 @@ android {
     buildToolsVersion "25.0.0"
     defaultConfig {
         applicationId "org.reapbenefit.gautam.intern.potholedetectorbeta"
-        minSdkVersion 17
+        minSdkVersion 23
         targetSdkVersion 25
-        versionCode 24
-        versionName "1.24"
+        versionCode 25
+        versionName "1.25"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

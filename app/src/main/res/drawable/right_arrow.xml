@@ -1,0 +1,14 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Fill the background with a solid color -->
+    <item
+        android:drawable="@color/colorAccent" />
+    <item>
+
+        <!-- Place your bitmap in the center -->
+        <bitmap
+            android:gravity="center"
+            android:tint="#000000"
+            android:src="@drawable/ic_keyboard_arrow_right"/>
+    </item>
+
+</layer-list>

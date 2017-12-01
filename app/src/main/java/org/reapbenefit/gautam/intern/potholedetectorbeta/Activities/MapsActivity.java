@@ -305,3 +305,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 }
+
+/**
+*
+*  Check if first gear start stop scenarios have a concrete signature in terms of waveform
+*
+*  Include a  Help required section -> Machine learning on time series data, backend development?
+*
+**/
