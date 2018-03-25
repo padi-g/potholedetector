@@ -1,4 +1,21 @@
-*.iml
+/.gradle
+/captures
+.externalNativeBuild
+*.txt
+# built app files
+*.apk
+*.ap_
+# files for the dex VM
+*.dex
+Thumbs.db
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/datasources.xml
+.idea/dataSources.ids
+bin/
+gen/
+/gradlew
+*.properties*.iml
 .gradle
 /local.properties
 /.idea/workspace.xml
