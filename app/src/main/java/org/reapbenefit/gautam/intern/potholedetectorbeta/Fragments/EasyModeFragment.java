@@ -50,6 +50,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.UploadTasksService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadSevice;
 
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.s3.transferutility.*;
@@ -204,6 +205,7 @@ public class EasyModeFragment extends Fragment {
             tripStatus = intent.getBooleanExtra("LoggingStatus", false);
             if(!tripStatus){
                 uploadFileUri = intent.getParcelableExtra("filename");
+                Log.d("EasyMode", uploadFileUri.toString());
                 if(uploadFileUri == null){
                     statusIndicatorText.setText("Sorry, we could not detect your location accurately");
                 }else {
@@ -214,6 +216,7 @@ public class EasyModeFragment extends Fragment {
                     }else if(!internetAvailable()){
                         Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_LONG).show();
                     }else if(!autoUploadOn())
+                        Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_LONG).show();
                         Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_LONG).show();
                     openMap();
                 }
@@ -245,7 +248,8 @@ public class EasyModeFragment extends Fragment {
     }
 
     public void startUploadService(){
-        Intent intent = new Intent(getContext(), UploadTasksService.class);
+        Intent intent = new Intent(getContext(), S3UploadSevice.class);
+        //Intent intent = new Intent(getContext(), UploadTasksService.class);
         intent.setAction("upload_now");
         intent.putExtra("upload_uri", uploadFileUri);
         this.getContext().startService(intent);

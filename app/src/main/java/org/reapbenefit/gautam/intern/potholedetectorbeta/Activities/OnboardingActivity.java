@@ -161,6 +161,7 @@ public class OnboardingActivity extends AppCompatActivity {
 
         } else {
             // Signed out, show unauthenticated UI.
+            Log.d("K-Onboarding", "FirebaseAuth failed");
         }
     }
 
