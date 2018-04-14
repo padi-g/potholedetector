@@ -7,6 +7,8 @@
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <uses-feature android:name="android.hardware.sensor.gyroscope" />
     <uses-feature android:name="android.hardware.screen.portrait" />
@@ -104,6 +106,10 @@
             android:enabled="true" />
         <service
             android:name=".MyFirebaseMessagingService"
+            android:enabled="true" />
+
+        <!-- required for AWS uploads -->
+        <service android:name="com.amazonaws.mobileconnectors.s3.transferutility.TransferService"
             android:enabled="true" />
 
         <activity android:name=".Activities.SettingsActivity">

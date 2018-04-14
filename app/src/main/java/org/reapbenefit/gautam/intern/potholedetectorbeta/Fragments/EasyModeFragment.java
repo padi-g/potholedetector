@@ -51,6 +51,9 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.UploadTasksService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
+import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.s3.transferutility.*;
+
 import java.util.List;
 
 import static android.content.Context.MODE_PRIVATE;
