@@ -174,19 +174,19 @@ public class OnboardingActivity extends AppCompatActivity {
         if(acct != null) {
             Log.d("firebase auth", "firebaseAuthWithGoogle:" + acct.getId());
             AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-            Log.d("kinks", acct.getId());
             mAuth.signInWithCredential(credential)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
-                                uploadEditor.putString("FIREBASE_USER_ID", acct.getId());
-                                uploadEditor.apply();
-                                uploadEditor.commit();
-
                                 // Sign in success, update UI with the signed-in user's information
                                 Log.d("firebase auth", "signInWithCredential:success");
                                 FirebaseUser user = mAuth.getCurrentUser();
+                                Log.d("Firebase UUID: ", user.getUid());
+                                uploadEditor.putString("FIREBASE_USER_ID", user.getUid());
+                                uploadEditor.apply();
+                                uploadEditor.commit();
+
                                 //update UI
                             } else {
                                 // If sign in fails, display a message to the user.

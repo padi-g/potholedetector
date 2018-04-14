@@ -59,6 +59,7 @@ public class S3UploadSevice extends IntentService {
             transferUtility = Util.getsTransferUtility(this);
             Uri uploadUri = intent.getParcelableExtra(UPLOAD_URI);
             mNotifyMgr.notify(mNotificationId, mBuilder.build());
+            Log.d("FileURI", uploadUri.toString());
             uploadFile(uploadUri);
         }
     }

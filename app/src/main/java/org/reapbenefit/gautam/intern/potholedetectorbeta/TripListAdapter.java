@@ -150,7 +150,7 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
     }
 
     public void startUploadService(){
-        Intent intent = new Intent(getContext(), UploadTasksService.class);
+        Intent intent = new Intent(getContext(), S3UploadSevice.class);
         intent.setAction("upload_now");
         intent.putExtra("upload_uri", uploadFileUri);
         this.getContext().startService(intent);
