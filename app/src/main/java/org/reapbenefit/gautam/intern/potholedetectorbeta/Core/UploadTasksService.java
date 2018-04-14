@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -23,6 +24,7 @@ import com.google.firebase.storage.UploadTask;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Created by gautam on 13/09/17.
@@ -43,6 +45,9 @@ public class UploadTasksService extends IntentService {
     private DatabaseReference db;
     private String filename;
     SharedPreferences prefs;
+
+    //for keeping track of uploads
+    private List<TransferObserver> observers;
 
 
     public UploadTasksService(){

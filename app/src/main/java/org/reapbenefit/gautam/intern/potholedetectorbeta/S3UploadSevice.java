@@ -68,9 +68,11 @@ public class S3UploadSevice extends IntentService {
         filename = uri.toString().substring(uri.toString().lastIndexOf('/')) ;
         File file = new File(uri.getPath());
         String userID = prefs.getString("FIREBASE_USER_ID", null);
-        transferUtility.upload("***REMOVED***",
+        TransferObserver observer = transferUtility.upload("***REMOVED***",
                 "logs/" + userID + filename,
                 file);
+        //adding listener to monitor progress of upload
+        observer.setTransferListener(new UploadListener());
     }
 
     @Override
@@ -79,23 +81,41 @@ public class S3UploadSevice extends IntentService {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    public void publishProgress(int progress){
+        if(progress == -1)
+            mBuilder.setContentText("Upload paused");
+        else if(progress == -2)
+            mBuilder.setContentText("Upload failed");
+        else {
+            mBuilder.setProgress(100, progress, false);
+            if (progress == 100)
+                mBuilder.setContentText("Upload Complete");
+        }
+        mNotifyMgr.notify(mNotificationId, mBuilder.build());
+    }
+
     //tracking file upload progress
     private class UploadListener implements TransferListener {
 
         @Override
         public void onStateChanged(int id, TransferState state) {
             Log.d("S3UploadService", "onStateChanged: " + id + ", " + state);
+            if (state == TransferState.PAUSED)
+                publishProgress(-1);
         }
 
         @Override
         public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
             Log.d("S3UploadService", String.format("onProgressChanged: %d, total: %d, current: %d",
                     id, bytesTotal, bytesCurrent));
+            uploadProgress = (int) ((bytesCurrent/bytesTotal) * 100.0);
+            publishProgress(uploadProgress);
         }
 
         @Override
         public void onError(int id, Exception ex) {
             Log.e("S3UploadService", "Error during upload: " + id, ex);
+            publishProgress(-2);
         }
     }
 }
