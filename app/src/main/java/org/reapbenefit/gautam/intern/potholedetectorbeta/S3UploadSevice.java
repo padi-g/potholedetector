@@ -66,7 +66,9 @@ public class S3UploadSevice extends IntentService {
     private void uploadFile(Uri uri) {
         filename = uri.toString().substring(uri.toString().lastIndexOf('/')) ;
         File file = new File(uri.getPath());
-        transferUtility.upload("***REMOVED***", file.toURI().getPath(),
+        String userID = prefs.getString("FIREBASE_USER_ID", null);
+        transferUtility.upload("***REMOVED***",
+                "logs/" + userID + filename,
                 file);
     }
 

@@ -205,7 +205,6 @@ public class EasyModeFragment extends Fragment {
             tripStatus = intent.getBooleanExtra("LoggingStatus", false);
             if(!tripStatus){
                 uploadFileUri = intent.getParcelableExtra("filename");
-                Log.d("EasyMode", uploadFileUri.toString());
                 if(uploadFileUri == null){
                     statusIndicatorText.setText("Sorry, we could not detect your location accurately");
                 }else {

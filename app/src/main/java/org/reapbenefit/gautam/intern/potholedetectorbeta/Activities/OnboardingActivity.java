@@ -47,6 +47,8 @@ public class OnboardingActivity extends AppCompatActivity {
     private ProgressDialog dialog;
     private Button continueButton;
     SharedPreferences sharedPreferences;
+    private SharedPreferences uploadPreferences;
+    private SharedPreferences.Editor uploadEditor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +56,9 @@ public class OnboardingActivity extends AppCompatActivity {
 
         sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(this);
+
+        uploadPreferences = getSharedPreferences("uploads", MODE_PRIVATE);
+        uploadEditor = uploadPreferences.edit();
         // Check if we need to display our OnboardingFragment
         if (!sharedPreferences.getBoolean(
                 OnboardingActivity.COMPLETED_ONBOARDING_PREF_NAME, false)) {
@@ -165,16 +170,20 @@ public class OnboardingActivity extends AppCompatActivity {
         }
     }
 
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+    private void firebaseAuthWithGoogle(final GoogleSignInAccount acct) {
         if(acct != null) {
             Log.d("firebase auth", "firebaseAuthWithGoogle:" + acct.getId());
-
             AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+            Log.d("kinks", acct.getId());
             mAuth.signInWithCredential(credential)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
+                                uploadEditor.putString("FIREBASE_USER_ID", acct.getId());
+                                uploadEditor.apply();
+                                uploadEditor.commit();
+
                                 // Sign in success, update UI with the signed-in user's information
                                 Log.d("firebase auth", "signInWithCredential:success");
                                 FirebaseUser user = mAuth.getCurrentUser();
