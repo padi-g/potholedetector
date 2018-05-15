@@ -33,6 +33,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MyLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
@@ -59,7 +60,8 @@ public class LoggerService extends Service implements SensorEventListener {
     protected String TAG = "Logger_Service";
     private SensorManager mSensorManager;
     private Sensor mAccelerometer, mGyroscope, mProximity;
-    private static final int ACCURACY_REQUIRED = 25;
+    //1525 metre accuracy sensitive if in debug state, 25 in release
+    private static final int ACCURACY_REQUIRED = BuildConfig.DEBUG?1525:25;
 
     private String Marks;
     float accVals[] = null, gyrVals[] = null;
