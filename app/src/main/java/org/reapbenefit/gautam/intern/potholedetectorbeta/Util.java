@@ -33,7 +33,7 @@ public class Util {
 
     //getting instance of CognitoCachingCredentialsProvider
 
-    private static CognitoCachingCredentialsProvider getsCredProvider(Context context) {
+    public static CognitoCachingCredentialsProvider getsCredProvider(Context context) {
         if (sCredProvider == null) {
             sCredProvider = new CognitoCachingCredentialsProvider(
                     context.getApplicationContext(),

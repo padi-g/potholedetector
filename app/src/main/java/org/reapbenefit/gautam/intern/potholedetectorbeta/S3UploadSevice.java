@@ -12,6 +12,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 
+import com.amazonaws.mobileconnectors.s3.transfermanager.TransferManager;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
@@ -36,6 +37,7 @@ public class S3UploadSevice extends IntentService {
     private static final String UPLOAD_URI = "upload_uri";
     private Util util;
     private String filename;
+    private TransferManager transferManager;
 
     public S3UploadSevice() {
         super("UploadService");
@@ -46,6 +48,7 @@ public class S3UploadSevice extends IntentService {
         prefs = getSharedPreferences("uploads", MODE_PRIVATE);
         Log.d("Preferences", "Inside onHandleIntent Found file_delete = " + prefs.getBoolean("file_delete", false));
 
+        transferManager = new TransferManager(Util.getsCredProvider(getApplicationContext()));
         mBuilder = new NotificationCompat.Builder(getApplicationContext())
                 .setSmallIcon(R.drawable.ic_upload)
                 .setContentTitle("Road Quality Audit")
@@ -72,6 +75,7 @@ public class S3UploadSevice extends IntentService {
         filename = uri.toString().substring(uri.toString().lastIndexOf('/'));
         File file = new File(uri.getPath());
         String userID = prefs.getString("FIREBASE_USER_ID", null);
+        Log.d("User ID", userID);
         observer = null;
         if (BuildConfig.DEBUG) {
             observer = transferUtility.upload("***REMOVED***",
@@ -97,7 +101,8 @@ public class S3UploadSevice extends IntentService {
             }
         }
         //adding listener to monitor progress of upload
-        observer.setTransferListener(new TransferListener() {
+        observer.setTransferListener(new UploadListener());
+        /*observer.setTransferListener(new TransferListener() {
             @Override
             public void onStateChanged(int id, TransferState state) {
                 Log.d("S3UploadService", "onStateChanged: " + id + ", " + state);
@@ -134,7 +139,7 @@ public class S3UploadSevice extends IntentService {
                 publishProgress(-2);
             }
         });
-        Log.i("Progress", observer.getBytesTransferred() + "");
+        Log.i("Progress", observer.getBytesTransferred() + "");*/
     }
 
     @Override
@@ -151,6 +156,8 @@ public class S3UploadSevice extends IntentService {
             mBuilder.setContentText("Upload failed");
         else if (progress == -3)
             mBuilder.setContentText("Waiting for network");
+        else if (progress == -4)
+            mBuilder.setContentText("Network connection interrupted. Resuming upload...");
         else {
             mBuilder.setProgress(100, progress, false);
             if (progress == 100) {
@@ -177,11 +184,15 @@ public class S3UploadSevice extends IntentService {
                 //saving state of upload
                 tryPause = transferUtility.pause(id);
             }
-            if (state == TransferState.WAITING_FOR_NETWORK) {
+            else if (state == TransferState.WAITING_FOR_NETWORK) {
                 publishProgress(-3);
                 tryPause = transferUtility.pause(id);
             }
-            if (state == TransferState.IN_PROGRESS) {
+            else if (state == TransferState.PART_COMPLETED) {
+                publishProgress(-4);
+                tryPause = transferUtility.pause(id);
+            }
+            else if (state == TransferState.IN_PROGRESS) {
                 TransferObserver resumed = transferUtility.resume(id);
                 observer.setTransferListener(new UploadListener());
             }
