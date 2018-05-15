@@ -2,7 +2,6 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
-import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -11,17 +10,13 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-
 import com.amazonaws.mobileconnectors.s3.transfermanager.TransferManager;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferType;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
-
 
 import java.io.File;
 
@@ -38,6 +33,7 @@ public class S3UploadSevice extends IntentService {
     private Util util;
     private String filename;
     private TransferManager transferManager;
+    private int progress_flag;
 
     public S3UploadSevice() {
         super("UploadService");
@@ -46,7 +42,16 @@ public class S3UploadSevice extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         prefs = getSharedPreferences("uploads", MODE_PRIVATE);
+
         Log.d("Preferences", "Inside onHandleIntent Found file_delete = " + prefs.getBoolean("file_delete", false));
+
+        //creating intent to redirect user to fragment
+        /*Intent notifyIntent = new Intent(this, MainActivity.class);
+        notifyIntent.putExtra("Fragment", "TripList");
+        notifyIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        //setting activity to start without backstack and without recent task filling
+        PendingIntent notifyPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,
+                notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);*/
 
         transferManager = new TransferManager(Util.getsCredProvider(getApplicationContext()));
         mBuilder = new NotificationCompat.Builder(getApplicationContext())
@@ -54,7 +59,8 @@ public class S3UploadSevice extends IntentService {
                 .setContentTitle("Road Quality Audit")
                 .setContentText("Data is being Uploaded")
                 .setOngoing(true);
-
+        //passing intent to notification builder
+        //mBuilder.setContentIntent(notifyPendingIntent);
         mNotifyMgr =
                 (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
         mNotifyMgr.notify(mNotificationId, mBuilder.build());
@@ -102,44 +108,6 @@ public class S3UploadSevice extends IntentService {
         }
         //adding listener to monitor progress of upload
         observer.setTransferListener(new UploadListener());
-        /*observer.setTransferListener(new TransferListener() {
-            @Override
-            public void onStateChanged(int id, TransferState state) {
-                Log.d("S3UploadService", "onStateChanged: " + id + ", " + state);
-                boolean tryPause = false;
-                if (state == TransferState.PAUSED) {
-                    publishProgress(-1);
-                    //saving state of upload
-                    tryPause = transferUtility.pause(id);
-                }
-                if (state == TransferState.WAITING_FOR_NETWORK) {
-                    publishProgress(-3);
-                    tryPause = transferUtility.pause(id);
-                }
-                if (state == TransferState.IN_PROGRESS && tryPause) {
-                    //runs only for past uploads
-                    TransferObserver resumed = transferUtility.resume(id);
-                    observer.setTransferListener(new UploadListener());
-                }
-            }
-
-            @Override
-            public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
-                Log.d("S3UploadService", String.format("onProgressChanged: %d, total: %d, current: %d",
-                        id, observer.getBytesTotal(), observer.getBytesTransferred()));
-                bytesCurrent = observer.getBytesTransferred();
-                bytesTotal = observer.getBytesTotal();
-                uploadProgress = (int) (((double) bytesCurrent / (double) bytesTotal) * 100.0);
-                publishProgress(uploadProgress);
-            }
-
-            @Override
-            public void onError(int id, Exception ex) {
-                Log.e("S3UploadService", "Error during upload: " + id, ex);
-                publishProgress(-2);
-            }
-        });
-        Log.i("Progress", observer.getBytesTransferred() + "");*/
     }
 
     @Override
@@ -149,8 +117,9 @@ public class S3UploadSevice extends IntentService {
     }
 
     public void publishProgress(int progress) {
-        Log.i("Progress", "old method: " + progress);
-        if (progress == -1)
+        ++progress_flag;
+        Log.i("Progress", "old method: " + progress + progress_flag);
+        if (progress == -1 || (progress == 0 && progress_flag > 1))
             mBuilder.setContentText("Upload paused");
         else if (progress == -2)
             mBuilder.setContentText("Upload failed");
@@ -163,8 +132,11 @@ public class S3UploadSevice extends IntentService {
             if (progress == 100) {
                 mBuilder.setContentText("Upload Complete");
                 mBuilder.setOngoing(false);//notification can now be swiped away
-                /*Log.d("TripID", ApplicationClass.getInstance().getTrip().getTrip_id());
-                ApplicationClass.getInstance().getTrip().setUploaded(true);*/
+                ApplicationClass.getInstance().getTrip().setUploaded(true);
+                if(getSharedPreferences("uploads", MODE_PRIVATE).getBoolean("file_delete", false)) {
+                    File file = new File(getApplicationContext().getFilesDir(), "logs/" + filename);
+                    file.delete();
+                }
             } else {
                 mBuilder.setContentText(progress + "% done");
                 mBuilder.setOngoing(true);
@@ -174,32 +146,33 @@ public class S3UploadSevice extends IntentService {
     }
 
     private class UploadListener implements TransferListener {
-
+        private boolean tryPause;
         @Override
         public void onStateChanged(int id, TransferState state) {
             Log.d("S3UploadService", "onStateChanged: " + id + ", " + state);
-            boolean tryPause = false;
+            tryPause = false;
             if (state == TransferState.PAUSED) {
                 publishProgress(-1);
                 //saving state of upload
                 tryPause = transferUtility.pause(id);
             }
-            else if (state == TransferState.WAITING_FOR_NETWORK) {
+            if (state == TransferState.WAITING_FOR_NETWORK) {
                 publishProgress(-3);
                 tryPause = transferUtility.pause(id);
             }
-            else if (state == TransferState.PART_COMPLETED) {
+            if (state == TransferState.PART_COMPLETED) {
                 publishProgress(-4);
                 tryPause = transferUtility.pause(id);
-            }
-            else if (state == TransferState.IN_PROGRESS) {
-                TransferObserver resumed = transferUtility.resume(id);
-                observer.setTransferListener(new UploadListener());
             }
         }
 
         @Override
         public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
+            if (tryPause) {
+                //transfer is paused, must resume
+                TransferObserver resumed = transferUtility.resume(id);
+                resumed.setTransferListener(new UploadListener());
+            }
             Log.d("S3UploadService", String.format("onProgressChanged: %d, total: %d, current: %d",
                     id, observer.getBytesTotal(), observer.getBytesTransferred()));
             bytesCurrent = observer.getBytesTransferred();

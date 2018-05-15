@@ -101,9 +101,9 @@
         <service
             android:name=".FileProcessorService"
             android:enabled="true" />
-        <service
+        <!--<service
             android:name=".Core.UploadTasksService"
-            android:enabled="true" />
+            android:enabled="true" />-->
         <service
             android:name=".MyFirebaseMessagingService"
             android:enabled="true" />
