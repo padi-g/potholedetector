@@ -48,7 +48,6 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.UploadTasksService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadSevice;
 import org.w3c.dom.Text;

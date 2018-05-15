@@ -17,7 +17,6 @@ import android.widget.Toast;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.UploadTasksService;
 
 import java.io.File;
 import java.text.DecimalFormat;
