@@ -88,6 +88,9 @@ public class EasyModeFragment extends Fragment {
     private Intent loggerIntent;
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 389;
 
+    private SharedPreferences arsPreferences;
+    private boolean inCar;
+
     ApplicationClass app;
 
     public EasyModeFragment() {
@@ -140,6 +143,9 @@ public class EasyModeFragment extends Fragment {
 
         View v = inflater.inflate(R.layout.fragment_easy_mode, container, false);
 
+        arsPreferences = getActivity().getSharedPreferences("ARS", MODE_PRIVATE);
+        inCar = arsPreferences.getBoolean("inCar", false);
+
         bgframe = (RelativeLayout) v.findViewById(R.id.easyframe);
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
         statusIndicatorText.setText(R.string.warnings);
@@ -162,18 +168,21 @@ public class EasyModeFragment extends Fragment {
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!app.isTripInProgress() && checkPermissions()) {
+                if (!app.isTripInProgress() && checkPermissions() && inCar) {
                     app.setTripInProgress(true);
                     startLogger();
                     bgframe.setBackgroundResource(R.drawable.logging_bg);
                     statusIndicatorText.setText(getResources().getString(R.string.detecting));
                     startButton.setVisibility(View.GONE);
                     stopButton.setVisibility(View.VISIBLE);
-                } else if(!checkPermissions()) {
+                } else if (!checkPermissions()) {
                     requestPermissions();
                     startButton.setVisibility(View.VISIBLE);
                     stopButton.setVisibility(View.GONE);
                     bgframe.setBackgroundResource(R.drawable.notlogging_bg);
+                }
+                else if (!inCar) {
+                    Toast.makeText(getContext(), "Logging cannot happen outside a vehicle", Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -265,7 +274,8 @@ public class EasyModeFragment extends Fragment {
 
 
     public void startLogger(){
-        getActivity().startService(loggerIntent);
+        if (inCar)
+            getActivity().startService(loggerIntent);
     }
 
     public void stopLogger(){
