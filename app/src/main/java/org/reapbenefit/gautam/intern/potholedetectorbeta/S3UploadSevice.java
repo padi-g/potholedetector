@@ -6,10 +6,12 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 
 import com.amazonaws.mobileconnectors.s3.transfermanager.TransferManager;
@@ -19,6 +21,7 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferType;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
@@ -39,16 +42,18 @@ public class S3UploadSevice extends IntentService {
     private String filename;
     private TransferManager transferManager;
 
+    private Handler mHandler;
     public S3UploadSevice() {
         super("UploadService");
     }
 
     @Override
-    protected void onHandleIntent(@Nullable Intent intent) {
-        prefs = getSharedPreferences("uploads", MODE_PRIVATE);
-        Log.d("Preferences", "Inside onHandleIntent Found file_delete = " + prefs.getBoolean("file_delete", false));
+    public void onCreate() {
+        super.onCreate();
+        mHandler = new Handler();
+    }
 
-        transferManager = new TransferManager(Util.getsCredProvider(getApplicationContext()));
+    private void initialiseNotification() {
         mBuilder = new NotificationCompat.Builder(getApplicationContext())
                 .setSmallIcon(R.drawable.ic_upload)
                 .setContentTitle("Road Quality Audit")
@@ -58,6 +63,14 @@ public class S3UploadSevice extends IntentService {
         mNotifyMgr =
                 (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
         mNotifyMgr.notify(mNotificationId, mBuilder.build());
+    }
+
+    @Override
+    protected void onHandleIntent(@Nullable Intent intent) {
+        prefs = getSharedPreferences("uploads", MODE_PRIVATE);
+        Log.d("Preferences", "Inside onHandleIntent Found file_delete = " + prefs.getBoolean("file_delete", false));
+
+        transferManager = new TransferManager(Util.getsCredProvider(getApplicationContext()));
 
         String action = intent.getAction();
         if (action.equals(ACTION_UPLOAD_NOW)) {
@@ -65,8 +78,7 @@ public class S3UploadSevice extends IntentService {
             util = new Util();
             transferUtility = Util.getsTransferUtility(this);
             Uri uploadUri = intent.getParcelableExtra(UPLOAD_URI);
-            mNotifyMgr.notify(mNotificationId, mBuilder.build());
-            Log.d("FileURI", uploadUri.toString());
+            //mNotifyMgr.notify(mNotificationId, mBuilder.build());
             uploadFile(uploadUri);
         }
     }
@@ -78,26 +90,60 @@ public class S3UploadSevice extends IntentService {
         Log.d("User ID", userID);
         observer = null;
         if (BuildConfig.DEBUG) {
-            observer = transferUtility.upload("***REMOVED***",
-                    "debug/" + userID + filename,
-                    file);
+            try {
+                observer = transferUtility.upload("***REMOVED***",
+                        "debug/" + userID + filename,
+                        file);
+                initialiseNotification();
+            }
+            catch (Exception e){
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(S3UploadSevice.this, "File not found on device", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return;
+            }
         } else {
             String[] debug_ids = getResources().getStringArray(R.array.debugging_ids);
             //checking if current user ID is a debug ID
             boolean debug_id_flag = false;
             for (int i = 0; i < debug_ids.length; ++i) {
                 if (debug_ids[i] == userID) {
-                    observer = transferUtility.upload("***REMOVED***",
-                            "debug/" + userID + filename,
-                            file);
-                    debug_id_flag = true;
-                    break;
+                    try {
+                        observer = transferUtility.upload("***REMOVED***",
+                                "debug/" + userID + filename,
+                                file);
+                        debug_id_flag = true;
+                        break;
+                    }
+                    catch (Exception e) {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(S3UploadSevice.this, "File not found on device", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        return;
+                    }
                 }
             }
             if (!debug_id_flag) {
-                observer = transferUtility.upload("***REMOVED***",
-                        "logs/" + userID + filename,
-                        file);
+                try {
+                    observer = transferUtility.upload("***REMOVED***",
+                            "logs/" + userID + filename,
+                            file);
+                }
+                catch (Exception e) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(S3UploadSevice.this, "File not found on device", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    return;
+                }
             }
         }
         //adding listener to monitor progress of upload
