@@ -20,6 +20,7 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferType;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
+import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
@@ -41,6 +42,8 @@ public class S3UploadSevice extends IntentService {
     private Util util;
     private String filename;
     private TransferManager transferManager;
+
+    private String tripJson;
 
     private Handler mHandler;
     public S3UploadSevice() {
@@ -71,6 +74,9 @@ public class S3UploadSevice extends IntentService {
         Log.d("Preferences", "Inside onHandleIntent Found file_delete = " + prefs.getBoolean("file_delete", false));
 
         transferManager = new TransferManager(Util.getsCredProvider(getApplicationContext()));
+
+        tripJson = intent.getStringExtra("trip_json");
+        Log.d("TripJSON", tripJson);
 
         String action = intent.getAction();
         if (action.equals(ACTION_UPLOAD_NOW)) {
@@ -148,44 +154,6 @@ public class S3UploadSevice extends IntentService {
         }
         //adding listener to monitor progress of upload
         observer.setTransferListener(new UploadListener());
-        /*observer.setTransferListener(new TransferListener() {
-            @Override
-            public void onStateChanged(int id, TransferState state) {
-                Log.d("S3UploadService", "onStateChanged: " + id + ", " + state);
-                boolean tryPause = false;
-                if (state == TransferState.PAUSED) {
-                    publishProgress(-1);
-                    //saving state of upload
-                    tryPause = transferUtility.pause(id);
-                }
-                if (state == TransferState.WAITING_FOR_NETWORK) {
-                    publishProgress(-3);
-                    tryPause = transferUtility.pause(id);
-                }
-                if (state == TransferState.IN_PROGRESS && tryPause) {
-                    //runs only for past uploads
-                    TransferObserver resumed = transferUtility.resume(id);
-                    observer.setTransferListener(new UploadListener());
-                }
-            }
-
-            @Override
-            public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
-                Log.d("S3UploadService", String.format("onProgressChanged: %d, total: %d, current: %d",
-                        id, observer.getBytesTotal(), observer.getBytesTransferred()));
-                bytesCurrent = observer.getBytesTransferred();
-                bytesTotal = observer.getBytesTotal();
-                uploadProgress = (int) (((double) bytesCurrent / (double) bytesTotal) * 100.0);
-                publishProgress(uploadProgress);
-            }
-
-            @Override
-            public void onError(int id, Exception ex) {
-                Log.e("S3UploadService", "Error during upload: " + id, ex);
-                publishProgress(-2);
-            }
-        });
-        Log.i("Progress", observer.getBytesTransferred() + "");*/
     }
 
     @Override
@@ -209,8 +177,19 @@ public class S3UploadSevice extends IntentService {
             if (progress == 100) {
                 mBuilder.setContentText("Upload Complete");
                 mBuilder.setOngoing(false);//notification can now be swiped away
-                /*Log.d("TripID", ApplicationClass.getInstance().getTrip().getTrip_id());
-                ApplicationClass.getInstance().getTrip().setUploaded(true);*/
+                /*mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Gson gson = new Gson();
+                        Trip trip = gson.fromJson(tripJson, Trip.class);
+                        Log.d("TripID", trip.getTrip_id() + "");
+                        trip.setUploaded(true);
+                    }
+                });*/
+                Gson gson = new Gson();
+                Trip trip = gson.fromJson(tripJson, Trip.class);
+                Log.d("TripID", trip.getTrip_id() + "");
+                trip.setUploaded(true);
             } else {
                 mBuilder.setContentText(progress + "% done");
                 mBuilder.setOngoing(true);
