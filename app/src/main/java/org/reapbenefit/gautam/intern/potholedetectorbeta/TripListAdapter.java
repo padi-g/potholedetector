@@ -39,8 +39,8 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
         this.context = context;
         trips = new ArrayList<>(values);
         app = ApplicationClass.getInstance();
-        notifyDataSetChanged();
     }
+
 
     @Override
     public View getView(final int position, final View convertView, ViewGroup parent) {
@@ -155,6 +155,5 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
         this.getContext().startService(intent);
 
     }
-
 
 }

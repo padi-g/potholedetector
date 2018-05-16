@@ -67,11 +67,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         setContentView(R.layout.activity_main);
+
 
         //Adding toolbar to the activity
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -116,16 +118,6 @@ public class MainActivity extends AppCompatActivity
         SharedPreferences prefs = getSharedPreferences("uploads", MODE_PRIVATE);
         if(!prefs.contains("file_delete"))
             prefs.edit().putBoolean("file_delete", false);
-
-        //checking if upload notification fired intent to MainActivity
-        /*Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            String fragment = extras.getString("Fragment");
-            if (fragment.equalsIgnoreCase("TripList")) {
-                getSupportFragmentManager().beginTransaction().add(R.id.main_activity_container,
-                        new TriplistFragment(), "TriplistFragment").addToBackStack(null).commit();
-            }
-        }*/
     }
 
     private void settingsRequest(){
