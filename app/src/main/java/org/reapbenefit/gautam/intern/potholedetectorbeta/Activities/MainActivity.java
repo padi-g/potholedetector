@@ -1,6 +1,7 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
@@ -10,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
@@ -22,9 +24,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -38,6 +43,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.ActivityRecognizedService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
@@ -48,7 +54,9 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
         TriplistFragment.OnFragmentInteractionListener,
-        EasyModeFragment.OnFragmentInteractionListener{
+        EasyModeFragment.OnFragmentInteractionListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener{
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
@@ -63,6 +71,8 @@ public class MainActivity extends AppCompatActivity
     private FirebaseAuth mAuth;
     private Toolbar toolbar;
     ApplicationClass app;
+    private GoogleApiClient apiClient;
+    private final int INTERVAL_MILLISECONDS = 3000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +81,14 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        //connecting to ActivityRecognition
+        apiClient = new GoogleApiClient.Builder(this)
+                .addApi(ActivityRecognition.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
+        apiClient.connect();
 
         setContentView(R.layout.activity_main);
 
@@ -370,6 +388,26 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onFragmentInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        //called when app connects to Play Services
+        Intent intent = new Intent(this, ActivityRecognizedService.class);
+        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(apiClient, INTERVAL_MILLISECONDS,
+                pendingIntent);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
 

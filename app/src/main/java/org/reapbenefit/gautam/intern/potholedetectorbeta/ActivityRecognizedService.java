@@ -32,7 +32,7 @@ public class ActivityRecognizedService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.i("ActivityRecog Intent", "Connected to IntentService");
+        Log.i("ARS", "Connected to IntentService");
 
         if(ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
