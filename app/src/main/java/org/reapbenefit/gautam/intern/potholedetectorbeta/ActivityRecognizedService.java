@@ -92,6 +92,7 @@ public class ActivityRecognizedService extends IntentService {
                 case DetectedActivity.RUNNING: {
                     Log.i( "ActivityRecogition", "Running: " + activity.getConfidence() );
                     break;
+
                 }
                 case DetectedActivity.STILL: {
                     Log.i( "ActivityRecogition", "Still: " + activity.getConfidence() );

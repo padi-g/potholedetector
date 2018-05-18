@@ -2,7 +2,10 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -18,6 +21,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.transition.Transition;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,6 +34,9 @@ import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.ActivityTransition;
+import com.google.android.gms.location.ActivityTransitionRequest;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -51,6 +58,9 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragm
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
         TriplistFragment.OnFragmentInteractionListener,
@@ -61,7 +71,6 @@ public class MainActivity extends AppCompatActivity
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
-    protected static final String TAG = "Main_Activity";
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 389;
     private static final int REQUEST_CHECK_SETTINGS = 23;
 
@@ -73,6 +82,45 @@ public class MainActivity extends AppCompatActivity
     ApplicationClass app;
     private GoogleApiClient apiClient;
     private final int INTERVAL_MILLISECONDS = 3000;
+    private PendingIntent pendingIntent;
+    private final String TAG = getClass().getSimpleName();
+    public final static String TRANSITIONS_RECEIVER_ACTION = BuildConfig.APPLICATION_ID +
+            "TRANSITIONS_RECEIVER_ACTION";
+    private TransitionsReceiver transitionsReceiver;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setupTransitions();
+    }
+
+    private void setupTransitions() {
+        List<ActivityTransition> transitions = new ArrayList<>();
+        transitions.add(
+                new ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.IN_VEHICLE)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build()
+        );
+        ActivityTransitionRequest request = new ActivityTransitionRequest(transitions);
+
+        Task<Void> task = ActivityRecognition.getClient(this)
+                .requestActivityTransitionUpdates(request, pendingIntent);
+        task.addOnSuccessListener(
+                new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.i(TAG, "Transition received");
+                    }
+                }
+        );
+        task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.i(TAG, "Transition failed");
+            }
+        });
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +129,12 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        Intent intent = new Intent(TRANSITIONS_RECEIVER_ACTION);
+        pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, 0);
+
+        transitionsReceiver = new TransitionsReceiver();
+        registerReceiver(transitionsReceiver, new IntentFilter(TRANSITIONS_RECEIVER_ACTION));
 
         //connecting to ActivityRecognition
         apiClient = new GoogleApiClient.Builder(this)
@@ -394,11 +448,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         //called when app connects to Play Services
-        Intent intent = new Intent(this, ActivityRecognizedService.class);
+        /*Intent intent = new Intent(this, ActivityRecognizedService.class);
         PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
         ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(apiClient, INTERVAL_MILLISECONDS,
-                pendingIntent);
+                pendingIntent);*/
     }
 
     @Override
@@ -410,6 +464,7 @@ public class MainActivity extends AppCompatActivity
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
+
 
     /*
     public void startActivityService() {
@@ -428,3 +483,5 @@ public class MainActivity extends AppCompatActivity
 // eg koramangala to indiranagar
 
 //  https://coolors.co/6da34d-c9cba3-202030-39304a-52528c  for colours
+
+
