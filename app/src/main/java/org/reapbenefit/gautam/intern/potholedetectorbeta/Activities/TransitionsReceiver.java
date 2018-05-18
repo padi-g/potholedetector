@@ -1,5 +1,8 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +15,7 @@ import com.google.android.gms.location.ActivityTransitionRequest;
 import com.google.android.gms.location.ActivityTransitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.NotificationHelper;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 public class TransitionsReceiver extends BroadcastReceiver {
@@ -30,13 +34,25 @@ public class TransitionsReceiver extends BroadcastReceiver {
                     Log.i("TransitionReceiver", "WALKING");
                 else if (event.getActivityType() == DetectedActivity.IN_VEHICLE) {
                     //handling notification
-                    //TODO: Update code below for Android 8+
-                    /*NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this)
-                            .setSmallIcon(R.drawable.cast_ic_notification_small_icon)
-                            .setContentTitle("Looks like you're in a car")
-                            .setContentText("Track potholes in the city!")
-                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                            .build();*/
+                    NotificationHelper notificationHelper = new NotificationHelper(context);
+                    Notification.Builder builder = notificationHelper.getNotification(
+                            "Seems like you're in a vehicle",
+                            "Tap to start tracking potholes!"
+                    );
+                    notificationHelper.notify(0, builder);
+                }
+                else if (event.getActivityType() == DetectedActivity.ON_FOOT) {
+                    Log.i("TransitionReceiver", "ON_FOOT");
+                }
+                else {
+                    Log.i("TransitionReceiver", "UNKNOWN");
+                    //handling notification
+                    NotificationHelper notificationHelper = new NotificationHelper(context);
+                    Notification.Builder builder = notificationHelper.getNotification(
+                            "Seems like you're in a vehicle",
+                            "Tap to start tracking potholes!"
+                    );
+                    notificationHelper.notify(0, builder);
                 }
             }
         }
