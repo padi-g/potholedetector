@@ -12,6 +12,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -34,6 +36,7 @@ import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.ActivityTransitionRequest;
 import com.google.android.gms.location.DetectedActivity;
@@ -55,6 +58,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.NotifierService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
@@ -82,25 +86,18 @@ public class MainActivity extends AppCompatActivity
     ApplicationClass app;
     private GoogleApiClient apiClient;
     private final int INTERVAL_MILLISECONDS = 3000;
-    private PendingIntent pendingIntent;
     private final String TAG = getClass().getSimpleName();
-    public final static String TRANSITIONS_RECEIVER_ACTION = BuildConfig.APPLICATION_ID +
-            "TRANSITIONS_RECEIVER_ACTION";
-    private TransitionsReceiver transitionsReceiver;
+    private ActivityRecognitionClient activityRecognitionClient;
+    private Handler handler;
+    private Context context;
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        setupTransitions();
-    }
-
-    private void setupTransitions() {
+    /*private void setupTransitions() {
         List<ActivityTransition> transitions = new ArrayList<>();
         transitions.add(
                 new ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.IN_VEHICLE)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                .build()
+                        .setActivityType(DetectedActivity.IN_VEHICLE)
+                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                        .build()
         );
         ActivityTransitionRequest request = new ActivityTransitionRequest(transitions);
 
@@ -120,33 +117,17 @@ public class MainActivity extends AppCompatActivity
                 Log.i(TAG, "Transition failed");
             }
         });
-    }
+    }*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        context = this;
         Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        Intent intent = new Intent(TRANSITIONS_RECEIVER_ACTION);
-        pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, 0);
-
-        transitionsReceiver = new TransitionsReceiver();
-        registerReceiver(transitionsReceiver, new IntentFilter(TRANSITIONS_RECEIVER_ACTION));
-
-        //connecting to ActivityRecognition
-        apiClient = new GoogleApiClient.Builder(this)
-                .addApi(ActivityRecognition.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-        apiClient.connect();
-
         setContentView(R.layout.activity_main);
-
-
         //Adding toolbar to the activity
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -190,6 +171,15 @@ public class MainActivity extends AppCompatActivity
         SharedPreferences prefs = getSharedPreferences("uploads", MODE_PRIVATE);
         if(!prefs.contains("file_delete"))
             prefs.edit().putBoolean("file_delete", false);
+        handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                //starting service in another thread
+                Intent intent = new Intent(context, NotifierService.class);
+                context.startService(intent);
+            }
+        });
     }
 
     private void settingsRequest(){
@@ -453,7 +443,7 @@ public class MainActivity extends AppCompatActivity
                 PendingIntent.FLAG_UPDATE_CURRENT);
         ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(apiClient, INTERVAL_MILLISECONDS,
                 pendingIntent);*/
-    }
+            }
 
     @Override
     public void onConnectionSuspended(int i) {
