@@ -7,6 +7,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
@@ -51,7 +52,15 @@ public class TransitionsReceiver extends IntentService {
                         .setAutoCancel(true);
                 NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
                 notificationManagerCompat.notify(1337, builder.build());
+
+                //committing changes to shared prefs
+                SharedPreferences sharedPreferences = getSharedPreferences("ARS", MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("inCar", true);
+                editor.commit();
             }
+            else
+                Log.i(getClass().getSimpleName(), "Not in vehicle");
         }
     }
 
