@@ -1,11 +1,9 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -23,7 +21,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.transition.Transition;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,11 +32,7 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResolvableApiException;
-import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityRecognitionClient;
-import com.google.android.gms.location.ActivityTransition;
-import com.google.android.gms.location.ActivityTransitionRequest;
-import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -53,7 +46,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 
-import org.reapbenefit.gautam.intern.potholedetectorbeta.ActivityRecognizedService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
@@ -61,9 +53,6 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragm
 import org.reapbenefit.gautam.intern.potholedetectorbeta.NotifierService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
@@ -90,34 +79,11 @@ public class MainActivity extends AppCompatActivity
     private ActivityRecognitionClient activityRecognitionClient;
     private Handler handler;
     private Context context;
+    private boolean inCar;
+    private Handler handler_receiver;
 
-    /*private void setupTransitions() {
-        List<ActivityTransition> transitions = new ArrayList<>();
-        transitions.add(
-                new ActivityTransition.Builder()
-                        .setActivityType(DetectedActivity.IN_VEHICLE)
-                        .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                        .build()
-        );
-        ActivityTransitionRequest request = new ActivityTransitionRequest(transitions);
 
-        Task<Void> task = ActivityRecognition.getClient(this)
-                .requestActivityTransitionUpdates(request, pendingIntent);
-        task.addOnSuccessListener(
-                new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.i(TAG, "Transition received");
-                    }
-                }
-        );
-        task.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.i(TAG, "Transition failed");
-            }
-        });
-    }*/
+    private BroadcastReceiver broadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,12 +94,13 @@ public class MainActivity extends AppCompatActivity
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         setContentView(R.layout.activity_main);
+        inCar = getIntent().getBooleanExtra("inCar", false);
+        Log.i("inCar MainActivity old", inCar + "");
         //Adding toolbar to the activity
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setTitle("Road Quality Audit");
-
 
         mAuth = FirebaseAuth.getInstance();
         if(mAuth.getCurrentUser() == null){
@@ -158,7 +125,7 @@ public class MainActivity extends AppCompatActivity
 
 
         viewPager = (ViewPager) findViewById(R.id.pager);
-        PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
+        PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), inCar);
         viewPager.setAdapter(adapter);
 
         //Adding onTabSelectedListener to swipe views
@@ -178,6 +145,20 @@ public class MainActivity extends AppCompatActivity
                 //starting service in another thread
                 Intent intent = new Intent(context, NotifierService.class);
                 context.startService(intent);
+            }
+        });
+        //checking for receipt of signals in another thread
+        handler_receiver = new Handler(Looper.getMainLooper());
+        handler_receiver.post(new Runnable() {
+            @Override
+            public void run() {
+                broadcastReceiver = new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        inCar = intent.getBooleanExtra("inCar", false);
+                        Log.i(getClass().getSimpleName(), inCar + "");
+                    }
+                };
             }
         });
     }

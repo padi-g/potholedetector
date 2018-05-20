@@ -143,9 +143,9 @@ public class EasyModeFragment extends Fragment {
 
         View v = inflater.inflate(R.layout.fragment_easy_mode, container, false);
 
-        arsPreferences = getActivity().getSharedPreferences("ARS", MODE_PRIVATE);
-        inCar = arsPreferences.getBoolean("inCar", false);
-
+        //getting value of inCar
+        inCar = getArguments().getBoolean("inCar", false);
+        Log.i(getClass().getSimpleName(), inCar + "");
         bgframe = (RelativeLayout) v.findViewById(R.id.easyframe);
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
         statusIndicatorText.setText(R.string.warnings);
@@ -182,7 +182,7 @@ public class EasyModeFragment extends Fragment {
                     bgframe.setBackgroundResource(R.drawable.notlogging_bg);
                 }
                 else if (!inCar) {
-                    Toast.makeText(getContext(), "Logging cannot happen outside a vehicle", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "Logging cannot happen outside a vehicle", Toast.LENGTH_SHORT).show();
                 }
             }
         });

@@ -11,11 +11,13 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 public class TransitionsReceiver extends IntentService {
@@ -39,8 +41,10 @@ public class TransitionsReceiver extends IntentService {
         editor = sharedPreferences.edit();
         createNotificationChannel();
         mainIntent = new Intent(this, MainActivity.class);
+        mainIntent.putExtra("inCar", true);
+        mainIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         pendingIntent = PendingIntent.getActivity(this, 0,
-                mainIntent, 0);
+                mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder = new NotificationCompat.Builder(this,
                 getString(R.string.notification_channel_id))
                 .setSmallIcon(R.drawable.ic_launcher)
@@ -61,7 +65,8 @@ public class TransitionsReceiver extends IntentService {
             //getting ArrayList of possible activities
             DetectedActivity detectedActivity = result.getMostProbableActivity();
             Log.i(getClass().getSimpleName(), detectedActivity.toString());
-            if (detectedActivity.equals(DetectedActivity.IN_VEHICLE) && detectedActivity.getConfidence() >= 75) {
+            if ((detectedActivity.equals(DetectedActivity.IN_VEHICLE) && detectedActivity.getConfidence() >= 75)
+                    || BuildConfig.DEBUG) {
                 //sending notification to user
                 notificationManagerCompat.notify(0, builder.build());
                 //committing changes to shared prefs
