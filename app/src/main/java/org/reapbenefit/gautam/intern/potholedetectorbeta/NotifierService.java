@@ -17,7 +17,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.TransitionsR
 
 public class NotifierService extends IntentService {
     private ActivityRecognitionClient activityRecognitionClient;
-
+    public static double GPSUnavailable;
     public NotifierService() {
         super("NotifierService");
     }

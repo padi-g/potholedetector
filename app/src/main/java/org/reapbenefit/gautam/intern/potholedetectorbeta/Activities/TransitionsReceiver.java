@@ -8,6 +8,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
@@ -18,6 +19,14 @@ import com.google.android.gms.location.DetectedActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 public class TransitionsReceiver extends IntentService {
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
+    private Intent mainIntent;
+    private PendingIntent pendingIntent;
+    private NotificationCompat.Builder builder;
+    private NotificationManagerCompat notificationManagerCompat;
+    private Handler handler;
+    private boolean notifyFlag;
     public TransitionsReceiver() {
         super("TransitionsReceiver");
     }
@@ -25,6 +34,22 @@ public class TransitionsReceiver extends IntentService {
     @Override
     public void onCreate() {
         super.onCreate();
+        handler = new Handler();
+        sharedPreferences = getSharedPreferences("ARS", MODE_PRIVATE);
+        editor = sharedPreferences.edit();
+        createNotificationChannel();
+        mainIntent = new Intent(this, MainActivity.class);
+        pendingIntent = PendingIntent.getActivity(this, 0,
+                mainIntent, 0);
+        builder = new NotificationCompat.Builder(this,
+                getString(R.string.notification_channel_id))
+                .setSmallIcon(R.drawable.ic_launcher)
+                .setContentTitle("Looks like you're in a car")
+                .setContentText("Tap to start logging potholes.")
+                .setPriority(NotificationManager.IMPORTANCE_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
+        notificationManagerCompat = NotificationManagerCompat.from(this);
     }
 
     @SuppressLint("RestrictedApi")
@@ -38,29 +63,27 @@ public class TransitionsReceiver extends IntentService {
             Log.i(getClass().getSimpleName(), detectedActivity.toString());
             if (detectedActivity.equals(DetectedActivity.IN_VEHICLE) && detectedActivity.getConfidence() >= 75) {
                 //sending notification to user
-                createNotificationChannel();
-                Intent mainIntent = new Intent(this, MainActivity.class);
-                PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                        mainIntent, 0);
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(this,
-                        getString(R.string.notification_channel_id))
-                        .setSmallIcon(R.drawable.cast_ic_notification_small_icon)
-                        .setContentTitle("Looks like you're in a car")
-                        .setContentText("Tap to start logging ")
-                        .setPriority(NotificationManager.IMPORTANCE_DEFAULT)
-                        .setContentIntent(pendingIntent)
-                        .setAutoCancel(true);
-                NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
-                notificationManagerCompat.notify(1337, builder.build());
-
+                notificationManagerCompat.notify(0, builder.build());
                 //committing changes to shared prefs
-                SharedPreferences sharedPreferences = getSharedPreferences("ARS", MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putBoolean("inCar", true);
                 editor.commit();
+                notifyFlag = true;
+                /*starting notification timeout, 5 minutes
+                long delay = 5 * 60 * 1000;
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        notificationManagerCompat.cancel(0);
+                    }
+                }, delay);*/
             }
-            else
+            else {
                 Log.i(getClass().getSimpleName(), "Not in vehicle");
+                if (notifyFlag) {
+                    notificationManagerCompat.cancel(0);
+                    notifyFlag = false;
+                }
+            }
         }
     }
 
