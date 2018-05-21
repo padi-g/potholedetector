@@ -7,12 +7,14 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
+import com.google.android.gms.awareness.snapshot.DetectedActivityResult;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
@@ -67,7 +69,7 @@ public class TransitionsReceiver extends IntentService {
             //committing current activity to shared prefs
             editor.putString("currentActivity", detectedActivity.toString());
             editor.commit();
-            if (detectedActivity.equals(DetectedActivity.IN_VEHICLE) && detectedActivity.getConfidence() >= 75) {
+            if (detectedActivity.toString().contains("VEHICLE")) {
                 //sending notification to user
                 notificationManagerCompat.notify(0, builder.build());
                 notifyFlag = true;

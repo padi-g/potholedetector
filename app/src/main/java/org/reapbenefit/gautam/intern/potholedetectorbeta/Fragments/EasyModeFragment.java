@@ -164,18 +164,28 @@ public class EasyModeFragment extends Fragment {
         statusIndicatorText.setText(R.string.warnings);
         startButton = (Button) v.findViewById(R.id.start_trip_button);
         stopButton = (Button) v.findViewById(R.id.stop_trip_button);
-        arsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-        currentActivity = arsPreferences.getString("currentActivity", null);
-        if (currentActivity == null) {
-            Log.i(getClass().getSimpleName(), "NullPointer currentActivity");
-            Toast.makeText(getContext(), "Initialising. Try again after a few seconds.", Toast.LENGTH_SHORT);
-        }
-        else {
-            if (currentActivity.contains("VEHICLE")) {
-                currentlyInCar = true;
-                Log.i(getClass().getSimpleName(), currentlyInCar + "");
+        handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                //keeps checking current activity in a separate thread to stay updated
+                arsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+                currentActivity = arsPreferences.getString("currentActivity", null);
+                if (currentActivity == null) {
+                    Log.i(getClass().getSimpleName(), "NullPointer currentActivity");
+                    Toast.makeText(getContext(), "Initialising. Try again after a few seconds.", Toast.LENGTH_SHORT);
+                }
+                else {
+                    if (currentActivity.contains("VEHICLE")) {
+                        currentlyInCar = true;
+                        Log.i(getClass().getSimpleName(), currentlyInCar + "");
+                    }
+                    else {
+                        currentlyInCar = false;
+                    }
+                }
             }
-        }
+        });
 
         if(!app.isTripInProgress() && !app.isTripEnded()){
             startButton.setVisibility(View.VISIBLE);
