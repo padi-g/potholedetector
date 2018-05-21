@@ -1,5 +1,7 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
+import android.annotation.SuppressLint;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +13,9 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -31,6 +36,8 @@ import android.widget.Toast;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
@@ -90,6 +97,10 @@ public class EasyModeFragment extends Fragment {
 
     private SharedPreferences arsPreferences;
     private boolean inCar;
+    private Handler handler;
+    private ActivityRecognitionClient activityRecognitionClient;
+    private String currentActivity;
+    private boolean currentlyInCar;
 
     ApplicationClass app;
 
@@ -151,6 +162,18 @@ public class EasyModeFragment extends Fragment {
         statusIndicatorText.setText(R.string.warnings);
         startButton = (Button) v.findViewById(R.id.start_trip_button);
         stopButton = (Button) v.findViewById(R.id.stop_trip_button);
+        arsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        currentActivity = arsPreferences.getString("currentActivity", null);
+        if (currentActivity == null) {
+            Log.i(getClass().getSimpleName(), "NullPointer currentActivity");
+            Toast.makeText(getContext(), "Initialising. Try again after a few seconds.", Toast.LENGTH_SHORT);
+        }
+        else {
+            if (currentActivity.contains("VEHICLE")) {
+                currentlyInCar = true;
+                Log.i(getClass().getSimpleName(), currentlyInCar + "");
+            }
+        }
 
         if(!app.isTripInProgress() && !app.isTripEnded()){
             startButton.setVisibility(View.VISIBLE);
@@ -168,7 +191,7 @@ public class EasyModeFragment extends Fragment {
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!app.isTripInProgress() && checkPermissions() && inCar) {
+                if (!app.isTripInProgress() && checkPermissions() && (inCar || currentlyInCar)) {
                     app.setTripInProgress(true);
                     startLogger();
                     bgframe.setBackgroundResource(R.drawable.logging_bg);
@@ -181,7 +204,7 @@ public class EasyModeFragment extends Fragment {
                     stopButton.setVisibility(View.GONE);
                     bgframe.setBackgroundResource(R.drawable.notlogging_bg);
                 }
-                else if (!inCar) {
+                else if (!inCar && !currentlyInCar) {
                     Toast.makeText(getContext(), "Logging cannot happen outside a vehicle", Toast.LENGTH_SHORT).show();
                 }
             }

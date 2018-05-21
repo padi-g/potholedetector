@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
@@ -16,6 +17,7 @@ import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 public class TransitionsReceiver extends IntentService {
@@ -35,7 +37,7 @@ public class TransitionsReceiver extends IntentService {
     public void onCreate() {
         super.onCreate();
         handler = new Handler();
-        sharedPreferences = getSharedPreferences("ARS", MODE_PRIVATE);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         editor = sharedPreferences.edit();
         createNotificationChannel();
         mainIntent = new Intent(this, MainActivity.class);
@@ -62,12 +64,12 @@ public class TransitionsReceiver extends IntentService {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             DetectedActivity detectedActivity = result.getMostProbableActivity();
             Log.i(getClass().getSimpleName(), detectedActivity.toString());
+            //committing current activity to shared prefs
+            editor.putString("currentActivity", detectedActivity.toString());
+            editor.commit();
             if (detectedActivity.equals(DetectedActivity.IN_VEHICLE) && detectedActivity.getConfidence() >= 75) {
                 //sending notification to user
                 notificationManagerCompat.notify(0, builder.build());
-                //committing changes to shared prefs
-                editor.putBoolean("inCar", true);
-                editor.commit();
                 notifyFlag = true;
                 /*starting notification timeout, 5 minutes
                 long delay = 5 * 60 * 1000;
