@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -53,6 +54,7 @@ import com.google.firebase.storage.UploadTask;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
@@ -297,7 +299,7 @@ public class EasyModeFragment extends Fragment {
 
 
     public void startLogger(){
-        if (inCar)
+        if (inCar || currentlyInCar)
             getActivity().startService(loggerIntent);
     }
 
