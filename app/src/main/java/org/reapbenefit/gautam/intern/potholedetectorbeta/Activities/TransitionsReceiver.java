@@ -2,7 +2,6 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 import android.annotation.SuppressLint;
 import android.app.IntentService;
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -11,7 +10,6 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
@@ -62,11 +60,9 @@ public class TransitionsReceiver extends IntentService {
        //check if intent contains data about an activity
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
-            //getting ArrayList of possible activities
             DetectedActivity detectedActivity = result.getMostProbableActivity();
             Log.i(getClass().getSimpleName(), detectedActivity.toString());
-            if ((detectedActivity.equals(DetectedActivity.IN_VEHICLE) && detectedActivity.getConfidence() >= 75)
-                    || BuildConfig.DEBUG) {
+            if (detectedActivity.equals(DetectedActivity.IN_VEHICLE) && detectedActivity.getConfidence() >= 75) {
                 //sending notification to user
                 notificationManagerCompat.notify(0, builder.build());
                 //committing changes to shared prefs

@@ -80,10 +80,6 @@ public class MainActivity extends AppCompatActivity
     private Handler handler;
     private Context context;
     private boolean inCar;
-    private Handler handler_receiver;
-
-
-    private BroadcastReceiver broadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,20 +141,6 @@ public class MainActivity extends AppCompatActivity
                 //starting service in another thread
                 Intent intent = new Intent(context, NotifierService.class);
                 context.startService(intent);
-            }
-        });
-        //checking for receipt of signals in another thread
-        handler_receiver = new Handler(Looper.getMainLooper());
-        handler_receiver.post(new Runnable() {
-            @Override
-            public void run() {
-                broadcastReceiver = new BroadcastReceiver() {
-                    @Override
-                    public void onReceive(Context context, Intent intent) {
-                        inCar = intent.getBooleanExtra("inCar", false);
-                        Log.i(getClass().getSimpleName(), inCar + "");
-                    }
-                };
             }
         });
     }
