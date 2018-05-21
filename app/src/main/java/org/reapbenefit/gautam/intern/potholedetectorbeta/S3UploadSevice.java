@@ -2,7 +2,6 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
-import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -11,23 +10,20 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.ListView;
 import android.widget.Toast;
-
 
 import com.amazonaws.mobileconnectors.s3.transfermanager.TransferManager;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferType;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
-
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class S3UploadSevice extends IntentService {
     private TransferUtility transferUtility;
@@ -44,8 +40,10 @@ public class S3UploadSevice extends IntentService {
     private TransferManager transferManager;
 
     private String tripJson;
-
+    private ArrayList<Trip> trips;
+    private int position;
     private Handler mHandler;
+    private final String TAG = getClass().getSimpleName();
     public S3UploadSevice() {
         super("UploadService");
     }
@@ -75,8 +73,12 @@ public class S3UploadSevice extends IntentService {
 
         transferManager = new TransferManager(Util.getsCredProvider(getApplicationContext()));
 
-        tripJson = intent.getStringExtra("trip_json");
+        /*tripJson = intent.getStringExtra("trip_json");
         Log.d("TripJSON", tripJson);
+
+        trips = intent.getParcelableArrayListExtra("trips");
+        position = intent.getIntExtra("position", -1);
+        Log.i(TAG, "position = " + position);*/
 
         String action = intent.getAction();
         if (action.equals(ACTION_UPLOAD_NOW)) {
@@ -177,19 +179,10 @@ public class S3UploadSevice extends IntentService {
             if (progress == 100) {
                 mBuilder.setContentText("Upload Complete");
                 mBuilder.setOngoing(false);//notification can now be swiped away
-                /*mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Gson gson = new Gson();
-                        Trip trip = gson.fromJson(tripJson, Trip.class);
-                        Log.d("TripID", trip.getTrip_id() + "");
-                        trip.setUploaded(true);
-                    }
-                });*/
-                Gson gson = new Gson();
-                Trip trip = gson.fromJson(tripJson, Trip.class);
-                Log.d("TripID", trip.getTrip_id() + "");
-                trip.setUploaded(true);
+                Intent intent = new Intent("SET_UPLOADED_TRUE");
+                intent.putExtra("uploadStatus", true);
+                intent.putExtra("positionChanged", position);
+                sendBroadcast(intent);
             } else {
                 mBuilder.setContentText(progress + "% done");
                 mBuilder.setOngoing(true);

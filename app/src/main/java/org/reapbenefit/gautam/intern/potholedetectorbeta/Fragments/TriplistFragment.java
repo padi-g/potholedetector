@@ -1,7 +1,10 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -23,6 +26,7 @@ import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
@@ -64,7 +68,8 @@ public class TriplistFragment extends Fragment {
     private ImageButton refreshButton;
 
     private ArrayList<Trip> trips = new ArrayList<>();
-
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
     private FirebaseDatabase database = FirebaseDatabase.getInstance();;
     private DatabaseReference myRef = database.getReference();
@@ -74,6 +79,18 @@ public class TriplistFragment extends Fragment {
     private long distanceScore = 0;  // calculated based on distance logged
     private CustomTripComparator comparator;
     ApplicationClass app;
+    private boolean uploadStatus;
+    private int positionChanged;
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (l != null) {
+                uploadStatus = true;
+                positionChanged = intent.getIntExtra("positionChanged", -1);
+                l.setAdapter(new TripListAdapter(getActivity(), trips, uploadStatus, positionChanged));
+            }
+        }
+    };
 
 
     public TriplistFragment() {
@@ -108,6 +125,8 @@ public class TriplistFragment extends Fragment {
 
         app = ApplicationClass.getInstance();
         comparator = new CustomTripComparator();
+        sharedPreferences = getActivity().getSharedPreferences("uploads", Context.MODE_PRIVATE);
+        editor = sharedPreferences.edit();
         try {   // thrown when the user is not signed in
             myRef = myRef.child(mAuth.getCurrentUser().getUid());
             profileRef = profileRef.child("profiles").child(mAuth.getCurrentUser().getUid());
@@ -175,10 +194,20 @@ public class TriplistFragment extends Fragment {
             return false;
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        getActivity().unregisterReceiver(broadcastReceiver);
+    }
+
     private void createListView(){
         if(!trips.isEmpty() && getActivity()!=null) {
             Collections.sort(trips, new CustomTripComparator());
-            l.setAdapter(new TripListAdapter(getActivity(), trips));
+            l.setAdapter(new TripListAdapter(getActivity(), trips, uploadStatus, 0));
+            Gson gson = new Gson();
+            /*String listViewJson = gson.toJson(l);
+            editor.putString("listViewJson", listViewJson);
+            editor.commit();*/
             l.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -199,6 +228,7 @@ public class TriplistFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        getActivity().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
     }
 
     @Override
@@ -223,6 +253,11 @@ public class TriplistFragment extends Fragment {
 
 
         l = (ListView) v.findViewById(R.id.trips_list);
+        if (broadcastReceiver != null)
+            getContext().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
+        else
+            Log.i(getClass().getSimpleName(), "broadcast receiver null");
+        Log.i(getClass().getSimpleName(), "uploaded status " + uploadStatus);
         createListView();
         l.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

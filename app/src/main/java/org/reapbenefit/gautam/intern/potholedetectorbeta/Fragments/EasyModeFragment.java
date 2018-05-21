@@ -203,7 +203,7 @@ public class EasyModeFragment extends Fragment {
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!app.isTripInProgress() && checkPermissions() && (inCar || currentlyInCar)) {
+                if (!app.isTripInProgress() && checkPermissions() && (inCar || currentlyInCar || BuildConfig.DEBUG)) {
                     app.setTripInProgress(true);
                     startLogger();
                     bgframe.setBackgroundResource(R.drawable.logging_bg);
@@ -309,7 +309,7 @@ public class EasyModeFragment extends Fragment {
 
 
     public void startLogger(){
-        if (inCar || currentlyInCar)
+        if (inCar || currentlyInCar || BuildConfig.DEBUG)
             getActivity().startService(loggerIntent);
     }
 

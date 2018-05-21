@@ -2,7 +2,6 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -11,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,11 +34,15 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
     private static ArrayList<Trip> trips;
     private Uri uploadFileUri;
     ApplicationClass app;
+    private int positionChanged;
+    private boolean uploadStatus;
 
-    public TripListAdapter(Context context, ArrayList<Trip> values) {
+
+    public TripListAdapter(Context context, ArrayList<Trip> values, boolean uploadStatus, int positionChanged) {
         super(context, -1, values);
         this.context = context;
         trips = new ArrayList<>(values);
+        this.uploadStatus = uploadStatus;
         app = ApplicationClass.getInstance();
     }
 
@@ -53,6 +55,7 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
 
         String countString, timeString, durationString, distanceString;
         ImageButton uploadButton, uploadedTick, mapButton;
+
 
         if(!trips.isEmpty()){
             try {
@@ -67,7 +70,7 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
                 uploadedTick = (ImageButton) rowView.findViewById(R.id.upload_tick);
                 mapButton = (ImageButton) rowView.findViewById(R.id.map_button);
 
-                if(trip.isUploaded()){
+                if(trip.isUploaded() || (uploadStatus && position == positionChanged)) {
                     uploadButton.setVisibility(View.GONE);
                     uploadedTick.setVisibility(View.VISIBLE);
                 }
@@ -158,6 +161,8 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
         intent.setAction("upload_now");
         intent.putExtra("upload_uri", uploadFileUri);
         intent.putExtra("trip_json", json);
+        intent.putExtra("trips_arraylist", trips);
+        intent.putExtra("position", positionChanged);
         this.getContext().startService(intent);
 
     }

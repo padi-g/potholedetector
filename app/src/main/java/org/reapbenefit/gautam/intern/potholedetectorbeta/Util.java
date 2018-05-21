@@ -43,7 +43,6 @@ public class Util {
         }
         return sCredProvider;
     }
-
     //getting instance of S3 client
 
     public static AmazonS3Client getsS3Client(Context context) {
