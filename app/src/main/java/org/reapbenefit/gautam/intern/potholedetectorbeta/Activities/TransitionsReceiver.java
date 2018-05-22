@@ -72,14 +72,6 @@ public class TransitionsReceiver extends IntentService {
             if (detectedActivity.toString().contains("VEHICLE")) {
                 //sending notification to user
                 notificationManagerCompat.notify(0, builder.build());
-                /*starting notification timeout, 5 minutes
-                long delay = 5 * 60 * 1000;
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        notificationManagerCompat.cancel(0);
-                    }
-                }, delay);*/
             }
             else {
                 Log.i(getClass().getSimpleName(), "Not in vehicle");

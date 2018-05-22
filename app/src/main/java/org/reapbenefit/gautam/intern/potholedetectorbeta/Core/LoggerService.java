@@ -3,6 +3,8 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -13,9 +15,11 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -31,11 +35,13 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MyLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.TrafficTimeService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import java.io.File;
@@ -93,7 +99,10 @@ public class LoggerService extends Service implements SensorEventListener {
     public final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 0;
     private FusedLocationProviderClient mFusedLocationClient;
     private long inaccurateTiming = SystemClock.elapsedRealtimeNanos();
-
+    private Intent trafficIntent;
+    private Handler trafficHandler;
+    private BroadcastReceiver trafficReceiver;
+    private long minutesWasted = -1;
 
     private Trip newtrip;
     private FirebaseAuth mAuth;
@@ -155,6 +164,25 @@ public class LoggerService extends Service implements SensorEventListener {
 
         newtrip.setStartTime(getCurrentDateTime());
         startTime = new Date();  // to pass into bundle
+
+        //starting tracking time wasted in traffic
+        trafficIntent = new Intent(this, TrafficTimeService.class);
+        trafficIntent.putExtra("startTime", new Gson().toJson(startTime));
+        startService(trafficIntent);
+        /*trafficHandler = new Handler(Looper.getMainLooper());
+        trafficHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                trafficReceiver = new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                              minutesWasted = intent.getLongExtra("minutesWasted", -1);
+                    }
+                };
+            }
+        });*/
+
+
         setupSensors();
         setupLogFile();
         mp = MediaPlayer.create(getApplication(), R.raw.beep);
@@ -462,6 +490,17 @@ public class LoggerService extends Service implements SensorEventListener {
 
         app.setTrip(newtrip);
         Log.i(TAG, "logged newtrip");
+
+        //getting data from TrafficTimeService
+        stopService(trafficIntent);
+        minutesWasted = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance()).getLong(
+                "minutesWasted", -1
+        );
+        if (minutesWasted != -1) {
+            newtrip.setMinutesWasted(minutesWasted);
+        }
+        else
+            Log.i(TAG, "minutesWasted was -1");
 
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {

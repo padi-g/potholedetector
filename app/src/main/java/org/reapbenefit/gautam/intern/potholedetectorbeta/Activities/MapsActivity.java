@@ -31,6 +31,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -55,7 +56,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private DatabaseReference db;
 
     private ProgressBar spinner;
-    private TextView date, distance, duration, potholecount, textview;
+    private TextView date, distance, duration, potholecount, textview, trafficTime;
     private SeekBar accuracySeekbar;
     private Button submitButton;
     private String tripID;
@@ -105,6 +106,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         distance = (TextView) findViewById(R.id.distance);
         potholecount = (TextView) findViewById(R.id.potholecount);
         textview = (TextView) findViewById(R.id.how_accurate_text);
+        trafficTime = (TextView) findViewById(R.id.traffic_time);
         accuracySeekbar = (SeekBar) findViewById(R.id.accuracy_seek);
         setUserPercievedAccuracy(-1); // To have a non 0 value when the user does not submit
         submitButton = (Button) findViewById(R.id.submit_button);

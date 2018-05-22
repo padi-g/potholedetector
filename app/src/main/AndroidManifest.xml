@@ -137,6 +137,9 @@
             android:exported="false" />
         <service
             android:name=".NotifierService"
+            android:exported="false" />
+        <service
+            android:name=".TrafficTimeService"
             android:exported="false"></service>
     </application>
 
