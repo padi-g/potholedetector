@@ -32,6 +32,7 @@ public class Trip implements Parcelable {
     private int potholeCount;
 
     private long minutesWasted;
+    private long minutesAccuracyLow;
 
     public Trip() {
     }
@@ -51,6 +52,7 @@ public class Trip implements Parcelable {
         this.device = t.device;
         this.userRating = t.userRating;
         this.minutesWasted = t.minutesWasted;
+        this.minutesAccuracyLow = t.minutesAccuracyLow;
     }  // copy constructor
 
 
@@ -191,6 +193,14 @@ public class Trip implements Parcelable {
         this.minutesWasted = minutesWasted;
     }
 
+    public long getMinutesAccuracyLow() {
+        return minutesAccuracyLow;
+    }
+
+    public void setMinutesAccuracyLow(long minutesAccuracyLow) {
+        this.minutesAccuracyLow = minutesAccuracyLow;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -215,6 +225,7 @@ public class Trip implements Parcelable {
         dest.writeFloat(this.threshold);
         dest.writeInt(this.potholeCount);
         dest.writeLong(this.minutesWasted);
+        dest.writeLong(this.minutesAccuracyLow);
     }
 
     protected Trip(Parcel in) {
@@ -235,6 +246,7 @@ public class Trip implements Parcelable {
         this.threshold = in.readFloat();
         this.potholeCount = in.readInt();
         this.minutesWasted = in.readLong();
+        this.minutesAccuracyLow = in.readLong();
     }
 
     public static final Creator<Trip> CREATOR = new Creator<Trip>() {

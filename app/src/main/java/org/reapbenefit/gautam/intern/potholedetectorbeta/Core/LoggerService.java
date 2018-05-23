@@ -124,6 +124,9 @@ public class LoggerService extends Service implements SensorEventListener {
     ApplicationClass app;
     private LocationCallback mLocationCallback;
 
+    private Date accuracyLostTime;
+    private long minutesAccuracyLow;
+    private Date startAccuracyTime;
 
     public LoggerService() {
         super();
@@ -172,7 +175,7 @@ public class LoggerService extends Service implements SensorEventListener {
         startTime = new Date();  // to pass into bundle
 
         startTrafficTime = startTime;
-
+        startAccuracyTime = startTime;
         setupSensors();
         setupLogFile();
         mp = MediaPlayer.create(getApplication(), R.raw.beep);
@@ -349,10 +352,16 @@ public class LoggerService extends Service implements SensorEventListener {
                 writeToFile(accVals, gyrVals, LocData);
             } else {
                 Log.i(TAG, "Location accuracy not hit " + mCurrentLocation.getAccuracy());
-                // do some timing
+                calcAccuracyLowTime();
             }
         }
 
+    }
+
+    private void calcAccuracyLowTime() {
+        accuracyLostTime = Calendar.getInstance().getTime();
+        minutesAccuracyLow += accuracyLostTime.getTime() - startAccuracyTime.getTime();
+        startAccuracyTime = accuracyLostTime;
     }
 
     private void calcTrafficTime() {
@@ -508,6 +517,8 @@ public class LoggerService extends Service implements SensorEventListener {
         }
         else
             Log.i(TAG, "minutesWasted was -1");
+
+        minutesAccuracyLow = Math.round((minutesWasted/1000.0)/60.0);
 
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {

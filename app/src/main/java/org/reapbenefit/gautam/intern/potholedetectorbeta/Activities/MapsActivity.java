@@ -68,6 +68,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private HashMap<Integer, String> pointsOfInterest = new HashMap<>();
     private int accuracy_result = 0;
     private GridLayout resultGrid;
+    private TextView accuracyLowTime;
 
     @Override
     protected void onDestroy() {
@@ -107,6 +108,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         potholecount = (TextView) findViewById(R.id.potholecount);
         textview = (TextView) findViewById(R.id.how_accurate_text);
         trafficTime = (TextView) findViewById(R.id.traffic_time);
+        accuracyLowTime = (TextView) findViewById(R.id.accuracy_low_time);
         accuracySeekbar = (SeekBar) findViewById(R.id.accuracy_seek);
         setUserPercievedAccuracy(-1); // To have a non 0 value when the user does not submit
         submitButton = (Button) findViewById(R.id.submit_button);
@@ -292,7 +294,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             spinner.setVisibility(View.GONE);
             duration.setText(finishedTrip.getDuration() + " mins");
             date.setText(finishedTrip.getStartTime().substring(0,11));
-            trafficTime.setText(finishedTrip.getMinutesWasted() + "");
+            trafficTime.setText(finishedTrip.getMinutesWasted() + " minutes");
+            accuracyLowTime.setText(finishedTrip.getMinutesAccuracyLow() + " minutes");
             resultGrid.setVisibility(View.VISIBLE);
             accuracySeekbar.setVisibility(View.VISIBLE);
             submitButton.setVisibility(View.VISIBLE);
