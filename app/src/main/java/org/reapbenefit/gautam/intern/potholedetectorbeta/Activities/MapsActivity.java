@@ -292,6 +292,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             spinner.setVisibility(View.GONE);
             duration.setText(finishedTrip.getDuration() + " mins");
             date.setText(finishedTrip.getStartTime().substring(0,11));
+            trafficTime.setText(finishedTrip.getMinutesWasted() + "");
             resultGrid.setVisibility(View.VISIBLE);
             accuracySeekbar.setVisibility(View.VISIBLE);
             submitButton.setVisibility(View.VISIBLE);

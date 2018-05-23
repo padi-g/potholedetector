@@ -42,8 +42,8 @@ public class TrafficTimeService extends IntentService {
             if (currentActivity.toString().contains("STILL")) {
                 newTime = Calendar.getInstance().getTime();
                 minutesWasted += newTime.getTime() - startTime.getTime();
-                startTime = newTime;
                 Log.i("minutesWasted", minutesWasted + "");
+                startTime = newTime;
                 editor.putLong("minutesWasted", minutesWasted);
                 editor.commit();
             }

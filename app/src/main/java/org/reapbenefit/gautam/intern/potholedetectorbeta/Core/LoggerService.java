@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -52,6 +53,7 @@ import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -103,6 +105,10 @@ public class LoggerService extends Service implements SensorEventListener {
     private Handler trafficHandler;
     private BroadcastReceiver trafficReceiver;
     private long minutesWasted = -1;
+    private SharedPreferences transitionPrefs;
+    private Date newTime;
+    private Date startTrafficTime;
+    private String currentActivity;
 
     private Trip newtrip;
     private FirebaseAuth mAuth;
@@ -165,23 +171,7 @@ public class LoggerService extends Service implements SensorEventListener {
         newtrip.setStartTime(getCurrentDateTime());
         startTime = new Date();  // to pass into bundle
 
-        //starting tracking time wasted in traffic
-        trafficIntent = new Intent(this, TrafficTimeService.class);
-        trafficIntent.putExtra("startTime", new Gson().toJson(startTime));
-        startService(trafficIntent);
-        /*trafficHandler = new Handler(Looper.getMainLooper());
-        trafficHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                trafficReceiver = new BroadcastReceiver() {
-                    @Override
-                    public void onReceive(Context context, Intent intent) {
-                              minutesWasted = intent.getLongExtra("minutesWasted", -1);
-                    }
-                };
-            }
-        });*/
-
+        startTrafficTime = startTime;
 
         setupSensors();
         setupLogFile();
@@ -316,6 +306,9 @@ public class LoggerService extends Service implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
 
+        //timing traffic latency
+        calcTrafficTime();
+
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
             Log.w("Prox", String.valueOf(sensorEvent.values[0]));
 
@@ -359,6 +352,22 @@ public class LoggerService extends Service implements SensorEventListener {
                 // do some timing
             }
         }
+
+    }
+
+    private void calcTrafficTime() {
+        //tracking time wasted in traffic
+        transitionPrefs = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        currentActivity = transitionPrefs.getString("currentActivity", null);
+        if (currentActivity != null) {
+            if (currentActivity.toString().contains("STILL")) {
+                newTime = Calendar.getInstance().getTime();
+                minutesWasted += newTime.getTime() - startTrafficTime.getTime();
+                startTrafficTime = newTime;
+            }
+        }
+        else
+            Log.i(TAG, "currentActivity is null");
 
     }
 
@@ -491,12 +500,10 @@ public class LoggerService extends Service implements SensorEventListener {
         app.setTrip(newtrip);
         Log.i(TAG, "logged newtrip");
 
-        //getting data from TrafficTimeService
-        stopService(trafficIntent);
-        minutesWasted = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance()).getLong(
-                "minutesWasted", -1
-        );
+
         if (minutesWasted != -1) {
+            Log.i("minutesWasted", minutesWasted + " milliseconds");
+            minutesWasted = Math.round((minutesWasted/1000.0)/60.0);
             newtrip.setMinutesWasted(minutesWasted);
         }
         else
