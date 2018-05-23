@@ -3,8 +3,10 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 import android.annotation.SuppressLint;
 import android.app.IntentService;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Intent;
 import android.content.Context;
+import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -15,16 +17,18 @@ import com.google.android.gms.tasks.Task;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.TransitionsReceiver;
 
-public class NotifierService extends IntentService {
+public class NotifierService extends Service {
     private ActivityRecognitionClient activityRecognitionClient;
-    public static double GPSUnavailable;
-    public NotifierService() {
-        super("NotifierService");
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     @SuppressLint("RestrictedApi")
     @Override
-    protected void onHandleIntent(@Nullable Intent intent) {
+    public int onStartCommand(Intent intent, int flags, int startId) {
         activityRecognitionClient = new ActivityRecognitionClient(getApplicationContext());
         //connecting to ARS every 3 seconds, checking for activity
         Task<Void> task = activityRecognitionClient.requestActivityUpdates(
@@ -38,5 +42,6 @@ public class NotifierService extends IntentService {
                 Log.i(getClass().getSimpleName(), "Polling for activity successful");
             }
         });
+        return Service.START_STICKY;
     }
 }
