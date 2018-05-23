@@ -43,6 +43,7 @@
             android:exported="false" />
         <service
             android:name=".Activities.TransitionsReceiver"
+            android:enabled="true"
             android:exported="false" />
 
         <activity
@@ -133,14 +134,17 @@
             android:enabled="true"
             android:exported="true" />
         <service
-            android:name=".Core.ActivityRecognition"
-            android:exported="false" />
-        <service
             android:name=".NotifierService"
+            android:enabled="true"
             android:exported="false" />
         <service
             android:name=".TrafficTimeService"
+            android:enabled="true"
             android:exported="false"></service>
+
+        <receiver android:name=".Core.TransitionAlarm"
+            android:enabled="true"
+            android:exported="true" />
     </application>
 
 </manifest>

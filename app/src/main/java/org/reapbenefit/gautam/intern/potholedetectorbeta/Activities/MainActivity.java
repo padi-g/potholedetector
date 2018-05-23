@@ -2,6 +2,7 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 
 import android.annotation.SuppressLint;
+import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -50,6 +51,7 @@ import com.google.firebase.auth.FirebaseAuth;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TransitionAlarm;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.NotifierService;
@@ -101,7 +103,7 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setTitle("Road Quality Audit");
 
         mAuth = FirebaseAuth.getInstance();
-        if(mAuth.getCurrentUser() == null){
+        if (mAuth.getCurrentUser() == null) {
             // Toast
             Toast.makeText(this, "Please login to start using the app", Toast.LENGTH_LONG).show();
             // open login activity
@@ -134,31 +136,18 @@ public class MainActivity extends AppCompatActivity
         );
 
         SharedPreferences prefs = getSharedPreferences("uploads", MODE_PRIVATE);
-        if(!prefs.contains("file_delete"))
+        if (!prefs.contains("file_delete"))
             prefs.edit().putBoolean("file_delete", false);
-        handler = new Handler(Looper.getMainLooper());
-        handler.post(new Runnable() {
-            @SuppressLint("RestrictedApi")
-            @Override
-            public void run() {
-                //starting service in another thread
-                /*Intent intent = new Intent(context, NotifierService.class);
-                context.startService(intent);*/
-                activityRecognitionClient = new ActivityRecognitionClient(context);
-                //connecting to ARS every 3 seconds, checking for activity
-                Task<Void> task = activityRecognitionClient.requestActivityUpdates(
-                        3000, PendingIntent.getService(context, 0,
-                                new Intent(context, TransitionsReceiver.class),
-                                PendingIntent.FLAG_UPDATE_CURRENT)
-                );
-                task.addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.i(TAG, "Polling for transitions successful");
-                    }
-                });
-            }
-        });
+
+        //setting TransitionAlarm
+        setAlarm(5000);
+    }
+
+    private void setAlarm(long timeinMillis) {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, TransitionAlarm.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+        alarmManager.setRepeating(AlarmManager.RTC, timeinMillis, timeinMillis, pendingIntent);
     }
 
     private void settingsRequest(){
