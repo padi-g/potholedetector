@@ -28,7 +28,7 @@ public class TransitionAlarm extends BroadcastReceiver {
         activityRecognitionClient = new ActivityRecognitionClient(context);
         //connecting to ARS every 3 seconds, checking for activity
         Task<Void> task = activityRecognitionClient.requestActivityUpdates(
-                10000, PendingIntent.getService(context, 0,
+                3000, PendingIntent.getService(context, 0,
                         new Intent(context, TransitionsReceiver.class),
                         PendingIntent.FLAG_UPDATE_CURRENT)
         );
