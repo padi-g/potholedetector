@@ -36,16 +36,16 @@ public class TrafficTimeService extends IntentService {
 
         //getting current activity from TransitionReceiver
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        editor = sharedPreferences.edit();
         currentActivity = sharedPreferences.getString("currentActivity", null);
         if (currentActivity != null) {
-            if (currentActivity.contains("STILL")) {
+            Log.i(TAG, currentActivity.toString());
+            if (currentActivity.toString().contains("STILL")) {
                 newTime = Calendar.getInstance().getTime();
-                minutesWasted += TimeUnit.MILLISECONDS.toMinutes(
-                        newTime.getTime() - startTime.getTime()
-                );
+                minutesWasted += newTime.getTime() - startTime.getTime();
                 startTime = newTime;
-                editor.putLong("minutesWasted", minutesWasted);
                 Log.i("minutesWasted", String.valueOf(minutesWasted));
+                editor.putLong("minutesWasted", minutesWasted);
                 editor.commit();
             }
         }
