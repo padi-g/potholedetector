@@ -37,8 +37,8 @@ public class Util {
         if (sCredProvider == null) {
             sCredProvider = new CognitoCachingCredentialsProvider(
                     context.getApplicationContext(),
-                    "ap-south-1:130cc9ca-6819-4eb6-a460-dedcf4fc4c21",
-                    Regions.fromName("ap-south-1")
+                    "***REMOVED***",
+                    Regions.fromName("us-east-1")
             );
         }
         return sCredProvider;
