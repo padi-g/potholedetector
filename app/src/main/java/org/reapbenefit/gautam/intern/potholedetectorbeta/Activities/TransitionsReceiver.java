@@ -19,6 +19,12 @@ import com.google.android.gms.location.DetectedActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
+/*
+TransitionReciever contains the logic for detection of the current activity. 
+Sends notification to user if he is in a vehicle and also stores the current status of the activity 
+(picked up by EasyModeFragment later to check for fraud data logging)
+*/
+
 public class TransitionsReceiver extends IntentService {
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
