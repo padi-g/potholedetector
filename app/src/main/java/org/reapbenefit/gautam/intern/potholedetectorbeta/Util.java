@@ -22,6 +22,8 @@ import java.util.UUID;
 /**
  * Created by kanis on 14-04-2018.
  * Utility class for handling AWS operations
+ Util.java is just a utility class that contains functions used to authenticate users into S3 and Dynamo. 
+ The users assume a role through the app, and then send the files/data through to AWS.
  */
 
 //TODO: FIX ALL EXPLICIT STRINGS THAT HAVE POOL ID BEFORE RELEASE
