@@ -20,7 +20,7 @@
     <GridLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:rowCount="4"
+        android:rowCount="6"
         android:columnCount="2"
         android:id="@+id/map_result_grid"
         android:visibility="gone">
@@ -88,7 +88,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:fontFamily="sans-serif-condensed"
             android:text="Distance"
             android:layout_row="3"
@@ -98,11 +97,50 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:id="@+id/distance"
             android:fontFamily="sans-serif-condensed"
             android:textStyle="bold"
             android:layout_row="3"
+            android:layout_column="1"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:fontFamily="sans-serif-condensed"
+            android:text="Time wasted in traffic"
+            android:layout_row="4"
+            android:layout_column="0"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:id="@+id/traffic_time"
+            android:fontFamily="sans-serif-condensed"
+            android:textStyle="bold"
+            android:layout_row="4"
+            android:layout_column="1"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
+            android:fontFamily="sans-serif-condensed"
+            android:text="GPS inaccurate for"
+            android:layout_row="5"
+            android:layout_column="0"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
+            android:id="@+id/accuracy_low_time"
+            android:fontFamily="sans-serif-condensed"
+            android:textStyle="bold"
+            android:layout_row="5"
             android:layout_column="1"/>
 
     </GridLayout>

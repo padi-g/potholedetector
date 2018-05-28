@@ -50,4 +50,11 @@
     <string name="submit">Submit</string>
     <string name="carname">Car Name</string>
     <string name="carmodel">Car Model</string>
+
+    <string-array name="debugging_ids">
+        <item>bgWUREt57xcWBvHSUw6rtw78EXX2</item> <!--Kanishk-->
+        <item>y0xSs7IhheUuKxckviuVnOxf9Ac2</item> <!--Kanishk-->
+    </string-array>
+
+    <string name="notification_channel_id">PotholeNotifier</string>
 </resources>

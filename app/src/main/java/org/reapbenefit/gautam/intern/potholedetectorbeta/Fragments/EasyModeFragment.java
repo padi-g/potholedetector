@@ -1,5 +1,7 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
+import android.annotation.SuppressLint;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,7 +12,11 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -31,6 +37,8 @@ import android.widget.Toast;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
@@ -46,10 +54,15 @@ import com.google.firebase.storage.UploadTask;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.UploadTasksService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadSevice;
+import org.w3c.dom.Text;
+
+import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.s3.transferutility.*;
 
 import java.util.List;
 
@@ -83,6 +96,13 @@ public class EasyModeFragment extends Fragment {
     private Button startButton, stopButton;
     private Intent loggerIntent;
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 389;
+
+    private SharedPreferences arsPreferences;
+    private boolean inCar;
+    private Handler handler;
+    private ActivityRecognitionClient activityRecognitionClient;
+    private String currentActivity;
+    private boolean currentlyInCar;
 
     ApplicationClass app;
 
@@ -136,11 +156,36 @@ public class EasyModeFragment extends Fragment {
 
         View v = inflater.inflate(R.layout.fragment_easy_mode, container, false);
 
+        //getting value of inCar
+        inCar = getArguments().getBoolean("inCar", false);
+        Log.i(getClass().getSimpleName(), inCar + "");
         bgframe = (RelativeLayout) v.findViewById(R.id.easyframe);
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
         statusIndicatorText.setText(R.string.warnings);
         startButton = (Button) v.findViewById(R.id.start_trip_button);
         stopButton = (Button) v.findViewById(R.id.stop_trip_button);
+        handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                //keeps checking current activity in a separate thread to stay updated
+                arsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+                currentActivity = arsPreferences.getString("currentActivity", null);
+                if (currentActivity == null) {
+                    Log.i(getClass().getSimpleName(), "NullPointer currentActivity");
+                    Toast.makeText(getContext(), "Initialising. Try again after a few seconds.", Toast.LENGTH_SHORT);
+                }
+                else {
+                    if (currentActivity.contains("VEHICLE")) {
+                        currentlyInCar = true;
+                        Log.i(getClass().getSimpleName(), currentlyInCar + "");
+                    }
+                    else {
+                        currentlyInCar = false;
+                    }
+                }
+            }
+        });
 
         if(!app.isTripInProgress() && !app.isTripEnded()){
             startButton.setVisibility(View.VISIBLE);
@@ -158,18 +203,21 @@ public class EasyModeFragment extends Fragment {
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!app.isTripInProgress() && checkPermissions()) {
+                if (!app.isTripInProgress() && checkPermissions() && (inCar || currentlyInCar || BuildConfig.DEBUG)) {
                     app.setTripInProgress(true);
                     startLogger();
                     bgframe.setBackgroundResource(R.drawable.logging_bg);
                     statusIndicatorText.setText(getResources().getString(R.string.detecting));
                     startButton.setVisibility(View.GONE);
                     stopButton.setVisibility(View.VISIBLE);
-                } else if(!checkPermissions()) {
+                } else if (!checkPermissions()) {
                     requestPermissions();
                     startButton.setVisibility(View.VISIBLE);
                     stopButton.setVisibility(View.GONE);
                     bgframe.setBackgroundResource(R.drawable.notlogging_bg);
+                }
+                else if (!inCar && !currentlyInCar) {
+                    Toast.makeText(getContext(), "Logging cannot happen outside a vehicle", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -212,6 +260,7 @@ public class EasyModeFragment extends Fragment {
                         Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_LONG).show();
                     }else if(!autoUploadOn())
                         Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_LONG).show();
                     openMap();
                 }
                 ////////// redundant
@@ -242,7 +291,8 @@ public class EasyModeFragment extends Fragment {
     }
 
     public void startUploadService(){
-        Intent intent = new Intent(getContext(), UploadTasksService.class);
+        Intent intent = new Intent(getContext(), S3UploadSevice.class);
+        //Intent intent = new Intent(getContext(), UploadTasksService.class);
         intent.setAction("upload_now");
         intent.putExtra("upload_uri", uploadFileUri);
         this.getContext().startService(intent);
@@ -259,7 +309,8 @@ public class EasyModeFragment extends Fragment {
 
 
     public void startLogger(){
-        getActivity().startService(loggerIntent);
+        if (inCar || currentlyInCar || BuildConfig.DEBUG)
+            getActivity().startService(loggerIntent);
     }
 
     public void stopLogger(){

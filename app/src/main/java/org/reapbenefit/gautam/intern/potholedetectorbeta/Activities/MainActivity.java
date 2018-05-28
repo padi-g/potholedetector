@@ -1,7 +1,11 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 
-import android.content.DialogInterface;
+import android.annotation.SuppressLint;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
@@ -9,27 +13,29 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CompoundButton;
-import android.widget.Switch;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -45,21 +51,23 @@ import com.google.firebase.auth.FirebaseAuth;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TransitionAlarm;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.NotifierService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
         TriplistFragment.OnFragmentInteractionListener,
-        EasyModeFragment.OnFragmentInteractionListener{
+        EasyModeFragment.OnFragmentInteractionListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener{
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
-    protected static final String TAG = "Main_Activity";
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 389;
     private static final int REQUEST_CHECK_SETTINGS = 23;
 
@@ -69,29 +77,37 @@ public class MainActivity extends AppCompatActivity
     private FirebaseAuth mAuth;
     private Toolbar toolbar;
     ApplicationClass app;
+    private GoogleApiClient apiClient;
+    private final int INTERVAL_MILLISECONDS = 3000;
+    private final String TAG = getClass().getSimpleName();
+    private ActivityRecognitionClient activityRecognitionClient;
+    private Handler handler;
+    private Context context;
+    private boolean inCar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        context = this;
         Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         setContentView(R.layout.activity_main);
-
+        inCar = getIntent().getBooleanExtra("inCar", false);
+        Log.i("inCar MainActivity old", inCar + "");
         //Adding toolbar to the activity
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setTitle("Road Quality Audit");
 
-
         mAuth = FirebaseAuth.getInstance();
-        if(mAuth.getCurrentUser() == null){
+        if (mAuth.getCurrentUser() == null) {
             // Toast
             Toast.makeText(this, "Please login to start using the app", Toast.LENGTH_LONG).show();
             // open login activity
+
             Intent i = new Intent(this, LoginActivity.class);
             startActivity(i);
         }
@@ -109,7 +125,7 @@ public class MainActivity extends AppCompatActivity
 
 
         viewPager = (ViewPager) findViewById(R.id.pager);
-        PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
+        PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), inCar);
         viewPager.setAdapter(adapter);
 
         //Adding onTabSelectedListener to swipe views
@@ -120,8 +136,18 @@ public class MainActivity extends AppCompatActivity
         );
 
         SharedPreferences prefs = getSharedPreferences("uploads", MODE_PRIVATE);
-        if(!prefs.contains("file_delete"))
+        if (!prefs.contains("file_delete"))
             prefs.edit().putBoolean("file_delete", false);
+
+        //setting TransitionAlarm
+        setAlarm(5000);
+    }
+
+    private void setAlarm(long timeinMillis) {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, TransitionAlarm.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+        alarmManager.setRepeating(AlarmManager.RTC, timeinMillis, timeinMillis, pendingIntent);
     }
 
     private void settingsRequest(){
@@ -377,6 +403,27 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        //called when app connects to Play Services
+        /*Intent intent = new Intent(this, ActivityRecognizedService.class);
+        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(apiClient, INTERVAL_MILLISECONDS,
+                pendingIntent);*/
+            }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+
     /*
     public void startActivityService() {
         // fire only when trip started = false
@@ -394,3 +441,5 @@ public class MainActivity extends AppCompatActivity
 // eg koramangala to indiranagar
 
 //  https://coolors.co/6da34d-c9cba3-202030-39304a-52528c  for colours
+
+

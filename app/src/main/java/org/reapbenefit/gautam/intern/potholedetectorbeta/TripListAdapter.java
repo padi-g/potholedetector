@@ -10,14 +10,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.UploadTasksService;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -34,11 +34,15 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
     private static ArrayList<Trip> trips;
     private Uri uploadFileUri;
     ApplicationClass app;
+    private int positionChanged;
+    private boolean uploadStatus;
 
-    public TripListAdapter(Context context, ArrayList<Trip> values) {
+
+    public TripListAdapter(Context context, ArrayList<Trip> values, boolean uploadStatus, int positionChanged) {
         super(context, -1, values);
         this.context = context;
         trips = new ArrayList<>(values);
+        this.uploadStatus = uploadStatus;
         app = ApplicationClass.getInstance();
     }
 
@@ -47,11 +51,11 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
     public View getView(final int position, final View convertView, ViewGroup parent) {
         LayoutInflater inflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
         View rowView = inflater.inflate(R.layout.trip_list_item, parent, false);
 
         String countString, timeString, durationString, distanceString;
         ImageButton uploadButton, uploadedTick, mapButton;
+
 
         if(!trips.isEmpty()){
             try {
@@ -66,7 +70,7 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
                 uploadedTick = (ImageButton) rowView.findViewById(R.id.upload_tick);
                 mapButton = (ImageButton) rowView.findViewById(R.id.map_button);
 
-                if(trip.isUploaded()){
+                if(trip.isUploaded() || (uploadStatus && position == positionChanged)) {
                     uploadButton.setVisibility(View.GONE);
                     uploadedTick.setVisibility(View.VISIBLE);
                 }
@@ -76,7 +80,10 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
                     public void onClick(View v) {
                         if(internetAvailable()) {
                             uploadFileUri = Uri.fromFile(new File(context.getApplicationContext().getFilesDir() + "/logs/" + trip.getTrip_id() + ".csv"));
-                            startUploadService();
+                            //passing object to service as JSON
+                            Gson gson = new Gson();
+                            String json = gson.toJson(trip);
+                            startUploadService(json);
                         }else {
                             Toast.makeText(context.getApplicationContext(), "Internet not available. Try again later", Toast.LENGTH_LONG).show();
                         }
@@ -149,10 +156,13 @@ public class TripListAdapter extends ArrayAdapter<Trip> {
             return false;
     }
 
-    public void startUploadService(){
-        Intent intent = new Intent(getContext(), UploadTasksService.class);
+    public void startUploadService(String json){
+        Intent intent = new Intent(getContext(), S3UploadSevice.class);
         intent.setAction("upload_now");
         intent.putExtra("upload_uri", uploadFileUri);
+        intent.putExtra("trip_json", json);
+        intent.putExtra("trips_arraylist", trips);
+        intent.putExtra("position", positionChanged);
         this.getContext().startService(intent);
 
     }

@@ -3,7 +3,10 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -13,9 +16,11 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -31,10 +36,13 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MyLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.TrafficTimeService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import java.io.File;
@@ -45,6 +53,7 @@ import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -59,7 +68,8 @@ public class LoggerService extends Service implements SensorEventListener {
     protected String TAG = "Logger_Service";
     private SensorManager mSensorManager;
     private Sensor mAccelerometer, mGyroscope, mProximity;
-    private static final int ACCURACY_REQUIRED = 25;
+    //1525 metre accuracy sensitive if in debug state, 25 in release
+    private static final int ACCURACY_REQUIRED = BuildConfig.DEBUG?1525:25;
 
     private String Marks;
     float accVals[] = null, gyrVals[] = null;
@@ -91,7 +101,14 @@ public class LoggerService extends Service implements SensorEventListener {
     public final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 0;
     private FusedLocationProviderClient mFusedLocationClient;
     private long inaccurateTiming = SystemClock.elapsedRealtimeNanos();
-
+    private Intent trafficIntent;
+    private Handler trafficHandler;
+    private BroadcastReceiver trafficReceiver;
+    private long minutesWasted = -1;
+    private SharedPreferences transitionPrefs;
+    private Date newTime;
+    private Date startTrafficTime;
+    private String currentActivity;
 
     private Trip newtrip;
     private FirebaseAuth mAuth;
@@ -107,6 +124,9 @@ public class LoggerService extends Service implements SensorEventListener {
     ApplicationClass app;
     private LocationCallback mLocationCallback;
 
+    private Date accuracyLostTime;
+    private long minutesAccuracyLow;
+    private Date startAccuracyTime;
 
     public LoggerService() {
         super();
@@ -153,6 +173,9 @@ public class LoggerService extends Service implements SensorEventListener {
 
         newtrip.setStartTime(getCurrentDateTime());
         startTime = new Date();  // to pass into bundle
+
+        startTrafficTime = startTime;
+        startAccuracyTime = startTime;
         setupSensors();
         setupLogFile();
         mp = MediaPlayer.create(getApplication(), R.raw.beep);
@@ -286,6 +309,9 @@ public class LoggerService extends Service implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
 
+        //timing traffic latency
+        calcTrafficTime();
+
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
             Log.w("Prox", String.valueOf(sensorEvent.values[0]));
 
@@ -326,9 +352,31 @@ public class LoggerService extends Service implements SensorEventListener {
                 writeToFile(accVals, gyrVals, LocData);
             } else {
                 Log.i(TAG, "Location accuracy not hit " + mCurrentLocation.getAccuracy());
-                // do some timing
+                calcAccuracyLowTime();
             }
         }
+
+    }
+
+    private void calcAccuracyLowTime() {
+        accuracyLostTime = Calendar.getInstance().getTime();
+        minutesAccuracyLow += accuracyLostTime.getTime() - startAccuracyTime.getTime();
+        startAccuracyTime = accuracyLostTime;
+    }
+
+    private void calcTrafficTime() {
+        //tracking time wasted in traffic
+        transitionPrefs = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        currentActivity = transitionPrefs.getString("currentActivity", null);
+        if (currentActivity != null) {
+            if (currentActivity.toString().contains("STILL")) {
+                newTime = Calendar.getInstance().getTime();
+                minutesWasted += newTime.getTime() - startTrafficTime.getTime();
+                startTrafficTime = newTime;
+            }
+        }
+        else
+            Log.i(TAG, "currentActivity is null");
 
     }
 
@@ -460,6 +508,17 @@ public class LoggerService extends Service implements SensorEventListener {
 
         app.setTrip(newtrip);
         Log.i(TAG, "logged newtrip");
+
+
+        if (minutesWasted != -1) {
+            Log.i("minutesWasted", minutesWasted + " milliseconds");
+            minutesWasted = Math.round((minutesWasted/1000.0)/60.0);
+            newtrip.setMinutesWasted(minutesWasted);
+        }
+        else
+            Log.i(TAG, "minutesWasted was -1");
+
+        minutesAccuracyLow = Math.round((minutesWasted/1000.0)/60.0);
 
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {
