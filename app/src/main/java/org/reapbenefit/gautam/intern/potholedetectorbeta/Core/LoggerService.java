@@ -113,8 +113,6 @@ public class LoggerService extends Service implements SensorEventListener {
     private Trip newtrip;
     private FirebaseAuth mAuth;
     private FirebaseAnalytics mFirebaseAnalytics;
-    private FirebaseDatabase mDatabase;
-    private DatabaseReference ref;
 
     private ArrayList<MyLocation> gpsPolls;
     private float distance_travelled = 0;
@@ -127,6 +125,7 @@ public class LoggerService extends Service implements SensorEventListener {
     private Date accuracyLostTime;
     private long minutesAccuracyLow;
     private Date startAccuracyTime;
+    private TripViewModel tripViewModel;
 
     public LoggerService() {
         super();
@@ -146,10 +145,6 @@ public class LoggerService extends Service implements SensorEventListener {
         fileid = UUID.randomUUID();
         newtrip.setTrip_id(fileid.toString());
         mAuth = FirebaseAuth.getInstance();
-
-        mDatabase = FirebaseDatabase.getInstance();
-
-        ref = mDatabase.getReference();
         gpsPolls = new ArrayList<>();
 
         newtrip.setDevice(Build.MANUFACTURER + " " + Build.MODEL + " " + Build.PRODUCT);
@@ -523,7 +518,8 @@ public class LoggerService extends Service implements SensorEventListener {
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {
             logGPSpollstoFile(gpsPolls);
-            ref.child(newtrip.getUser_id()).child(newtrip.getTrip_id()).setValue(newtrip);
+            tripViewModel = new TripViewModel(app);
+            tripViewModel.insert(Trip.tripToLocalTripEntity(newtrip));
             sendTripLoggingBroadcast(false, fileuri);
         }else {
             logAnalytics("unsuccessful_in_starting_logging");

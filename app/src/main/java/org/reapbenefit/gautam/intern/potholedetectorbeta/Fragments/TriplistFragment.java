@@ -72,9 +72,6 @@ public class TriplistFragment extends Fragment {
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    private FirebaseDatabase database = FirebaseDatabase.getInstance();;
-    private DatabaseReference myRef = database.getReference();
-    private DatabaseReference profileRef = database.getReference();
 
     private long timeScore = 0;  // calculated based on time logged
     private long distanceScore = 0;  // calculated based on distance logged
@@ -93,27 +90,16 @@ public class TriplistFragment extends Fragment {
             if (recyclerView != null) {
                 uploadStatus = true;
                 positionChanged = intent.getIntExtra("positionChanged", -1);
-                recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, positionChanged);
+                if (tripViewModel == null)
+                    tripViewModel = new TripViewModel(app);
+                recyclerAdapter = new TripListAdapter(getActivity(), (ArrayList<LocalTripEntity>) tripViewModel.getAllTrips().getValue(), uploadStatus, positionChanged);
                 recyclerView.setAdapter(recyclerAdapter);
                 recyclerAdapter.notifyDataSetChanged();
             }
         }
     };
+
     private TripViewModel tripViewModel;
-
-
-    public TriplistFragment() {
-        // Required empty public constructor
-    }
-
-    public static TriplistFragment newInstance(String param1, String param2) {
-        TriplistFragment fragment = new TriplistFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -127,47 +113,10 @@ public class TriplistFragment extends Fragment {
         comparator = new CustomTripComparator();
         sharedPreferences = getActivity().getSharedPreferences("uploads", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
-        try {   // thrown when the user is not signed in
-            myRef = myRef.child(mAuth.getCurrentUser().getUid());
-            profileRef = profileRef.child("profiles").child(mAuth.getCurrentUser().getUid());
 
-            myRef.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-
-                    timeScore = distanceScore = 0;
-                    trips = new ArrayList<Trip>();
-
-                    try {
-                        for (DataSnapshot d : dataSnapshot.getChildren()) {
-                            if (!d.getKey().contains("profile")) {
-                                Trip t = d.getValue(Trip.class);
-                                trips.add(t);
-                                Log.d("SCORE", String.valueOf(t.getDuration()));
-                                timeScore += t.getDuration();
-                                distanceScore += t.getDistanceInKM();
-                            }
-                        }
-                    }catch (DatabaseException e){
-
-                    }
-                    timeScore = (int) timeScore;
-                    distanceScore = (int) distanceScore;
-                    profileRef.child("timeScore").setValue(timeScore);
-                    profileRef.child("distanceScore").setValue(distanceScore);
-                    profileRef.child("totalTrips").setValue(trips.size());
-                    // TODO : Optimize to use lesser db reads by storing locally and updating
-                    createListView();
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
-        }catch (NullPointerException e){
-
-        }
+        //reading local Room database
+        tripViewModel = new TripViewModel(app);
+        List<LocalTripEntity> localTripEntities = tripViewModel.getAllTrips().getValue();
     }
 
 
@@ -203,10 +152,11 @@ public class TriplistFragment extends Fragment {
     private void createListView(){
         if(!trips.isEmpty() && getActivity()!=null) {
             Collections.sort(trips, new CustomTripComparator());
-            recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, 0);
+            if (tripViewModel == null)
+                tripViewModel = new TripViewModel(app);
+            recyclerAdapter = new TripListAdapter(getActivity(), (ArrayList<LocalTripEntity>) tripViewModel.getAllTrips().getValue(), uploadStatus, 0);
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
-            tripViewModel = ViewModelProviders.of(getActivity()).get(TripViewModel.class);
         }
     }
 
@@ -240,19 +190,21 @@ public class TriplistFragment extends Fragment {
         recyclerView.setHasFixedSize(true);
         recyclerLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerLayoutManager);
-        recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), trips, uploadStatus, positionChanged);
+        tripViewModel = new TripViewModel(app);
+        recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), (ArrayList<LocalTripEntity>) tripViewModel.getAllTrips().getValue(),
+                uploadStatus, positionChanged);
+        recyclerAdapter.notifyDataSetChanged();
         recyclerView.setAdapter(recyclerAdapter);
         if (broadcastReceiver != null)
             getContext().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
         else
             Log.i(getClass().getSimpleName(), "broadcast receiver null");
         Log.i(getClass().getSimpleName(), "uploaded status " + uploadStatus);
-        tripViewModel = new TripViewModel(app);
         tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
             @Override
             public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
                 //called when this fragment is in the foreground and when data undergoes a change
-                ArrayList<Trip> newTripsList = new ArrayList<>();
+                /*ArrayList<Trip> newTripsList = new ArrayList<>();
                 //converting each LocalTripEntity object to a Trip object
                 for (int i = 0; i < localTripEntities.size(); ++i) {
                     LocalTripEntity localTripEntity = localTripEntities.get(i);
@@ -275,8 +227,8 @@ public class TriplistFragment extends Fragment {
                     trip.setEndLoc(MyLocationConverter.StringToMyLocation(localTripEntity.endLoc));
                     trip.setStartLoc(MyLocationConverter.StringToMyLocation(localTripEntity.startLoc));
                     newTripsList.add(trip);
-                }
-                recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), newTripsList,
+                }*/
+                recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), (ArrayList<LocalTripEntity>) localTripEntities,
                         uploadStatus, positionChanged);
             }
         });

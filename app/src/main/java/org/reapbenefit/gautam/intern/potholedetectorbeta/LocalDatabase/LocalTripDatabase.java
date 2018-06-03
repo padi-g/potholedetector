@@ -1,5 +1,6 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.Room;
@@ -8,6 +9,11 @@ import android.arch.persistence.room.TypeConverters;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import android.util.Log;
+
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
+
+import java.util.List;
 
 @Database(entities = {LocalTripEntity.class}, version = 1)
 @TypeConverters({MyLocationConverter.class})
@@ -47,7 +53,10 @@ public abstract class LocalTripDatabase extends RoomDatabase {
         @Override
         protected Void doInBackground(Void... voids) {
             //TODO: CHECK WHETHER TO INCLUDE DELETE AND INSERT FUNCTIONS
-            localTripTableDao.getAllTrips();
+            List<LocalTripEntity> localTripEntityList = localTripTableDao.getAllTrips().getValue();
+            //TODO: SEND THIS DATA TO FRAGMENT AND SET ADAPTER WITH IT
+            if (localTripEntityList == null)
+                Log.i(getClass().getSimpleName(), "localTripEntityList is null");
             return null;
         }
     }

@@ -20,6 +20,8 @@ import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -28,11 +30,12 @@ import java.util.ArrayList;
 public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripListViewHolder> {
 
     private Context context;
-    private ArrayList<Trip> trips;
+    private ArrayList<LocalTripEntity> trips;
     private boolean uploadStatus;
     private int positionChanged;
     private ApplicationClass app = ApplicationClass.getInstance();
     private Uri uploadFileUri;
+    private TripViewModel tripViewModel;
 
     /*
     static ViewHolder class to reference views for each trip component item
@@ -57,11 +60,12 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         }
     }
 
-    public TripListAdapter(Context context, ArrayList<Trip> trips, boolean uploadStatus, int positionChanged) {
+    public TripListAdapter(Context context, ArrayList<LocalTripEntity> trips, boolean uploadStatus, int positionChanged) {
         this.context = context;
         this.trips = trips;
         this.uploadStatus = uploadStatus;
         this.positionChanged = positionChanged;
+        Log.i(getClass().getSimpleName(), "Adapter created");
     }
 
     @Override
@@ -112,26 +116,32 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
 
     @Override
     public void onBindViewHolder(TripListViewHolder holder, int position) {
+        Log.i(getClass().getSimpleName(), "inside onBindViewHolder");
         if (holder != null) {
+            Log.i(getClass().getSimpleName(), "holder is not null");
             View rowView = holder.itemView;
-            final Trip trip = trips.get(position);
+            final LocalTripEntity trip = trips.get(position);
+            tripViewModel = new TripViewModel(app);
+            if (tripViewModel == null)
+                Log.e(getClass().getSimpleName(), "TripViewModel is null");
             String countString, timeString, durationString, distanceString;
             ImageButton uploadButton, uploadedTick, mapButton;
             TextView date, time, size, distance;
-            countString = String.valueOf(trip.getPotholeCount()) + " potholes";
-            timeString = trip.getStartTime();
+            countString = String.valueOf(tripViewModel.getPotholeCount()) + " potholes";
+            Log.i("countString", countString);
+            timeString = tripViewModel.getStartTime();
             timeString = timeString.substring(4, timeString.indexOf("GMT") - 4);
-            durationString = String.valueOf(trip.getDuration()) + " mins, "  +  humanReadableByteCount(trip.getFilesize(), true);
-            distanceString = String.valueOf(roundTwoDecimals(trip.getDistanceInKM())) + "km";
+            durationString = String.valueOf(tripViewModel.getDuration()) + " mins, "  +  humanReadableByteCount(tripViewModel.getFilesize(), true);
+            distanceString = String.valueOf(roundTwoDecimals(tripViewModel.getDistanceInKm())) + "km";
             uploadButton = holder.uploadButton;
             uploadButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     if(internetAvailable()) {
-                        uploadFileUri = Uri.fromFile(new File(context.getApplicationContext().getFilesDir() + "/logs/" + trip.getTrip_id() + ".csv"));
+                        uploadFileUri = Uri.fromFile(new File(context.getApplicationContext().getFilesDir() + "/logs/" + tripViewModel.getTrip_id() + ".csv"));
                         //passing object to service as JSON
                         Gson gson = new Gson();
-                        String json = gson.toJson(trip);
+                        String json = gson.toJson(tripViewModel);
                         startUploadService(json);
                     }else {
                         Toast.makeText(context.getApplicationContext(), "Internet not available. Try again later", Toast.LENGTH_LONG).show();
@@ -142,12 +152,12 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             mapButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    File datafile = new File(context.getApplicationContext().getFilesDir(), "logs/" + trip.getTrip_id() + ".csv");
-                    File file = new File(context.getApplicationContext().getFilesDir(), "analysis/" + trip.getTrip_id() + ".csv");
+                    File datafile = new File(context.getApplicationContext().getFilesDir(), "logs/" + tripViewModel.getTrip_id() + ".csv");
+                    File file = new File(context.getApplicationContext().getFilesDir(), "analysis/" + tripViewModel.getTrip_id() + ".csv");
                     if(datafile.exists()) {
                         if (!app.isTripInProgress() && file.exists()) { // check if file of same name is available in the analytics folder
                             Intent i = new Intent(context, MapsActivity.class);
-                            i.putExtra("trip", trip);
+                            i.putExtra("trip", Trip.localTripEntityToTrip(trip));
                             context.startActivity(i);
                         }
                     }
@@ -165,6 +175,8 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             size.setText(durationString);
             distance.setText(distanceString);
         }
+        else
+            Log.i(getClass().getSimpleName(), "holder is null");
     }
 
     private void startUploadService(String json) {
@@ -192,6 +204,9 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
 
     @Override
     public int getItemCount() {
-        return trips.size();
+        if (trips == null)
+            return 0;
+        else
+            return trips.size();
     }
 }

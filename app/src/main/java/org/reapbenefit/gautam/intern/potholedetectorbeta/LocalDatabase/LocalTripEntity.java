@@ -1,11 +1,16 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase;
 
+import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 import android.arch.persistence.room.TypeConverters;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MyLocation;
+
+import java.io.Serializable;
+
 @Entity (tableName = "LocalTripTable", primaryKeys = {"trip_id", "user_id"})
 public class LocalTripEntity {
     @NonNull

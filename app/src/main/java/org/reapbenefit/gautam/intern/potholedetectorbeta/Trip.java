@@ -3,6 +3,9 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.MyLocationConverter;
+
 /**
  * Created by gautam on 29/06/17.
  */
@@ -260,4 +263,48 @@ public class Trip implements Parcelable {
             return new Trip[size];
         }
     };
+
+    public static Trip localTripEntityToTrip(LocalTripEntity localTripEntity) {
+        Trip trip = new Trip();
+        trip.setAxis(localTripEntity.axis);
+        trip.setUploaded(localTripEntity.uploaded);
+        trip.setFilesize(localTripEntity.filesize);
+        trip.setMinutesAccuracyLow(localTripEntity.minutesAccuracyLow);
+        trip.setDistanceInKM(localTripEntity.distanceInKM);
+        trip.setDuration(localTripEntity.duration);
+        trip.setStartTime(localTripEntity.startTime);
+        trip.setUserRating(localTripEntity.userRating);
+        trip.setEndTime(localTripEntity.endTime);
+        trip.setThreshold(localTripEntity.threshold);
+        trip.setPotholeCount(localTripEntity.potholeCount);
+        trip.setNo_of_lines(localTripEntity.no_of_lines);
+        trip.setDevice(localTripEntity.device);
+        trip.setTrip_id(localTripEntity.trip_id);
+        trip.setUser_id(localTripEntity.user_id);
+        trip.setEndLoc(MyLocationConverter.StringToMyLocation(localTripEntity.endLoc));
+        trip.setStartLoc(MyLocationConverter.StringToMyLocation(localTripEntity.startLoc));
+        return trip;
+    }
+
+    public static LocalTripEntity tripToLocalTripEntity(Trip trip) {
+        LocalTripEntity localTripEntity = new LocalTripEntity();
+        localTripEntity.axis = trip.getAxis();
+        localTripEntity.uploaded = trip.isUploaded();
+        localTripEntity.filesize = trip.getFilesize();
+        localTripEntity.minutesAccuracyLow = trip.getMinutesAccuracyLow();
+        localTripEntity.distanceInKM = trip.getDistanceInKM();
+        localTripEntity.duration = trip.getDuration();
+        localTripEntity.startTime = trip.getStartTime();
+        localTripEntity.userRating = trip.getUserRating();
+        localTripEntity.endTime = trip.getEndTime();
+        localTripEntity.threshold = trip.getThreshold();
+        localTripEntity.potholeCount = trip.getPotholeCount();
+        localTripEntity.no_of_lines = trip.getNo_of_lines();
+        localTripEntity.device = trip.getDevice();
+        localTripEntity.trip_id = trip.getTrip_id();
+        localTripEntity.user_id = trip.getUser_id();
+        localTripEntity.endLoc = (MyLocationConverter.myLocationToString(trip.getEndLoc()));
+        localTripEntity.startLoc = MyLocationConverter.myLocationToString(trip.getStartLoc());
+        return localTripEntity;
+    }
 }
