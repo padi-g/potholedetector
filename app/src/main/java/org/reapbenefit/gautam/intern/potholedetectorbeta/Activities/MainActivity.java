@@ -4,6 +4,8 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -52,11 +54,15 @@ import com.google.firebase.auth.FirebaseAuth;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TransitionAlarm;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.NotifierService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,

@@ -16,6 +16,12 @@ public class MyLocation implements Parcelable {
     public MyLocation() {
     }
 
+    public MyLocation(double latitude, double longitude, float accuracy) {
+        this.accuracy = accuracy;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
     public static MyLocation locToMyloc(Location l){
 
         MyLocation m = new MyLocation();

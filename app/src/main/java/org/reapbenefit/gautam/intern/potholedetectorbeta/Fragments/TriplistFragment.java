@@ -1,5 +1,8 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModel;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +12,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -32,6 +36,9 @@ import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.MyLocationConverter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
@@ -43,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class TriplistFragment extends Fragment {
@@ -91,6 +99,7 @@ public class TriplistFragment extends Fragment {
             }
         }
     };
+    private TripViewModel tripViewModel;
 
 
     public TriplistFragment() {
@@ -197,27 +206,7 @@ public class TriplistFragment extends Fragment {
             recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, 0);
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
-            Gson gson = new Gson();
-            /*String listViewJson = gson.toJson(l);
-            editor.putString("listViewJson", listViewJson);
-            editor.commit();*/
-            /*l.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Trip t = trips.get(position);
-                    File file = new File(getActivity().getApplicationContext().getFilesDir(), "analysis/" + t.getTrip_id() + ".csv");
-                    if(!app.isTripInProgress() && file.exists()){ // check if file of same name is available in the analytics folder
-                        Intent i = new Intent(getActivity(), MapsActivity.class);
-                        i.putExtra("trip", t);
-                        startActivity(i);
-                    }else{
-                        //Toast.makeText(getActivity(), )
-                    }
-                }
-            });*/
-
-            //updating recyclerView with correct data
-
+            tripViewModel = ViewModelProviders.of(getActivity()).get(TripViewModel.class);
         }
     }
 
@@ -258,6 +247,39 @@ public class TriplistFragment extends Fragment {
         else
             Log.i(getClass().getSimpleName(), "broadcast receiver null");
         Log.i(getClass().getSimpleName(), "uploaded status " + uploadStatus);
+        tripViewModel = new TripViewModel(app);
+        tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
+            @Override
+            public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
+                //called when this fragment is in the foreground and when data undergoes a change
+                ArrayList<Trip> newTripsList = new ArrayList<>();
+                //converting each LocalTripEntity object to a Trip object
+                for (int i = 0; i < localTripEntities.size(); ++i) {
+                    LocalTripEntity localTripEntity = localTripEntities.get(i);
+                    Trip trip = new Trip();
+                    trip.setAxis(localTripEntity.axis);
+                    trip.setUploaded(localTripEntity.uploaded);
+                    trip.setFilesize(localTripEntity.filesize);
+                    trip.setMinutesAccuracyLow(localTripEntity.minutesAccuracyLow);
+                    trip.setDistanceInKM(localTripEntity.distanceInKM);
+                    trip.setDuration(localTripEntity.duration);
+                    trip.setStartTime(localTripEntity.startTime);
+                    trip.setUserRating(localTripEntity.userRating);
+                    trip.setEndTime(localTripEntity.endTime);
+                    trip.setThreshold(localTripEntity.threshold);
+                    trip.setPotholeCount(localTripEntity.potholeCount);
+                    trip.setNo_of_lines(localTripEntity.no_of_lines);
+                    trip.setDevice(localTripEntity.device);
+                    trip.setTrip_id(localTripEntity.trip_id);
+                    trip.setUser_id(localTripEntity.user_id);
+                    trip.setEndLoc(MyLocationConverter.StringToMyLocation(localTripEntity.endLoc));
+                    trip.setStartLoc(MyLocationConverter.StringToMyLocation(localTripEntity.startLoc));
+                    newTripsList.add(trip);
+                }
+                recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), newTripsList,
+                        uploadStatus, positionChanged);
+            }
+        });
         createListView();
         return v;
     }
@@ -286,17 +308,6 @@ public class TriplistFragment extends Fragment {
         mListener = null;
     }
 
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
