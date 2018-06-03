@@ -10,6 +10,8 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -43,15 +45,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
 
-
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link TriplistFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link TriplistFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class TriplistFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -81,13 +74,20 @@ public class TriplistFragment extends Fragment {
     ApplicationClass app;
     private boolean uploadStatus;
     private int positionChanged;
+
+    private RecyclerView recyclerView;
+    private RecyclerView.Adapter recyclerAdapter;
+    private RecyclerView.LayoutManager recyclerLayoutManager;
+
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (l != null) {
+            if (recyclerView != null) {
                 uploadStatus = true;
                 positionChanged = intent.getIntExtra("positionChanged", -1);
-                l.setAdapter(new TripListAdapter(getActivity(), trips, uploadStatus, positionChanged));
+                recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, positionChanged);
+                recyclerView.setAdapter(recyclerAdapter);
+                recyclerAdapter.notifyDataSetChanged();
             }
         }
     };
@@ -97,15 +97,6 @@ public class TriplistFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment TriplistFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static TriplistFragment newInstance(String param1, String param2) {
         TriplistFragment fragment = new TriplistFragment();
         Bundle args = new Bundle();
@@ -203,12 +194,14 @@ public class TriplistFragment extends Fragment {
     private void createListView(){
         if(!trips.isEmpty() && getActivity()!=null) {
             Collections.sort(trips, new CustomTripComparator());
-            l.setAdapter(new TripListAdapter(getActivity(), trips, uploadStatus, 0));
+            recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, 0);
+            recyclerView.setAdapter(recyclerAdapter);
+            recyclerAdapter.notifyDataSetChanged();
             Gson gson = new Gson();
             /*String listViewJson = gson.toJson(l);
             editor.putString("listViewJson", listViewJson);
             editor.commit();*/
-            l.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            /*l.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     Trip t = trips.get(position);
@@ -221,7 +214,10 @@ public class TriplistFragment extends Fragment {
                         //Toast.makeText(getActivity(), )
                     }
                 }
-            });
+            });*/
+
+            //updating recyclerView with correct data
+
         }
     }
 
@@ -251,41 +247,18 @@ public class TriplistFragment extends Fragment {
             }
         });
 
-
-        l = (ListView) v.findViewById(R.id.trips_list);
+        recyclerView = (RecyclerView) v.findViewById(R.id.trips_list);
+        recyclerView.setHasFixedSize(true);
+        recyclerLayoutManager = new LinearLayoutManager(getActivity());
+        recyclerView.setLayoutManager(recyclerLayoutManager);
+        recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), trips, uploadStatus, positionChanged);
+        recyclerView.setAdapter(recyclerAdapter);
         if (broadcastReceiver != null)
             getContext().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
         else
             Log.i(getClass().getSimpleName(), "broadcast receiver null");
         Log.i(getClass().getSimpleName(), "uploaded status " + uploadStatus);
         createListView();
-        l.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-
-
-                /*   *********  Opens a map activity, DUMMY
-                Intent intent = new Intent(getActivity(), MapsActivity.class);
-                Bundle b = new Bundle();
-                b.putSerializable("file", logfiles[i]);
-                intent.putExtra("file", logfiles[i]);
-                startActivity(intent);
-                */
-                // Start a map activity that plots the locations
-
-                // Upload the related file to google drive
-               /*
-                String your_file_path = logfiles[i].getPath();
-                Intent intent = new Intent(android.content.Intent.ACTION_SEND);
-                intent.setType("text/plain");
-                intent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + your_file_path));
-                startActivity(Intent.createChooser(intent, ""));
-                */
-
-                // Open a detailed activity with a maps fragment
-            }
-        });
         return v;
     }
 

@@ -10,7 +10,7 @@ import java.util.List;
 
 public class TripRepository {
     private LocalTripTableDao dao;
-    private LiveData<List<Trip>> liveDataTrips;
+    private LiveData<List<LocalTripEntity>> liveDataTrips;
 
     public TripRepository(Application app) {
         LocalTripDatabase localTripDatabase = LocalTripDatabase.getInstance(app);
@@ -20,16 +20,16 @@ public class TripRepository {
 
     //Executed on a separate thread by Room automatically
     //Observer will be notified when data is changed
-    public LiveData<List<Trip>> getLiveDataTrips() {
+    public LiveData<List<LocalTripEntity>> getLiveDataTrips() {
         return liveDataTrips;
     }
 
     //Must be coded to run on a separate thread.
-    public void insertTrip(Trip trip) {
+    public void insertTrip(LocalTripEntity trip) {
         new InsertAsyncTask(dao).execute(trip);
     }
 
-    private static class InsertAsyncTask extends AsyncTask<Trip, Void, Void>{
+    private static class InsertAsyncTask extends AsyncTask<LocalTripEntity, Void, Void>{
 
         private LocalTripTableDao asyncTaskDao;
 
@@ -38,7 +38,7 @@ public class TripRepository {
         }
 
         @Override
-        protected Void doInBackground(Trip... trips) {
+        protected Void doInBackground(LocalTripEntity... trips) {
             asyncTaskDao.insertTrip(trips[0]);
             return null;
         }

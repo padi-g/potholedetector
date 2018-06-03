@@ -5,6 +5,7 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.TripRepository;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
@@ -13,7 +14,7 @@ import java.util.List;
 public class TripViewModel extends AndroidViewModel{
 
     private TripRepository tripRepository;
-    private LiveData<List<Trip>> allTrips;
+    private LiveData<List<LocalTripEntity>> allTrips;
 
     public TripViewModel(@NonNull Application application) {
         super(application);
@@ -22,11 +23,11 @@ public class TripViewModel extends AndroidViewModel{
     }
 
     //getter method to separate the implementation from the UI
-    public LiveData<List<Trip>> getAllTrips() {
+    public LiveData<List<LocalTripEntity>> getAllTrips() {
         return allTrips;
     }
 
-    public void insert(Trip trip) {
+    public void insert(LocalTripEntity trip) {
         tripRepository.insertTrip(trip);
     }
 }
