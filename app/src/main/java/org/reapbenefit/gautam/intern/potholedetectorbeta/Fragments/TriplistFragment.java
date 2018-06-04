@@ -73,6 +73,7 @@ public class TriplistFragment extends Fragment {
     private RecyclerView recyclerView;
     private RecyclerView.Adapter recyclerAdapter;
     private RecyclerView.LayoutManager recyclerLayoutManager;
+    private TriplistFragment triplistFragment = this;
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -81,7 +82,7 @@ public class TriplistFragment extends Fragment {
                 uploadStatus = true;
                 positionChanged = intent.getIntExtra("positionChanged", -1);
                 if (tripViewModel == null)
-                    tripViewModel = new TripViewModel(app);
+                    tripViewModel = ViewModelProviders.of(triplistFragment).get(TripViewModel.class);
                 recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, positionChanged, tripViewModel);
                 recyclerView.setAdapter(recyclerAdapter);
                 recyclerAdapter.notifyDataSetChanged();
@@ -172,6 +173,38 @@ public class TriplistFragment extends Fragment {
     }
 
     @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser) {
+            //reading for new trip registered by LoggerService
+            SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            String newTripJson = dbPreferences.getString("newTripJson", null);
+            if (newTripJson != null && tripViewModel != null) {
+                Trip newTrip = new Gson().fromJson(newTripJson, Trip.class);
+                tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
+            }
+            if (tripViewModel != null) {
+                tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
+                    @Override
+                    public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
+                        ArrayList<Trip> latestTrips = new ArrayList<>();
+                        for (int i = 0; i < localTripEntities.size(); ++i) {
+                            Trip trip = Trip.localTripEntityToTrip(localTripEntities.get(i));
+                            Log.i(TAG, i + " " + new Gson().toJson(trip.toString()));
+                            latestTrips.add(trip);
+                        }
+                        trips = latestTrips;
+                        Collections.sort(trips, new CustomTripComparator());
+                        recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), trips,
+                                uploadStatus, positionChanged, tripViewModel);
+                        recyclerView.setAdapter(recyclerAdapter);
+                    }
+                });
+            }
+        }
+    }
+
+    @Override
     public View onCreateView(final LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -201,13 +234,13 @@ public class TriplistFragment extends Fragment {
         recyclerAdapter.notifyDataSetChanged();
         recyclerView.setAdapter(recyclerAdapter);
 
-        //reading for new trip registered by LoggerService
+        /*
         SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         String newTripJson = dbPreferences.getString("newTripJson", null);
-        if (newTripJson != null) {
+        if (newTripJson != null && tripViewModel != null) {
             Trip newTrip = new Gson().fromJson(newTripJson, Trip.class);
             tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
-        }
+        }*/
 
         if (broadcastReceiver != null)
             getContext().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
