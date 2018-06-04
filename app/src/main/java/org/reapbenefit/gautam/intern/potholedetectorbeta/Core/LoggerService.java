@@ -518,8 +518,8 @@ public class LoggerService extends Service implements SensorEventListener {
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {
             logGPSpollstoFile(gpsPolls);
-            tripViewModel = new TripViewModel(app);
-            tripViewModel.insert(Trip.tripToLocalTripEntity(newtrip));
+            SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            dbPreferences.edit().putString("newTripJson", new Gson().toJson(newtrip)).commit();
             sendTripLoggingBroadcast(false, fileuri);
         }else {
             logAnalytics("unsuccessful_in_starting_logging");

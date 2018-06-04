@@ -2,9 +2,7 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.content.Context;
 import android.content.Intent;
-import android.media.Image;
 import android.net.ConnectivityManager;
-import android.net.Network;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
@@ -21,7 +19,6 @@ import com.google.gson.Gson;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -30,7 +27,7 @@ import java.util.ArrayList;
 public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripListViewHolder> {
 
     private Context context;
-    private ArrayList<LocalTripEntity> trips;
+    private ArrayList<Trip> trips;
     private boolean uploadStatus;
     private int positionChanged;
     private ApplicationClass app = ApplicationClass.getInstance();
@@ -60,11 +57,12 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         }
     }
 
-    public TripListAdapter(Context context, ArrayList<LocalTripEntity> trips, boolean uploadStatus, int positionChanged) {
+    public TripListAdapter(Context context, ArrayList<Trip> trips, boolean uploadStatus, int positionChanged, TripViewModel tripViewModel) {
         this.context = context;
         this.trips = trips;
         this.uploadStatus = uploadStatus;
         this.positionChanged = positionChanged;
+        this.tripViewModel = tripViewModel;
         Log.i(getClass().getSimpleName(), "Adapter created");
     }
 
@@ -121,28 +119,29 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             if (holder != null) {
                 Log.i(getClass().getSimpleName(), "holder is not null");
                 View rowView = holder.itemView;
-                final LocalTripEntity trip = trips.get(position);
-                tripViewModel = new TripViewModel(app);
+                final Trip trip = trips.get(position);
+
                 if (tripViewModel == null)
                     Log.e(getClass().getSimpleName(), "TripViewModel is null");
                 String countString, timeString, durationString, distanceString;
                 ImageButton uploadButton, uploadedTick, mapButton;
                 TextView date, time, size, distance;
-                countString = String.valueOf(tripViewModel.getPotholeCount()) + " potholes";
+                countString = String.valueOf(trip.getPotholeCount()) + " potholes";
                 Log.i("countString", countString);
-                timeString = tripViewModel.getStartTime();
+                Log.i("timeString", trip.getStartTime() + "");
+                timeString = trip.getStartTime();
                 timeString = timeString.substring(4, timeString.indexOf("GMT") - 4);
-                durationString = String.valueOf(tripViewModel.getDuration()) + " mins, " + humanReadableByteCount(tripViewModel.getFilesize(), true);
-                distanceString = String.valueOf(roundTwoDecimals(tripViewModel.getDistanceInKm())) + "km";
+                durationString = String.valueOf(trip.getDuration()) + " mins, " + humanReadableByteCount(trip.getFilesize(), true);
+                distanceString = String.valueOf(roundTwoDecimals(trip.getDistanceInKM())) + "km";
                 uploadButton = holder.uploadButton;
                 uploadButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         if (internetAvailable()) {
-                            uploadFileUri = Uri.fromFile(new File(context.getApplicationContext().getFilesDir() + "/logs/" + tripViewModel.getTrip_id() + ".csv"));
+                            uploadFileUri = Uri.fromFile(new File(context.getApplicationContext().getFilesDir() + "/logs/" + trip.getTrip_id() + ".csv"));
                             //passing object to service as JSON
                             Gson gson = new Gson();
-                            String json = gson.toJson(tripViewModel);
+                            String json = gson.toJson(trip);
                             startUploadService(json);
                         } else {
                             Toast.makeText(context.getApplicationContext(), "Internet not available. Try again later", Toast.LENGTH_LONG).show();
@@ -153,12 +152,12 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 mapButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        File datafile = new File(context.getApplicationContext().getFilesDir(), "logs/" + tripViewModel.getTrip_id() + ".csv");
-                        File file = new File(context.getApplicationContext().getFilesDir(), "analysis/" + tripViewModel.getTrip_id() + ".csv");
+                        File datafile = new File(context.getApplicationContext().getFilesDir(), "logs/" + trip.getTrip_id() + ".csv");
+                        File file = new File(context.getApplicationContext().getFilesDir(), "analysis/" + trip.getTrip_id() + ".csv");
                         if (datafile.exists()) {
                             if (!app.isTripInProgress() && file.exists()) { // check if file of same name is available in the analytics folder
                                 Intent i = new Intent(context, MapsActivity.class);
-                                i.putExtra("trip", Trip.localTripEntityToTrip(trip));
+                                i.putExtra("trip", trip);
                                 context.startActivity(i);
                             }
                         } else {

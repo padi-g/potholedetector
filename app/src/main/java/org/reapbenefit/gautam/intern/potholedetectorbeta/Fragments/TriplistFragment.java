@@ -1,7 +1,6 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
 import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,6 +11,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -20,30 +20,20 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseException;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.MyLocationConverter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
 
-import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -92,7 +82,7 @@ public class TriplistFragment extends Fragment {
                 positionChanged = intent.getIntExtra("positionChanged", -1);
                 if (tripViewModel == null)
                     tripViewModel = new TripViewModel(app);
-                recyclerAdapter = new TripListAdapter(getActivity(), (ArrayList<LocalTripEntity>) tripViewModel.getAllTrips().getValue(), uploadStatus, positionChanged);
+                recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, positionChanged, tripViewModel);
                 recyclerView.setAdapter(recyclerAdapter);
                 recyclerAdapter.notifyDataSetChanged();
             }
@@ -100,6 +90,27 @@ public class TriplistFragment extends Fragment {
     };
 
     private TripViewModel tripViewModel;
+    private String TAG = getClass().getSimpleName();
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
+        tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
+            @Override
+            public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
+                ArrayList<Trip> latestTrips = new ArrayList<>();
+                for (int i = 0; i < localTripEntities.size(); ++i) {
+                    Trip trip = Trip.localTripEntityToTrip(localTripEntities.get(i));
+                    Log.i(TAG, i + " " + new Gson().toJson(trip.toString()));
+                    latestTrips.add(trip);
+                }
+                trips = latestTrips;
+                recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), trips,
+                        uploadStatus, positionChanged, tripViewModel);
+                recyclerView.setAdapter(recyclerAdapter);
+            }
+        });
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -113,9 +124,6 @@ public class TriplistFragment extends Fragment {
         comparator = new CustomTripComparator();
         sharedPreferences = getActivity().getSharedPreferences("uploads", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
-
-        //reading local Room database
-        tripViewModel = new TripViewModel(app);
     }
 
 
@@ -151,9 +159,7 @@ public class TriplistFragment extends Fragment {
     private void createListView(){
         if(!trips.isEmpty() && getActivity()!=null) {
             Collections.sort(trips, new CustomTripComparator());
-            if (tripViewModel == null)
-                tripViewModel = new TripViewModel(app);
-            recyclerAdapter = new TripListAdapter(getActivity(), (ArrayList<LocalTripEntity>) tripViewModel.getAllTrips().getValue(), uploadStatus, 0);
+            recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, 0, tripViewModel);
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
         }
@@ -190,23 +196,24 @@ public class TriplistFragment extends Fragment {
         recyclerLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerLayoutManager);
         tripViewModel = new TripViewModel(app);
-        recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), (ArrayList<LocalTripEntity>) tripViewModel.getAllTrips().getValue(),
-                uploadStatus, positionChanged);
+        recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), trips,
+                uploadStatus, positionChanged, tripViewModel);
         recyclerAdapter.notifyDataSetChanged();
         recyclerView.setAdapter(recyclerAdapter);
+
+        //reading for new trip registered by LoggerService
+        SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        String newTripJson = dbPreferences.getString("newTripJson", null);
+        if (newTripJson != null) {
+            Trip newTrip = new Gson().fromJson(newTripJson, Trip.class);
+            tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
+        }
+
         if (broadcastReceiver != null)
             getContext().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
         else
             Log.i(getClass().getSimpleName(), "broadcast receiver null");
         Log.i(getClass().getSimpleName(), "uploaded status " + uploadStatus);
-        tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
-            @Override
-            public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
-                recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), (ArrayList<LocalTripEntity>) localTripEntities,
-                        uploadStatus, positionChanged);
-                recyclerView.setAdapter(recyclerAdapter);
-            }
-        });
         createListView();
         return v;
     }
