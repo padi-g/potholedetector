@@ -2,7 +2,9 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
+import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
+import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 
 import java.util.List;
@@ -33,6 +35,9 @@ public interface LocalTripTableDao {
     @Query("SELECT user_id FROM localtriptable")
     String getUser_id();
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertTrip(LocalTripEntity trip);
+
+    /*@Query("DELETE FROM localtriptable")
+    void deleteAll();*/
 }

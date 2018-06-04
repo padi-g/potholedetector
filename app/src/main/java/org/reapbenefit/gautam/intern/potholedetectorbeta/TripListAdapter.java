@@ -158,6 +158,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                             if (!app.isTripInProgress() && file.exists()) { // check if file of same name is available in the analytics folder
                                 Intent i = new Intent(context, MapsActivity.class);
                                 i.putExtra("trip", trip);
+                                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                 context.startActivity(i);
                             }
                         } else {

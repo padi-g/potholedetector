@@ -53,10 +53,8 @@ public abstract class LocalTripDatabase extends RoomDatabase {
 
         @Override
         protected Void doInBackground(Void... voids) {
+            //localTripTableDao.deleteAll();
             List<LocalTripEntity> localTripEntityList = localTripTableDao.getAllTrips().getValue();
-            //TODO: SEND THIS DATA TO FRAGMENT AND SET ADAPTER WITH IT
-            if (localTripEntityList == null)
-                Log.i(getClass().getSimpleName(), "localTripEntityList is null");
             return null;
         }
     }
