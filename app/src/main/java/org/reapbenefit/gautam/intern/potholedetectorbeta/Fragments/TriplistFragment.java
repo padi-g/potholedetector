@@ -190,17 +190,10 @@ public class TriplistFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_triplist, container, false);
-        /*recyclerView = (RecyclerView) v.findViewById(R.id.trips_list);
+        recyclerView = v.findViewById(R.id.trips_list);
         recyclerView.setHasFixedSize(true);
         recyclerLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerLayoutManager);
-        //tripViewModel = new TripViewModel(app);
-        recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), trips,
-                uploadStatus, positionChanged, tripViewModel);
-        recyclerAdapter.notifyDataSetChanged();
-        Collections.sort(trips, new CustomTripComparator());
-        recyclerView.setAdapter(recyclerAdapter);*/
-
         refreshButton = (ImageButton) v.findViewById(R.id.refreshButton);
         refreshButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -216,23 +209,11 @@ public class TriplistFragment extends Fragment {
             }
         });
 
-        recyclerView = (RecyclerView) v.findViewById(R.id.trips_list);
-        recyclerView.setHasFixedSize(true);
-        recyclerLayoutManager = new LinearLayoutManager(getActivity());
-        recyclerView.setLayoutManager(recyclerLayoutManager);
-        tripViewModel = new TripViewModel(app);
-        Collections.sort(trips, new CustomTripComparator());
-        recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), trips,
-                uploadStatus, positionChanged, tripViewModel);
-        recyclerAdapter.notifyDataSetChanged();
-        recyclerView.setAdapter(recyclerAdapter);
-
         if (broadcastReceiver != null)
             getContext().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
         else
             Log.i(getClass().getSimpleName(), "broadcast receiver null");
         Log.i(getClass().getSimpleName(), "uploaded status " + uploadStatus);
-        createListView();
         return v;
     }
 
