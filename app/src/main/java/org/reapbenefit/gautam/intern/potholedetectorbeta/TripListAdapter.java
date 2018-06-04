@@ -89,11 +89,11 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 rowViewHolder = new TripListViewHolder(rowView);
             }
             else {
-                Toast.makeText(context.getApplicationContext(), "No trips made yet", Toast.LENGTH_SHORT);
+                Toast.makeText(context.getApplicationContext(), "No trips made yet", Toast.LENGTH_SHORT).show();
             }
         }
         catch (NullPointerException nullPointerException) {
-            Toast.makeText(context.getApplicationContext(), "No trips made yet", Toast.LENGTH_SHORT);
+            Toast.makeText(context.getApplicationContext(), "No trips made yet", Toast.LENGTH_SHORT).show();
         }
         return rowViewHolder;
     }
@@ -116,67 +116,69 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
 
     @Override
     public void onBindViewHolder(TripListViewHolder holder, int position) {
-        Log.i(getClass().getSimpleName(), "inside onBindViewHolder");
-        if (holder != null) {
-            Log.i(getClass().getSimpleName(), "holder is not null");
-            View rowView = holder.itemView;
-            final LocalTripEntity trip = trips.get(position);
-            tripViewModel = new TripViewModel(app);
-            if (tripViewModel == null)
-                Log.e(getClass().getSimpleName(), "TripViewModel is null");
-            String countString, timeString, durationString, distanceString;
-            ImageButton uploadButton, uploadedTick, mapButton;
-            TextView date, time, size, distance;
-            countString = String.valueOf(tripViewModel.getPotholeCount()) + " potholes";
-            Log.i("countString", countString);
-            timeString = tripViewModel.getStartTime();
-            timeString = timeString.substring(4, timeString.indexOf("GMT") - 4);
-            durationString = String.valueOf(tripViewModel.getDuration()) + " mins, "  +  humanReadableByteCount(tripViewModel.getFilesize(), true);
-            distanceString = String.valueOf(roundTwoDecimals(tripViewModel.getDistanceInKm())) + "km";
-            uploadButton = holder.uploadButton;
-            uploadButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if(internetAvailable()) {
-                        uploadFileUri = Uri.fromFile(new File(context.getApplicationContext().getFilesDir() + "/logs/" + tripViewModel.getTrip_id() + ".csv"));
-                        //passing object to service as JSON
-                        Gson gson = new Gson();
-                        String json = gson.toJson(tripViewModel);
-                        startUploadService(json);
-                    }else {
-                        Toast.makeText(context.getApplicationContext(), "Internet not available. Try again later", Toast.LENGTH_LONG).show();
-                    }
-                }
-            });
-            mapButton = holder.mapButton;
-            mapButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    File datafile = new File(context.getApplicationContext().getFilesDir(), "logs/" + tripViewModel.getTrip_id() + ".csv");
-                    File file = new File(context.getApplicationContext().getFilesDir(), "analysis/" + tripViewModel.getTrip_id() + ".csv");
-                    if(datafile.exists()) {
-                        if (!app.isTripInProgress() && file.exists()) { // check if file of same name is available in the analytics folder
-                            Intent i = new Intent(context, MapsActivity.class);
-                            i.putExtra("trip", Trip.localTripEntityToTrip(trip));
-                            context.startActivity(i);
+        try {
+            Log.i(getClass().getSimpleName(), "inside onBindViewHolder");
+            if (holder != null) {
+                Log.i(getClass().getSimpleName(), "holder is not null");
+                View rowView = holder.itemView;
+                final LocalTripEntity trip = trips.get(position);
+                tripViewModel = new TripViewModel(app);
+                if (tripViewModel == null)
+                    Log.e(getClass().getSimpleName(), "TripViewModel is null");
+                String countString, timeString, durationString, distanceString;
+                ImageButton uploadButton, uploadedTick, mapButton;
+                TextView date, time, size, distance;
+                countString = String.valueOf(tripViewModel.getPotholeCount()) + " potholes";
+                Log.i("countString", countString);
+                timeString = tripViewModel.getStartTime();
+                timeString = timeString.substring(4, timeString.indexOf("GMT") - 4);
+                durationString = String.valueOf(tripViewModel.getDuration()) + " mins, " + humanReadableByteCount(tripViewModel.getFilesize(), true);
+                distanceString = String.valueOf(roundTwoDecimals(tripViewModel.getDistanceInKm())) + "km";
+                uploadButton = holder.uploadButton;
+                uploadButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (internetAvailable()) {
+                            uploadFileUri = Uri.fromFile(new File(context.getApplicationContext().getFilesDir() + "/logs/" + tripViewModel.getTrip_id() + ".csv"));
+                            //passing object to service as JSON
+                            Gson gson = new Gson();
+                            String json = gson.toJson(tripViewModel);
+                            startUploadService(json);
+                        } else {
+                            Toast.makeText(context.getApplicationContext(), "Internet not available. Try again later", Toast.LENGTH_LONG).show();
                         }
                     }
-                    else {
-                        Toast.makeText(context, "Sorry, file has been deleted", Toast.LENGTH_SHORT).show();
+                });
+                mapButton = holder.mapButton;
+                mapButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        File datafile = new File(context.getApplicationContext().getFilesDir(), "logs/" + tripViewModel.getTrip_id() + ".csv");
+                        File file = new File(context.getApplicationContext().getFilesDir(), "analysis/" + tripViewModel.getTrip_id() + ".csv");
+                        if (datafile.exists()) {
+                            if (!app.isTripInProgress() && file.exists()) { // check if file of same name is available in the analytics folder
+                                Intent i = new Intent(context, MapsActivity.class);
+                                i.putExtra("trip", Trip.localTripEntityToTrip(trip));
+                                context.startActivity(i);
+                            }
+                        } else {
+                            Toast.makeText(context, "Sorry, file has been deleted", Toast.LENGTH_SHORT).show();
+                        }
                     }
-                }
-            });
-            date = holder.date;
-            time = holder.time;
-            size = holder.size;
-            distance = holder.distance;
-            date.setText(countString);
-            time.setText(timeString);
-            size.setText(durationString);
-            distance.setText(distanceString);
+                });
+                date = holder.date;
+                time = holder.time;
+                size = holder.size;
+                distance = holder.distance;
+                date.setText(countString);
+                time.setText(timeString);
+                size.setText(durationString);
+                distance.setText(distanceString);
+            }
         }
-        else
-            Log.i(getClass().getSimpleName(), "holder is null");
+        catch (NullPointerException nullPointer) {
+            Log.i(getClass().getSimpleName(), "NullPointerException caught");
+        }
     }
 
     private void startUploadService(String json) {

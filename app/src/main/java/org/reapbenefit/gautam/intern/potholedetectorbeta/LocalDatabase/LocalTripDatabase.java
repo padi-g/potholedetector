@@ -13,6 +13,7 @@ import android.util.Log;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
+import java.util.Calendar;
 import java.util.List;
 
 @Database(entities = {LocalTripEntity.class}, version = 1)
@@ -52,7 +53,6 @@ public abstract class LocalTripDatabase extends RoomDatabase {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            //TODO: CHECK WHETHER TO INCLUDE DELETE AND INSERT FUNCTIONS
             List<LocalTripEntity> localTripEntityList = localTripTableDao.getAllTrips().getValue();
             //TODO: SEND THIS DATA TO FRAGMENT AND SET ADAPTER WITH IT
             if (localTripEntityList == null)

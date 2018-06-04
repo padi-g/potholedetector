@@ -116,7 +116,6 @@ public class TriplistFragment extends Fragment {
 
         //reading local Room database
         tripViewModel = new TripViewModel(app);
-        List<LocalTripEntity> localTripEntities = tripViewModel.getAllTrips().getValue();
     }
 
 
@@ -203,33 +202,9 @@ public class TriplistFragment extends Fragment {
         tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
             @Override
             public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
-                //called when this fragment is in the foreground and when data undergoes a change
-                /*ArrayList<Trip> newTripsList = new ArrayList<>();
-                //converting each LocalTripEntity object to a Trip object
-                for (int i = 0; i < localTripEntities.size(); ++i) {
-                    LocalTripEntity localTripEntity = localTripEntities.get(i);
-                    Trip trip = new Trip();
-                    trip.setAxis(localTripEntity.axis);
-                    trip.setUploaded(localTripEntity.uploaded);
-                    trip.setFilesize(localTripEntity.filesize);
-                    trip.setMinutesAccuracyLow(localTripEntity.minutesAccuracyLow);
-                    trip.setDistanceInKM(localTripEntity.distanceInKM);
-                    trip.setDuration(localTripEntity.duration);
-                    trip.setStartTime(localTripEntity.startTime);
-                    trip.setUserRating(localTripEntity.userRating);
-                    trip.setEndTime(localTripEntity.endTime);
-                    trip.setThreshold(localTripEntity.threshold);
-                    trip.setPotholeCount(localTripEntity.potholeCount);
-                    trip.setNo_of_lines(localTripEntity.no_of_lines);
-                    trip.setDevice(localTripEntity.device);
-                    trip.setTrip_id(localTripEntity.trip_id);
-                    trip.setUser_id(localTripEntity.user_id);
-                    trip.setEndLoc(MyLocationConverter.StringToMyLocation(localTripEntity.endLoc));
-                    trip.setStartLoc(MyLocationConverter.StringToMyLocation(localTripEntity.startLoc));
-                    newTripsList.add(trip);
-                }*/
                 recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), (ArrayList<LocalTripEntity>) localTripEntities,
                         uploadStatus, positionChanged);
+                recyclerView.setAdapter(recyclerAdapter);
             }
         });
         createListView();
