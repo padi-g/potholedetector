@@ -71,4 +71,8 @@ public class TripViewModel extends AndroidViewModel {
     public String getUser_id() {
         return user_id;
     }
+
+    public void deleteAll() {
+        tripRepository.deleteAll();
+    }
 }

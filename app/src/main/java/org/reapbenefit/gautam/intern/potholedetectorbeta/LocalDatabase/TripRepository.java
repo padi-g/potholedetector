@@ -141,4 +141,20 @@ public class TripRepository {
             return null;
         }
     }
+
+    public void deleteAll() { new DeleteAllAsyncTask(dao).execute(); }
+
+    private static class DeleteAllAsyncTask extends AsyncTask<LocalTripEntity, Void, Void> {
+        private LocalTripTableDao asyncTaskDao;
+
+        public DeleteAllAsyncTask(LocalTripTableDao dao) {
+            asyncTaskDao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(LocalTripEntity... localTripEntities) {
+            asyncTaskDao.deleteAll();
+            return null;
+        }
+    }
 }

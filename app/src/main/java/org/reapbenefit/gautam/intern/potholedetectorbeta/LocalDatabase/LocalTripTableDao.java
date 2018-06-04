@@ -38,6 +38,6 @@ public interface LocalTripTableDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertTrip(LocalTripEntity trip);
 
-    /*@Query("DELETE FROM localtriptable")
-    void deleteAll();*/
+    @Query("DELETE FROM localtriptable")
+    void deleteAll();
 }

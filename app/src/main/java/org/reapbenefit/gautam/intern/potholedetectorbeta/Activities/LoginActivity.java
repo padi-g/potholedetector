@@ -2,8 +2,10 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -122,7 +124,6 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 signOut();
-
             }
         });
 
@@ -183,6 +184,11 @@ public class LoginActivity extends AppCompatActivity {
 
         SignOut.setVisibility(View.GONE);
         SignIn.setVisibility(View.VISIBLE);
+
+
+        //must delete data of previous user from storage on signing out
+        SharedPreferences logoutPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        logoutPreferences.edit().putBoolean("loggedOut", true).commit();
 
         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
                 new ResultCallback<Status>() {

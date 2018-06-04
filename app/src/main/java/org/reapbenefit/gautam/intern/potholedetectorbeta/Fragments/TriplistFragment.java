@@ -182,6 +182,16 @@ public class TriplistFragment extends Fragment {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
             new UpdateDataAsyncTask().execute();
+            //reading SharedPreferences to check if user has logged out
+            SharedPreferences logoutPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            boolean loggedOut = logoutPreferences.getBoolean("loggedOut", false);
+            Log.i(TAG, loggedOut + "");
+            if (loggedOut) {
+                if (tripViewModel == null) {
+                    tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
+                }
+                tripViewModel.deleteAll();
+            }
         }
     }
 
