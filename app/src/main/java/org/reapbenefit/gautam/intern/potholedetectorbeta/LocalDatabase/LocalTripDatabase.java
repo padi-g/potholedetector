@@ -27,11 +27,33 @@ public abstract class LocalTripDatabase extends RoomDatabase {
                     //creating database instance
                     instance = Room.databaseBuilder(context.getApplicationContext(),
                             LocalTripDatabase.class, "LocalTripDatabase")
-                            .build();
+                            .addCallback(roomDatabaseCallback).build();
                 }
             }
         }
         return instance;
     }
     public abstract LocalTripTableDao localTripTableDao();
+    private static RoomDatabase.Callback roomDatabaseCallback = new RoomDatabase.Callback() {
+        @Override
+        public void onOpen(@NonNull SupportSQLiteDatabase db) {
+            //this method is called when the app is started
+            super.onOpen(db);
+            new PopulateDBAsync(instance).execute();
+        }
+    };
+
+    private static class PopulateDBAsync extends AsyncTask<Void, Void, Void> {
+        private final LocalTripTableDao localTripTableDao;
+
+        public PopulateDBAsync(LocalTripDatabase instance) {
+            this.localTripTableDao = instance.localTripTableDao();
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            List<LocalTripEntity> localTripEntityList = localTripTableDao.getAllTrips().getValue();
+            return null;
+        }
+    }
 }
