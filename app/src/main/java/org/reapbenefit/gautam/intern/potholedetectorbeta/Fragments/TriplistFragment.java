@@ -93,6 +93,7 @@ public class TriplistFragment extends Fragment {
 
     private TripViewModel tripViewModel;
     private String TAG = getClass().getSimpleName();
+
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -324,6 +325,26 @@ public class TriplistFragment extends Fragment {
             //reading SharedPreferences to see if a recent upload has happened
             SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             uploadStatus = dbPreferences.getBoolean("uploadStatus", false);
+            Set<String> uploadedTrips = dbPreferences.getStringSet("uploadedTrips", null);
+            Set<String> newTripSet = dbPreferences.getStringSet("newTripJson", null);
+            List<String> newTripJson = new ArrayList<>();
+            if (uploadedTrips == null) {
+                //no trip has been uploaded yet
+                return null;
+            }
+            if (newTripSet != null)
+                newTripJson = new ArrayList<>(newTripSet);
+            if (newTripJson != null) {
+                for (int i = 0; i < newTripJson.size(); ++i) {
+                    Trip newTrip = new Gson().fromJson(newTripJson.get(i), Trip.class);
+                    if (uploadedTrips.contains(newTrip.getTrip_id())) {
+
+                    }
+                }
+                dbPreferences.edit().putStringSet("uploadedTrips", null).commit();
+                return null;
+            }
+
             if (uploadStatus) {
                 positionChanged = dbPreferences.getInt("positionChanged", -1);
                 Log.d(TAG, "positionChanged = " + positionChanged);

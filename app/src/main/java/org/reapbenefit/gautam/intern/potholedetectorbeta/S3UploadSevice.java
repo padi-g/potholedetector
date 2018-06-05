@@ -27,6 +27,8 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class S3UploadSevice extends IntentService {
     private TransferUtility transferUtility;
@@ -182,6 +184,14 @@ public class S3UploadSevice extends IntentService {
                 SharedPreferences.Editor dbPreferencesEditor = dbPreferences.edit();
                 dbPreferencesEditor.putBoolean("uploadStatus", true);
                 dbPreferencesEditor.putInt("positionChanged", position);
+                Set<String> uploadedTrips = dbPreferences.getStringSet("uploadedTrips", null);
+                if (uploadedTrips == null) {
+                    //first trip in current upload batch
+                    uploadedTrips = new HashSet<>();
+                }
+                uploadedTrips.add(ApplicationClass.getInstance().getTrip().getTrip_id());
+                Log.d(TAG, uploadedTrips.toString());
+                dbPreferencesEditor.putStringSet("uploadedTrips", uploadedTrips);
                 dbPreferencesEditor.commit();
                 Intent uploadStatusIntent = new Intent("SET_UPLOADED_TRUE");
                 sendBroadcast(uploadStatusIntent);

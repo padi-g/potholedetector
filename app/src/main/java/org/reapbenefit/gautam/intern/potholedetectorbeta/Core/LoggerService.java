@@ -502,12 +502,12 @@ public class LoggerService extends Service implements SensorEventListener {
         mSensorManager.unregisterListener(this);
 
         newtrip.setFilesize(file.length());
-        Log.d("Filesize", newtrip.getFilesize() + "");
+        /*Log.d("Filesize", newtrip.getFilesize() + "");
         if (newtrip.getFilesize() < 1024 * 1024) {
             Toast.makeText(this, "Sorry, this data is too less to be helpful. Please log" +
                     " potholes for a longer trip.", Toast.LENGTH_LONG).show();
             return;
-        }
+        }*/
         newtrip.setUploaded(false);
         newtrip.setDistanceInKM(distance_travelled/1000);
         Log.d(TAG, String.valueOf(distance_travelled));

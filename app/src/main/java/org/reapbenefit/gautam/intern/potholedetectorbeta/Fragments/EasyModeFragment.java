@@ -291,7 +291,6 @@ public class EasyModeFragment extends Fragment {
 
     public void startUploadService(){
         Intent intent = new Intent(getContext(), S3UploadSevice.class);
-        //Intent intent = new Intent(getContext(), UploadTasksService.class);
         intent.setAction("upload_now");
         intent.putExtra("upload_uri", uploadFileUri);
         this.getContext().startService(intent);
