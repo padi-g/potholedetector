@@ -33,6 +33,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     private ApplicationClass app = ApplicationClass.getInstance();
     private Uri uploadFileUri;
     private TripViewModel tripViewModel;
+    private final String TAG = getClass().getSimpleName();
 
     /*
     static ViewHolder class to reference views for each trip component item
@@ -63,7 +64,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         this.uploadStatus = uploadStatus;
         this.positionChanged = positionChanged;
         this.tripViewModel = tripViewModel;
-        Log.i(getClass().getSimpleName(), "Adapter created");
+        Log.d(TAG, "positionChanged = " + positionChanged);
     }
 
     @Override
@@ -113,9 +114,11 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
 
 
     @Override
-    public void onBindViewHolder(TripListViewHolder holder, int position) {
+    public void onBindViewHolder(TripListViewHolder holder, final int position) {
+        //this method is called for every item in the list
         try {
             Log.i(getClass().getSimpleName(), "inside onBindViewHolder");
+            Log.d(TAG, "position = " + position);
             if (holder != null) {
                 Log.i(getClass().getSimpleName(), "holder is not null");
                 View rowView = holder.itemView;
@@ -123,6 +126,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
 
                 if (tripViewModel == null)
                     Log.e(getClass().getSimpleName(), "TripViewModel is null");
+
                 String countString, timeString, durationString, distanceString;
                 ImageButton uploadButton, uploadedTick, mapButton;
                 TextView date, time, size, distance;
@@ -134,6 +138,14 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 durationString = String.valueOf(trip.getDuration()) + " mins, " + humanReadableByteCount(trip.getFilesize(), true);
                 distanceString = String.valueOf(roundTwoDecimals(trip.getDistanceInKM())) + "km";
                 uploadButton = holder.uploadButton;
+                uploadedTick = holder.uploadedTick;
+
+                //checking if item has been uploaded
+                if (trip.isUploaded()) {
+                    uploadButton.setVisibility(View.GONE);
+                    uploadedTick.setVisibility(View.VISIBLE);
+                }
+
                 uploadButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -142,6 +154,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                             //passing object to service as JSON
                             Gson gson = new Gson();
                             String json = gson.toJson(trip);
+                            positionChanged = position;
                             startUploadService(json);
                         } else {
                             Toast.makeText(context.getApplicationContext(), "Internet not available. Try again later", Toast.LENGTH_LONG).show();

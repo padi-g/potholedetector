@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -21,6 +22,7 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -73,12 +75,8 @@ public class S3UploadSevice extends IntentService {
 
         transferManager = new TransferManager(Util.getsCredProvider(getApplicationContext()));
 
-        /*tripJson = intent.getStringExtra("trip_json");
-        Log.d("TripJSON", tripJson);
-
-        trips = intent.getParcelableArrayListExtra("trips");
         position = intent.getIntExtra("position", -1);
-        Log.i(TAG, "position = " + position);*/
+        Log.d(TAG, position + "");
 
         String action = intent.getAction();
         if (action.equals(ACTION_UPLOAD_NOW)) {
@@ -179,10 +177,14 @@ public class S3UploadSevice extends IntentService {
             if (progress == 100) {
                 mBuilder.setContentText("Upload Complete");
                 mBuilder.setOngoing(false);//notification can now be swiped away
-                Intent intent = new Intent("SET_UPLOADED_TRUE");
-                intent.putExtra("uploadStatus", true);
-                intent.putExtra("positionChanged", position);
-                sendBroadcast(intent);
+                SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+                SharedPreferences.Editor dbPreferencesEditor = dbPreferences.edit();
+                dbPreferencesEditor.putBoolean("uploadStatus", true);
+                dbPreferencesEditor.putInt("positionChanged", position);
+                dbPreferencesEditor.commit();
+                Intent uploadStatusIntent = new Intent("SET_UPLOADED_TRUE");
+                sendBroadcast(uploadStatusIntent);
+                Log.d("TripUploaded", "position number: " + position);
             } else {
                 mBuilder.setContentText(progress + "% done");
                 mBuilder.setOngoing(true);

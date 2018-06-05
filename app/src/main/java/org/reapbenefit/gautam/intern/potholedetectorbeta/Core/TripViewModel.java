@@ -75,4 +75,8 @@ public class TripViewModel extends AndroidViewModel {
     public void deleteAll() {
         tripRepository.deleteAll();
     }
+
+    public void setUploaded(LocalTripEntity trip) {
+        tripRepository.setUploaded(trip);
+    }
 }

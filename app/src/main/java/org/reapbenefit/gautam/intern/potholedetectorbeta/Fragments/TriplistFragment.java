@@ -64,7 +64,7 @@ public class TriplistFragment extends Fragment {
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-
+    //TODO: CHECK IF TIMESCORE AND DISTANCESCORE NEED TO BE REIMPLEMENTED
     private long timeScore = 0;  // calculated based on time logged
     private long distanceScore = 0;  // calculated based on distance logged
     private CustomTripComparator comparator;
@@ -80,16 +80,9 @@ public class TriplistFragment extends Fragment {
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (recyclerView != null) {
-                uploadStatus = true;
-                positionChanged = intent.getIntExtra("positionChanged", -1);
-                if (tripViewModel == null)
-                    tripViewModel = ViewModelProviders.of(triplistFragment).get(TripViewModel.class);
-                recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, positionChanged, tripViewModel);
-                Collections.sort(trips, new CustomTripComparator());
-                recyclerView.setAdapter(recyclerAdapter);
-                recyclerAdapter.notifyDataSetChanged();
-            }
+            uploadStatus = true;
+            Log.d("BroadcastReceiver", uploadStatus + "");
+            new UpdateTicksAsyncTask().execute();
         }
     };
 
@@ -165,7 +158,6 @@ public class TriplistFragment extends Fragment {
         if(!trips.isEmpty() && getActivity()!=null) {
             Collections.sort(trips, new CustomTripComparator());
             recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, 0, tripViewModel);
-            //Collections.sort(trips, new CustomTripComparator());
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
         }
@@ -182,6 +174,7 @@ public class TriplistFragment extends Fragment {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
             new UpdateDataAsyncTask().execute();
+            new UpdateTicksAsyncTask().execute();
             //reading SharedPreferences to check if user has logged out
             SharedPreferences logoutPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             boolean loggedOut = logoutPreferences.getBoolean("loggedOut", false);
@@ -302,6 +295,41 @@ public class TriplistFragment extends Fragment {
             Collections.sort(trips, new CustomTripComparator());
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
+        }
+    }
+
+    private class UpdateTicksAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        private boolean uploadStatus;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            //reading SharedPreferences to see if a recent upload has happened
+            SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            uploadStatus = dbPreferences.getBoolean("uploadStatus", false);
+            if (uploadStatus) {
+                positionChanged = dbPreferences.getInt("positionChanged", 0);
+                Log.d(TAG, "positionChanged = " + positionChanged);
+                LocalTripEntity tripEntityUploaded = Trip.tripToLocalTripEntity(trips.get(positionChanged));
+                tripEntityUploaded.uploaded = true;
+                if (tripViewModel != null) {
+                    tripViewModel.setUploaded(tripEntityUploaded);
+                }
+                trips.get(positionChanged).setUploaded(true);
+                dbPreferences.edit().putBoolean("uploadStatus", false).commit();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            if (uploadStatus) {
+                recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, positionChanged, tripViewModel);
+                Collections.sort(trips, new CustomTripComparator());
+                recyclerView.setAdapter(recyclerAdapter);
+                recyclerAdapter.notifyDataSetChanged();
+            }
         }
     }
 }
