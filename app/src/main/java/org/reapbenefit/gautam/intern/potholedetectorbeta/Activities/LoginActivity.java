@@ -132,6 +132,9 @@ public class LoginActivity extends AppCompatActivity {
     public void signIn() {
         SignIn.setVisibility(View.GONE);
         SignOut.setVisibility(View.VISIBLE);
+        //must prevent deletion of old user data
+        SharedPreferences logoutPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        logoutPreferences.edit().putBoolean("loggedOut", false).commit();
         Log.i("Sign in", "Trying");
         signedIn = true;
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
