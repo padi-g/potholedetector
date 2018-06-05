@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
@@ -44,6 +45,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class TriplistFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
@@ -266,24 +268,32 @@ public class TriplistFragment extends Fragment {
         protected Void doInBackground(Void... voids) {
             //reading for new trip registered by LoggerService
             SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-            String newTripJson = dbPreferences.getString("newTripJson", null);
+            Set<String> newTripSet = dbPreferences.getStringSet("newTripJson", null);
+            List<String> newTripJson = new ArrayList<>();
+            if (newTripSet != null)
+                newTripJson = new ArrayList<>(newTripSet);
             if (newTripJson != null && tripViewModel != null) {
-                Trip newTrip = new Gson().fromJson(newTripJson, Trip.class);
-                tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
+                for (int i = 0; i < newTripJson.size(); ++i) {
+                    Trip newTrip = new Gson().fromJson(newTripJson.get(i), Trip.class);
+                    tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
+                }
                 //setting SharedPreferences back to null
-                dbPreferences.edit().putString("newTripJson", null).commit();
-                tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
-                    @Override
-                    public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
-                        ArrayList<Trip> latestTrips = new ArrayList<>();
-                        for (int i = 0; i < localTripEntities.size(); ++i) {
-                            Trip trip = Trip.localTripEntityToTrip(localTripEntities.get(i));
-                            Log.i(TAG, i + " " + new Gson().toJson(trip.toString()));
-                            latestTrips.add(trip);
-                        }
-                        trips = latestTrips;
-                    }
-                });
+                dbPreferences.edit().putStringSet("newTripJson", null).commit();
+                    try {
+                        tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
+                            @Override
+                            public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
+                                ArrayList<Trip> latestTrips = new ArrayList<>();
+                                for (int i = 0; i < localTripEntities.size(); ++i) {
+                                    Trip trip = Trip.localTripEntityToTrip(localTripEntities.get(i));
+                                    Log.i(TAG, i + " " + new Gson().toJson(trip.toString()));
+                                    latestTrips.add(trip);
+                                }
+                                trips = latestTrips;
+                            }
+                        });
+                    } catch (IllegalStateException e) {
+                }
             }
             return null;
         }

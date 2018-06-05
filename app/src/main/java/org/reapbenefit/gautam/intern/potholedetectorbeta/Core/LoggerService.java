@@ -55,6 +55,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -126,6 +129,7 @@ public class LoggerService extends Service implements SensorEventListener {
     private long minutesAccuracyLow;
     private Date startAccuracyTime;
     private TripViewModel tripViewModel;
+    private Set<String> newTripSet;
 
     public LoggerService() {
         super();
@@ -135,7 +139,6 @@ public class LoggerService extends Service implements SensorEventListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         app = ApplicationClass.getInstance();
-
 
         mCurrentLocation = app.getCurrentLocation();
 
@@ -150,6 +153,11 @@ public class LoggerService extends Service implements SensorEventListener {
         newtrip.setDevice(Build.MANUFACTURER + " " + Build.MODEL + " " + Build.PRODUCT);
         newtrip.setUser_id(mAuth.getCurrentUser().getUid());
 
+        //getting previously logged trips in HashSet<>()
+        SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        newTripSet = dbPreferences.getStringSet("newTripJson", null);
+        if (newTripSet == null)
+            newTripSet = new HashSet<>();
 
         if (mCurrentLocation != null) {
                 mLastUpdateTime = getCurrentTime();
@@ -519,7 +527,9 @@ public class LoggerService extends Service implements SensorEventListener {
         if(locAccHit) {
             logGPSpollstoFile(gpsPolls);
             SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-            dbPreferences.edit().putString("newTripJson", new Gson().toJson(newtrip)).commit();
+            newTripSet.add(new Gson().toJson(newtrip));
+            Log.d("newTripSet", newTripSet.toString());
+            dbPreferences.edit().putStringSet("newTripJson", newTripSet).commit();
             sendTripLoggingBroadcast(false, fileuri);
         }else {
             logAnalytics("unsuccessful_in_starting_logging");

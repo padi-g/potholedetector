@@ -24,6 +24,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -70,7 +71,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         SharedPreferences adapterPreferences = context.getSharedPreferences("adapterPreferences", Context.MODE_PRIVATE);
         this.positionChangedSet = adapterPreferences.getStringSet("positionChangedSet", null);
         if (positionChangedSet == null)
-            positionChangedSet = new TreeSet<>();
+            positionChangedSet = new HashSet<>();
         positionChangedSet.add(String.valueOf(positionChanged));
         adapterPreferences.edit().putStringSet("positionChangedSet", positionChangedSet).apply();
         this.tripViewModel = tripViewModel;
@@ -132,6 +133,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     @Override
     public void onBindViewHolder(TripListViewHolder holder, final int position) {
         //this method is called for every item in the list
+        holder.setIsRecyclable(false);
         try {
             Log.i(getClass().getSimpleName(), "inside onBindViewHolder");
             Log.d(TAG, "position = " + position);
@@ -157,7 +159,8 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 uploadedTick = holder.uploadedTick;
 
                 //checking if item has been uploaded
-                if (trip.isUploaded() && positionChangedSet!= null && positionChangedSet.contains(String.valueOf(position))) {
+                //if (trip.isUploaded() && positionChangedSet!= null && positionChangedSet.contains(String.valueOf(position))) {
+                 if (trip.isUploaded()) {
                     uploadButton.setVisibility(View.GONE);
                     uploadedTick.setVisibility(View.VISIBLE);
                 }
