@@ -132,6 +132,7 @@ public class MainActivity extends AppCompatActivity
 
         viewPager = (ViewPager) findViewById(R.id.pager);
         PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), inCar);
+        viewPager.setOffscreenPageLimit(2);//caches both pages in memory
         viewPager.setAdapter(adapter);
 
         //Adding onTabSelectedListener to swipe views
