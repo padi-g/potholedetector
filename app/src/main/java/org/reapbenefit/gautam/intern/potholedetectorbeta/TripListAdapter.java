@@ -2,6 +2,7 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -23,6 +24,8 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripListViewHolder> {
 
@@ -34,6 +37,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     private Uri uploadFileUri;
     private TripViewModel tripViewModel;
     private final String TAG = getClass().getSimpleName();
+    private Set<String> positionChangedSet;
 
     /*
     static ViewHolder class to reference views for each trip component item
@@ -63,6 +67,12 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         this.trips = trips;
         this.uploadStatus = uploadStatus;
         this.positionChanged = positionChanged;
+        SharedPreferences adapterPreferences = context.getSharedPreferences("adapterPreferences", Context.MODE_PRIVATE);
+        this.positionChangedSet = adapterPreferences.getStringSet("positionChangedSet", null);
+        if (positionChangedSet == null)
+            positionChangedSet = new TreeSet<>();
+        positionChangedSet.add(String.valueOf(positionChanged));
+        adapterPreferences.edit().putStringSet("positionChangedSet", positionChangedSet).apply();
         this.tripViewModel = tripViewModel;
         Log.d(TAG, "positionChanged = " + positionChanged);
     }
@@ -122,8 +132,6 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     @Override
     public void onBindViewHolder(TripListViewHolder holder, final int position) {
         //this method is called for every item in the list
-        //TODO: REMOVE THIS AND ENSURE SCROLLING DOESN'T MESS UP TICKS WITH A RECYCLER IMPLEMENTATION
-        holder.setIsRecyclable(false);
         try {
             Log.i(getClass().getSimpleName(), "inside onBindViewHolder");
             Log.d(TAG, "position = " + position);
@@ -149,7 +157,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 uploadedTick = holder.uploadedTick;
 
                 //checking if item has been uploaded
-                if (trip.isUploaded()) {
+                if (trip.isUploaded() && positionChangedSet!= null && positionChangedSet.contains(String.valueOf(position))) {
                     uploadButton.setVisibility(View.GONE);
                     uploadedTick.setVisibility(View.VISIBLE);
                 }

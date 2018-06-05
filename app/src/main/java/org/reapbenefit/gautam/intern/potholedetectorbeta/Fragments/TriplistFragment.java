@@ -159,7 +159,7 @@ public class TriplistFragment extends Fragment {
             Collections.sort(trips, new CustomTripComparator());
             recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, 0, tripViewModel);
             recyclerView.setAdapter(recyclerAdapter);
-            recyclerAdapter.notifyDataSetChanged();
+            recyclerAdapter.notifyItemChanged(positionChanged);;
         }
     }
 
@@ -294,7 +294,7 @@ public class TriplistFragment extends Fragment {
             recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, 0, tripViewModel);
             Collections.sort(trips, new CustomTripComparator());
             recyclerView.setAdapter(recyclerAdapter);
-            recyclerAdapter.notifyDataSetChanged();
+            recyclerAdapter.notifyItemChanged(positionChanged);;
         }
     }
 
@@ -328,7 +328,7 @@ public class TriplistFragment extends Fragment {
                 recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, positionChanged, tripViewModel);
                 Collections.sort(trips, new CustomTripComparator());
                 recyclerView.setAdapter(recyclerAdapter);
-                recyclerAdapter.notifyDataSetChanged();
+                recyclerAdapter.notifyItemChanged(positionChanged);
             }
         }
     }
