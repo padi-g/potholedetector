@@ -336,13 +336,8 @@ public class TriplistFragment extends Fragment {
                         @Override
                         public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
                             Log.d(TAG, "Database updated");
-                            Log.d(TAG, "id of last in trips: " + trips.get(trips.size() - 1).getTrip_id());
-                            Log.d(TAG, "id of last in localTripEntities" + localTripEntities.get(localTripEntities.size() - 1).trip_id);
                             trips.add(Trip.localTripEntityToTrip(localTripEntities.get(localTripEntities.size() - 1)));
-                            Log.d(TAG, "id of last in trips: " + trips.get(trips.size() - 1).getTrip_id());
-                            Log.d(TAG, "id of last in localTripEntities" + localTripEntities.get(localTripEntities.size() - 1).trip_id);
                             positionChanged = trips.size() - 1;
-                            Log.d(TAG, "latest trips: " + new Gson().toJson(localTripEntities));
                         }
                     });
                 }
