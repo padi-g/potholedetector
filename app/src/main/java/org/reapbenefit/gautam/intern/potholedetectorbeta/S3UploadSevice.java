@@ -25,6 +25,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 public class S3UploadSevice extends IntentService {
@@ -185,6 +186,10 @@ public class S3UploadSevice extends IntentService {
                 Intent uploadStatusIntent = new Intent("SET_UPLOADED_TRUE");
                 sendBroadcast(uploadStatusIntent);
                 Log.d("TripUploaded", "position number: " + position);
+                if (prefs.getBoolean("file_delete", false)) {
+                    File file = new File(getApplicationContext().getFilesDir(), "logs/" + filename);
+                    file.delete();
+                }
             } else {
                 mBuilder.setContentText(progress + "% done");
                 mBuilder.setOngoing(true);

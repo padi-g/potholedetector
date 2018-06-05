@@ -260,7 +260,6 @@ public class EasyModeFragment extends Fragment {
                         Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_LONG).show();
                     }else if(!autoUploadOn())
                         Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_LONG).show();
-                        Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_LONG).show();
                     openMap();
                 }
                 ////////// redundant

@@ -78,6 +78,8 @@ public class TriplistFragment extends Fragment {
     private RecyclerView.Adapter recyclerAdapter;
     private RecyclerView.LayoutManager recyclerLayoutManager;
     private TriplistFragment triplistFragment = this;
+    private SharedPreferences dbPreferences;
+
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -124,6 +126,9 @@ public class TriplistFragment extends Fragment {
         comparator = new CustomTripComparator();
         sharedPreferences = getActivity().getSharedPreferences("uploads", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
+
+        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        positionChanged = dbPreferences.getInt("positionChanged", -1);
     }
 
 
@@ -315,11 +320,15 @@ public class TriplistFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... voids) {
             //reading SharedPreferences to see if a recent upload has happened
-            SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             uploadStatus = dbPreferences.getBoolean("uploadStatus", false);
             if (uploadStatus) {
-                positionChanged = dbPreferences.getInt("positionChanged", 0);
+                positionChanged = dbPreferences.getInt("positionChanged", -1);
                 Log.d(TAG, "positionChanged = " + positionChanged);
+                if (positionChanged == -1) {
+                    //handling automatic uploads
+                    positionChanged = 0;
+                }
                 LocalTripEntity tripEntityUploaded = Trip.tripToLocalTripEntity(trips.get(positionChanged));
                 tripEntityUploaded.uploaded = true;
                 if (tripViewModel != null) {

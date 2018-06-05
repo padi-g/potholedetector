@@ -11,6 +11,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 
@@ -61,6 +62,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         CheckBox autoUploadChkBox = (CheckBox) findViewById(R.id.auto_upload_checkbox);
+        autoUploadChkBox.setChecked(true);
         autoUploadChkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
