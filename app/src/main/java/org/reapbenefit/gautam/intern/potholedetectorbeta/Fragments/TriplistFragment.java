@@ -316,6 +316,7 @@ public class TriplistFragment extends Fragment {
 
     private class UpdateTicksAsyncTask extends AsyncTask<Void, Void, Void> {
 
+        private LocalTripEntity tripEntityUploaded;
         private boolean uploadStatus;
 
         @Override
@@ -326,7 +327,6 @@ public class TriplistFragment extends Fragment {
             if (uploadStatus) {
                 positionChanged = dbPreferences.getInt("positionChanged", -1);
                 Log.d(TAG, "positionChanged = " + positionChanged);
-                final LocalTripEntity[] tripEntityUploaded = {null};
                 if (positionChanged == -1 && trips.size() > 0) {
                     //handling automatic uploads
                     LocalTripEntity latestTripEntity = Trip.tripToLocalTripEntity(trips.get(0));
@@ -338,13 +338,15 @@ public class TriplistFragment extends Fragment {
                             Log.d(TAG, "Database updated");
                             trips.add(Trip.localTripEntityToTrip(localTripEntities.get(localTripEntities.size() - 1)));
                             positionChanged = trips.size() - 1;
+                            tripEntityUploaded = Trip.tripToLocalTripEntity(trips.get(positionChanged));
                         }
                     });
                 }
-                tripEntityUploaded[0] = Trip.tripToLocalTripEntity(trips.get(positionChanged));
-                tripEntityUploaded[0].uploaded = true;
+                else
+                    tripEntityUploaded = Trip.tripToLocalTripEntity(trips.get(positionChanged));
+                tripEntityUploaded.uploaded = true;
                 if (tripViewModel != null) {
-                    tripViewModel.setUploaded(tripEntityUploaded[0]);
+                    tripViewModel.setUploaded(tripEntityUploaded);
                 }
                 trips.get(positionChanged).setUploaded(true);
                 dbPreferences.edit().putBoolean("uploadStatus", false).commit();
