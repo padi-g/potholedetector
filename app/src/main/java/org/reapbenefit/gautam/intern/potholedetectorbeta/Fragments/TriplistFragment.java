@@ -1,6 +1,7 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
 import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -320,19 +321,35 @@ public class TriplistFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... voids) {
             //reading SharedPreferences to see if a recent upload has happened
-            dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             uploadStatus = dbPreferences.getBoolean("uploadStatus", false);
             if (uploadStatus) {
                 positionChanged = dbPreferences.getInt("positionChanged", -1);
                 Log.d(TAG, "positionChanged = " + positionChanged);
-                if (positionChanged == -1) {
+                final LocalTripEntity[] tripEntityUploaded = {null};
+                if (positionChanged == -1 && trips.size() > 0) {
                     //handling automatic uploads
-                    positionChanged = 0;
+                    LocalTripEntity latestTripEntity = Trip.tripToLocalTripEntity(trips.get(0));
+                    Log.d("LatestTripEntity", latestTripEntity.trip_id);
+                    Log.d("tripViewModelTop", tripViewModel.getAllTrips().getValue().get(0).trip_id);
+                    tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
+                        @Override
+                        public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
+                            Log.d(TAG, "Database updated");
+                            Log.d(TAG, "id of last in trips: " + trips.get(trips.size() - 1).getTrip_id());
+                            Log.d(TAG, "id of last in localTripEntities" + localTripEntities.get(localTripEntities.size() - 1).trip_id);
+                            trips.add(Trip.localTripEntityToTrip(localTripEntities.get(localTripEntities.size() - 1)));
+                            Log.d(TAG, "id of last in trips: " + trips.get(trips.size() - 1).getTrip_id());
+                            Log.d(TAG, "id of last in localTripEntities" + localTripEntities.get(localTripEntities.size() - 1).trip_id);
+                            positionChanged = trips.size() - 1;
+                            Log.d(TAG, "latest trips: " + new Gson().toJson(localTripEntities));
+                        }
+                    });
                 }
-                LocalTripEntity tripEntityUploaded = Trip.tripToLocalTripEntity(trips.get(positionChanged));
-                tripEntityUploaded.uploaded = true;
+                tripEntityUploaded[0] = Trip.tripToLocalTripEntity(trips.get(positionChanged));
+                tripEntityUploaded[0].uploaded = true;
                 if (tripViewModel != null) {
-                    tripViewModel.setUploaded(tripEntityUploaded);
+                    tripViewModel.setUploaded(tripEntityUploaded[0]);
                 }
                 trips.get(positionChanged).setUploaded(true);
                 dbPreferences.edit().putBoolean("uploadStatus", false).commit();
