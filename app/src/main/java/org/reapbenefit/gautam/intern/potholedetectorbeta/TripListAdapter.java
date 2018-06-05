@@ -25,6 +25,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.IllegalFormatCodePointException;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -68,14 +69,16 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         this.trips = trips;
         this.uploadStatus = uploadStatus;
         this.positionChanged = positionChanged;
-        SharedPreferences adapterPreferences = context.getSharedPreferences("adapterPreferences", Context.MODE_PRIVATE);
-        this.positionChangedSet = adapterPreferences.getStringSet("positionChangedSet", null);
-        if (positionChangedSet == null)
-            positionChangedSet = new HashSet<>();
-        positionChangedSet.add(String.valueOf(positionChanged));
-        adapterPreferences.edit().putStringSet("positionChangedSet", positionChangedSet).apply();
-        this.tripViewModel = tripViewModel;
-        Log.d(TAG, "positionChanged = " + positionChanged);
+        if (context != null) {
+            SharedPreferences adapterPreferences = ApplicationClass.getInstance().getSharedPreferences("adapterPreferences", Context.MODE_PRIVATE);
+            this.positionChangedSet = adapterPreferences.getStringSet("positionChangedSet", null);
+            if (positionChangedSet == null)
+                positionChangedSet = new HashSet<>();
+            positionChangedSet.add(String.valueOf(positionChanged));
+            adapterPreferences.edit().putStringSet("positionChangedSet", positionChangedSet).apply();
+            this.tripViewModel = tripViewModel;
+            Log.d(TAG, "positionChanged = " + positionChanged);
+        }
     }
 
     @Override
