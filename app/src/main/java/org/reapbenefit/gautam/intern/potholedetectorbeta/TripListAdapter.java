@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,6 +32,7 @@ import java.util.TreeSet;
 
 public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripListViewHolder> {
 
+    private ArrayList<String> trip_ids = new ArrayList<>();
     private Context context;
     private ArrayList<Trip> trips;
     private boolean uploadStatus;
@@ -79,6 +81,16 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             this.tripViewModel = tripViewModel;
             Log.d(TAG, "positionChanged = " + positionChanged);
         }
+    }
+
+    public TripListAdapter(Context context, ArrayList<Trip> trips, boolean uploadStatus, ArrayList<String> trip_ids, TripViewModel tripViewModel) {
+        Log.d("Constructor", "Hello");
+        this.context = context;
+        this.trips = trips;
+        this.uploadStatus = uploadStatus;
+        this.trip_ids = trip_ids;
+        this.tripViewModel = tripViewModel;
+        Log.d("Constructor", trip_ids.toString());
     }
 
     @Override
@@ -162,7 +174,10 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 uploadedTick = holder.uploadedTick;
 
                 //checking if item has been uploaded
-                //if (trip.isUploaded() && positionChangedSet!= null && positionChangedSet.contains(String.valueOf(position))) {
+                /*if (trip_ids.contains(trip.getTrip_id()))
+                    trip.setUploaded(true);
+                Log.d("TripAdapter TripID", trip.getTrip_id());
+                Log.d("TripAdapter List", trip_ids.toString());*/
                  if (trip.isUploaded()) {
                     uploadButton.setVisibility(View.GONE);
                     uploadedTick.setVisibility(View.VISIBLE);

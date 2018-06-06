@@ -38,6 +38,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
 
+import java.lang.reflect.Array;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -284,8 +285,7 @@ public class TriplistFragment extends Fragment {
                     Trip newTrip = new Gson().fromJson(newTripJson.get(i), Trip.class);
                     tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
                 }
-                //setting SharedPreferences back to null
-                dbPreferences.edit().putStringSet("newTripJson", null).commit();
+
                     try {
                         tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
                             @Override
@@ -319,7 +319,8 @@ public class TriplistFragment extends Fragment {
 
         private LocalTripEntity tripEntityUploaded;
         private boolean uploadStatus;
-
+        private boolean autoUpload;
+        private ArrayList<String> trip_ids = new ArrayList<>();
         @Override
         protected Void doInBackground(Void... voids) {
             //reading SharedPreferences to see if a recent upload has happened
@@ -333,22 +334,36 @@ public class TriplistFragment extends Fragment {
                 return null;
             }
             if (newTripSet != null)
-                newTripJson = new ArrayList<>(newTripSet);
-            if (newTripJson != null) {
-                for (int i = 0; i < newTripJson.size(); ++i) {
-                    Trip newTrip = new Gson().fromJson(newTripJson.get(i), Trip.class);
-                    if (uploadedTrips.contains(newTrip.getTrip_id())) {
+            newTripJson = new ArrayList<>(newTripSet);
+            Log.d(TAG, newTripJson.toString());
+            for (int i = 0; i < newTripJson.size(); ++i) {
+                Trip newTrip = new Gson().fromJson(newTripJson.get(i), Trip.class);
+                Log.d("newTrip ID", newTrip.getTrip_id());
+                Log.d("newTrip | uploadedTrips", uploadedTrips.toString());
+                if (uploadedTrips.contains(newTrip.getTrip_id())) {
+                    autoUpload = true;
+                    trip_ids.add(newTrip.getTrip_id());
+                    //matching TripId with database, finding appropriate LocalTripEntity
+                    LocalTripEntity matchedTripEntity = Trip.tripToLocalTripEntity(newTrip);
+                    matchedTripEntity.uploaded = true;
+                    if (tripViewModel != null) {
+                        tripViewModel.insert(matchedTripEntity);
                         Log.d(TAG, "MATCH");
+                        matchedTripEntity.uploaded = true;
+                        tripViewModel.setUploaded(matchedTripEntity);
+                        tripViewModel.insert(matchedTripEntity);
                     }
+                    trips.add(newTrip);
                 }
-                dbPreferences.edit().putStringSet("uploadedTrips", null).commit();
-                return null;
             }
 
-            if (uploadStatus) {
-                positionChanged = dbPreferences.getInt("positionChanged", -1);
+            //setting SharedPreferences back to null
+            dbPreferences.edit().putStringSet("newTripJson", null).commit();
+            dbPreferences.edit().putStringSet("uploadedTrips", null).commit();
+            positionChanged = dbPreferences.getInt("positionChanged", -1);
+            if (uploadStatus && positionChanged != -1) {
                 Log.d(TAG, "positionChanged = " + positionChanged);
-                if (positionChanged == -1 && trips.size() > 0) {
+                /*if (positionChanged == -1 && trips.size() > 0) {
                     //handling automatic uploads
                     LocalTripEntity latestTripEntity = Trip.tripToLocalTripEntity(trips.get(0));
                     Log.d("LatestTripEntity", latestTripEntity.trip_id);
@@ -363,23 +378,31 @@ public class TriplistFragment extends Fragment {
                         }
                     });
                 }
-                else
-                    tripEntityUploaded = Trip.tripToLocalTripEntity(trips.get(positionChanged));
+                else*/
+                tripEntityUploaded = Trip.tripToLocalTripEntity(trips.get(positionChanged));
                 tripEntityUploaded.uploaded = true;
                 if (tripViewModel != null) {
                     tripViewModel.setUploaded(tripEntityUploaded);
                 }
                 trips.get(positionChanged).setUploaded(true);
-                dbPreferences.edit().putBoolean("uploadStatus", false).commit();
             }
+                dbPreferences.edit().putBoolean("uploadStatus", false).commit();
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+            Log.d("autoUpload", autoUpload + "");
             if (uploadStatus) {
                 recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, positionChanged, tripViewModel);
+                Collections.sort(trips, new CustomTripComparator());
+                recyclerView.setAdapter(recyclerAdapter);
+                recyclerAdapter.notifyItemChanged(positionChanged);
+            }
+            if (autoUpload || positionChanged == -1) {
+                Log.d(TAG, "Setting alternative constructor");
+                recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, trip_ids, tripViewModel);
                 Collections.sort(trips, new CustomTripComparator());
                 recyclerView.setAdapter(recyclerAdapter);
                 recyclerAdapter.notifyItemChanged(positionChanged);
