@@ -338,7 +338,7 @@ public class TriplistFragment extends Fragment {
                 for (int i = 0; i < newTripJson.size(); ++i) {
                     Trip newTrip = new Gson().fromJson(newTripJson.get(i), Trip.class);
                     if (uploadedTrips.contains(newTrip.getTrip_id())) {
-
+                        Log.d(TAG, "MATCH");
                     }
                 }
                 dbPreferences.edit().putStringSet("uploadedTrips", null).commit();

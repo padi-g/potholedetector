@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.IllegalFormatCodePointException;
 import java.util.Set;
 
 public class S3UploadSevice extends IntentService {
@@ -49,6 +50,8 @@ public class S3UploadSevice extends IntentService {
     private int position;
     private Handler mHandler;
     private final String TAG = getClass().getSimpleName();
+    private Trip tripToBeUploaded;
+
     public S3UploadSevice() {
         super("UploadService");
     }
@@ -80,6 +83,8 @@ public class S3UploadSevice extends IntentService {
 
         position = intent.getIntExtra("position", -1);
         Log.d(TAG, position + "");
+
+        tripToBeUploaded = intent.getParcelableExtra("trip_object");
 
         String action = intent.getAction();
         if (action.equals(ACTION_UPLOAD_NOW)) {
@@ -189,7 +194,23 @@ public class S3UploadSevice extends IntentService {
                     //first trip in current upload batch
                     uploadedTrips = new HashSet<>();
                 }
-                uploadedTrips.add(ApplicationClass.getInstance().getTrip().getTrip_id());
+                else if (position == -1) {
+                    //auto upload case
+                    Set<String> newTripSet = new HashSet<>();
+                    newTripSet = dbPreferences.getStringSet("newTripJson", null);
+                    if (newTripSet != null) {
+                        ArrayList<String> newTripList = new ArrayList<>(newTripSet);
+                        for (int i = 0; i < newTripList.size(); ++i) {
+                            tripToBeUploaded = new Gson().fromJson(newTripList.get(i), Trip.class);
+                            Log.d(TAG, tripToBeUploaded.getTrip_id() + " = Trip ID");
+                            uploadedTrips.add(tripToBeUploaded.getTrip_id());
+                        }
+                    }
+                }
+                if (tripToBeUploaded != null) {
+                    Log.d(TAG, tripToBeUploaded.getTrip_id() + " = Trip ID");
+                    uploadedTrips.add(tripToBeUploaded.getTrip_id());
+                }
                 Log.d(TAG, uploadedTrips.toString());
                 dbPreferencesEditor.putStringSet("uploadedTrips", uploadedTrips);
                 dbPreferencesEditor.commit();
