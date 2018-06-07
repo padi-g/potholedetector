@@ -385,12 +385,12 @@ public class TriplistFragment extends Fragment {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             Log.d("autoUpload", autoUpload + "");
-            if (uploadStatus) {
+            /*if (uploadStatus) {
                 recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, positionChanged, tripViewModel);
                 Collections.sort(trips, new CustomTripComparator());
                 recyclerView.setAdapter(recyclerAdapter);
                 recyclerAdapter.notifyItemChanged(positionChanged);
-            }
+            }*/
             if (autoUpload) {
                 Log.d(TAG, "Setting alternative constructor");
                 recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, trip_ids, tripViewModel);

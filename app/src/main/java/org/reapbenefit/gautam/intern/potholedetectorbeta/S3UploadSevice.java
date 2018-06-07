@@ -197,7 +197,7 @@ public class S3UploadSevice extends IntentService {
                     //first trip in current upload batch
                     uploadedTrips = new HashSet<>();
                 }
-                else if (position == -1) {
+                //else if (position == -1) {
                     //auto upload case
                     Set<String> toBeUploadedTripSet = new HashSet<>();
                     toBeUploadedTripSet = dbPreferences.getStringSet("toBeUploadedTripSet", null);
@@ -209,7 +209,7 @@ public class S3UploadSevice extends IntentService {
                             uploadedTrips.add(tripToBeUploaded.getTrip_id());
                         }
                     }
-                }
+                //}
                 if (tripToBeUploaded != null) {
                     Log.d(TAG, tripToBeUploaded.getTrip_id() + " = Trip ID");
                     uploadedTrips.add(tripToBeUploaded.getTrip_id());
