@@ -22,12 +22,14 @@ import com.google.gson.Gson;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 
 import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IllegalFormatCodePointException;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -43,6 +45,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     private TripViewModel tripViewModel;
     private final String TAG = getClass().getSimpleName();
     private Set<String> positionChangedSet;
+    private ArrayList<Trip> databaseTrips = new ArrayList<>();
 
     /*
     static ViewHolder class to reference views for each trip component item
@@ -91,7 +94,12 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         this.uploadStatus = uploadStatus;
         this.trip_ids = trip_ids;
         this.tripViewModel = tripViewModel;
-        Log.d("Constructor", trip_ids.toString());
+        List<LocalTripEntity> localTripEntities = tripViewModel.getAllTrips().getValue();
+        //read trips from this database and match trip having current position with DB-pulled arrayList
+        for (int i = 0; i < localTripEntities.size(); ++i) {
+            databaseTrips.add(Trip.localTripEntityToTrip(localTripEntities.get(i)));
+            Log.d("databaseTrips", new Gson().toJson(databaseTrips.get(i)));
+        }
     }
 
     @Override
@@ -175,12 +183,13 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 uploadedTick = holder.uploadedTick;
                 Log.d("TripAdapter TripID", trip.getTrip_id());
                 Log.d("TripAdapter List", trip_ids.toString());
-                SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-                Set<String> tripIDSet = dbPreferences.getStringSet("trip_ids", new HashSet<String>());
-                if (tripIDSet.toString().contains(trip.getTrip_id()) || trip.isUploaded()) {
-                    Log.d("HELLO", "MATCH" + trip.getTrip_id());
-                    uploadButton.setVisibility(View.GONE);
-                    uploadedTick.setVisibility(View.VISIBLE);
+                if (databaseTrips.contains(trip)) {
+                    Log.d("InsideIf1", "Hello");
+                    if(databaseTrips.get(databaseTrips.indexOf(trip)).isUploaded()) {
+                        Log.d("InsideIf2", "Hello");
+                        uploadButton.setVisibility(View.GONE);
+                        uploadedTick.setVisibility(View.VISIBLE);
+                    }
                 }
 
                 uploadButton.setOnClickListener(new View.OnClickListener() {

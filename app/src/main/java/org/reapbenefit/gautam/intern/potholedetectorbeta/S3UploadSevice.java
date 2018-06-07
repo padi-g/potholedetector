@@ -203,32 +203,8 @@ public class S3UploadSevice extends IntentService {
                 Log.d(TAG, uploadedTrips.toString());
                 dbPreferencesEditor.putStringSet("uploadedTrips", uploadedTrips);
                 dbPreferencesEditor.commit();
-
-
-
-                /*//else if (position == -1) {
-                    //auto upload case
-                    Set<String> toBeUploadedTripSet = new HashSet<>();
-                    toBeUploadedTripSet = dbPreferences.getStringSet("toBeUploadedTripSet", null);
-                    if (toBeUploadedTripSet != null) {
-                        ArrayList<String> toBeUploadedTripList = new ArrayList<>(toBeUploadedTripSet);
-                        for (int i = 0; i < toBeUploadedTripList.size(); ++i) {
-                            tripToBeUploaded = new Gson().fromJson(toBeUploadedTripList.get(i), Trip.class);
-                            Log.d(TAG, tripToBeUploaded.getTrip_id() + " = Trip ID");
-                            uploadedTrips.add(tripToBeUploaded.getTrip_id());
-                        }
-                    }
-                //}
-                if (tripToBeUploaded != null) {
-                    Log.d(TAG, tripToBeUploaded.getTrip_id() + " = Trip ID");
-                    uploadedTrips.add(tripToBeUploaded.getTrip_id());
-                }
-                Log.d(TAG, uploadedTrips.toString());
-                dbPreferencesEditor.putStringSet("uploadedTrips", uploadedTrips);
-                dbPreferencesEditor.commit();
                 Intent uploadStatusIntent = new Intent("SET_UPLOADED_TRUE");
                 sendBroadcast(uploadStatusIntent);
-                Log.d("TripUploaded", "position number: " + position);*/
 
 
                 if (prefs.getBoolean("file_delete", false)) {
