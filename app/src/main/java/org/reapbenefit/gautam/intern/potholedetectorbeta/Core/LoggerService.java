@@ -13,6 +13,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -131,6 +133,7 @@ public class LoggerService extends Service implements SensorEventListener {
     private Date startAccuracyTime;
     private TripViewModel tripViewModel;
     private Set<String> newTripSet;
+    private Set<String> toBeUploadedTripSet;
 
     public LoggerService() {
         super();
@@ -159,6 +162,9 @@ public class LoggerService extends Service implements SensorEventListener {
         newTripSet = dbPreferences.getStringSet("newTripJson", null);
         if (newTripSet == null)
             newTripSet = new HashSet<>();
+        toBeUploadedTripSet = dbPreferences.getStringSet("toBeUploadedTripSet", null);
+        if (toBeUploadedTripSet == null)
+            toBeUploadedTripSet = new HashSet<>();
 
         if (mCurrentLocation != null) {
                 mLastUpdateTime = getCurrentTime();
@@ -502,12 +508,6 @@ public class LoggerService extends Service implements SensorEventListener {
         mSensorManager.unregisterListener(this);
 
         newtrip.setFilesize(file.length());
-        /*Log.d("Filesize", newtrip.getFilesize() + "");
-        if (newtrip.getFilesize() < 1024 * 1024) {
-            Toast.makeText(this, "Sorry, this data is too less to be helpful. Please log" +
-                    " potholes for a longer trip.", Toast.LENGTH_LONG).show();
-            return;
-        }*/
         newtrip.setUploaded(false);
         newtrip.setDistanceInKM(distance_travelled/1000);
         Log.d(TAG, String.valueOf(distance_travelled));
@@ -535,14 +535,31 @@ public class LoggerService extends Service implements SensorEventListener {
             logGPSpollstoFile(gpsPolls);
             SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             newTripSet.add(new Gson().toJson(newtrip));
+            if (internetAvailable())
+                toBeUploadedTripSet.add(new Gson().toJson(newtrip));
             Log.d("newTripSet", newTripSet.toString());
+            Log.d("toBeUploadedTripSet", newTripSet.toString());
             dbPreferences.edit().putStringSet("newTripJson", newTripSet).commit();
+            dbPreferences.edit().putStringSet("toBeUploadedTripSet", toBeUploadedTripSet).commit();
             sendTripLoggingBroadcast(false, fileuri);
         }else {
             logAnalytics("unsuccessful_in_starting_logging");
             sendTripLoggingBroadcast(false, null/*, null*/);
         }
 
+    }
+
+    private boolean internetAvailable() {
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        boolean isWifiConn = networkInfo.isConnected();
+        networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        boolean isMobileConn = networkInfo.isConnected();
+        if(isMobileConn || isWifiConn)
+            return true;
+        else
+            return false;
     }
 
     private void stopLocationUpdates() {

@@ -2,8 +2,11 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
@@ -196,12 +199,12 @@ public class S3UploadSevice extends IntentService {
                 }
                 else if (position == -1) {
                     //auto upload case
-                    Set<String> newTripSet = new HashSet<>();
-                    newTripSet = dbPreferences.getStringSet("newTripJson", null);
-                    if (newTripSet != null) {
-                        ArrayList<String> newTripList = new ArrayList<>(newTripSet);
-                        for (int i = 0; i < newTripList.size(); ++i) {
-                            tripToBeUploaded = new Gson().fromJson(newTripList.get(i), Trip.class);
+                    Set<String> toBeUploadedTripSet = new HashSet<>();
+                    toBeUploadedTripSet = dbPreferences.getStringSet("toBeUploadedTripSet", null);
+                    if (toBeUploadedTripSet != null) {
+                        ArrayList<String> toBeUploadedTripList = new ArrayList<>(toBeUploadedTripSet);
+                        for (int i = 0; i < toBeUploadedTripList.size(); ++i) {
+                            tripToBeUploaded = new Gson().fromJson(toBeUploadedTripList.get(i), Trip.class);
                             Log.d(TAG, tripToBeUploaded.getTrip_id() + " = Trip ID");
                             uploadedTrips.add(tripToBeUploaded.getTrip_id());
                         }
@@ -227,6 +230,18 @@ public class S3UploadSevice extends IntentService {
             }
         }
         mNotifyMgr.notify(mNotificationId, mBuilder.build());
+    }
+
+    private boolean internetAvailable() {
+        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        boolean isWifiConn = networkInfo.isConnected();
+        networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        boolean isMobileConn = networkInfo.isConnected();
+        if(isMobileConn || isWifiConn)
+            return true;
+        else
+            return false;
     }
 
     private class UploadListener implements TransferListener {

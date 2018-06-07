@@ -331,12 +331,15 @@ public class TriplistFragment extends Fragment {
             //reading SharedPreferences to see if a recent upload has happened
             uploadStatus = dbPreferences.getBoolean("uploadStatus", false);
             Set<String> uploadedTrips = dbPreferences.getStringSet("uploadedTrips", null);
-            Set<String> newTripSet = dbPreferences.getStringSet("newTripJson", null);
-            List<String> newTripJson = new ArrayList<>();
+
             if (uploadedTrips == null) {
                 //no trip has been uploaded yet
                 return null;
             }
+
+            Set<String> newTripSet = dbPreferences.getStringSet("newTripJson", null);
+            List<String> newTripJson = new ArrayList<>();
+
             if (newTripSet != null)
             newTripJson = new ArrayList<>(newTripSet);
             Log.d(TAG, newTripJson.toString());
@@ -367,22 +370,6 @@ public class TriplistFragment extends Fragment {
             positionChanged = dbPreferences.getInt("positionChanged", -1);
             if (uploadStatus && positionChanged != -1) {
                 Log.d(TAG, "positionChanged = " + positionChanged);
-                /*if (positionChanged == -1 && trips.size() > 0) {
-                    //handling automatic uploads
-                    LocalTripEntity latestTripEntity = Trip.tripToLocalTripEntity(trips.get(0));
-                    Log.d("LatestTripEntity", latestTripEntity.trip_id);
-                    Log.d("tripViewModelTop", tripViewModel.getAllTrips().getValue().get(0).trip_id);
-                    tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
-                        @Override
-                        public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
-                            Log.d(TAG, "Database updated");
-                            trips.add(Trip.localTripEntityToTrip(localTripEntities.get(localTripEntities.size() - 1)));
-                            positionChanged = trips.size() - 1;
-                            tripEntityUploaded = Trip.tripToLocalTripEntity(trips.get(positionChanged));
-                        }
-                    });
-                }
-                else*/
                 tripEntityUploaded = Trip.tripToLocalTripEntity(trips.get(positionChanged));
                 tripEntityUploaded.uploaded = true;
                 if (tripViewModel != null) {
@@ -404,7 +391,7 @@ public class TriplistFragment extends Fragment {
                 recyclerView.setAdapter(recyclerAdapter);
                 recyclerAdapter.notifyItemChanged(positionChanged);
             }
-            if (autoUpload || positionChanged == -1) {
+            if (autoUpload) {
                 Log.d(TAG, "Setting alternative constructor");
                 recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, trip_ids, tripViewModel);
                 Collections.sort(trips, new CustomTripComparator());
