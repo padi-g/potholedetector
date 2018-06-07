@@ -191,13 +191,22 @@ public class S3UploadSevice extends IntentService {
                 SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
                 SharedPreferences.Editor dbPreferencesEditor = dbPreferences.edit();
                 dbPreferencesEditor.putBoolean("uploadStatus", true);
-                dbPreferencesEditor.putInt("positionChanged", position);
                 Set<String> uploadedTrips = dbPreferences.getStringSet("uploadedTrips", null);
                 if (uploadedTrips == null) {
                     //first trip in current upload batch
                     uploadedTrips = new HashSet<>();
                 }
-                //else if (position == -1) {
+                if (tripToBeUploaded != null) {
+                    Log.d(TAG, tripToBeUploaded.getTrip_id() + " = Trip ID");
+                    uploadedTrips.add(tripToBeUploaded.getTrip_id());
+                }
+                Log.d(TAG, uploadedTrips.toString());
+                dbPreferencesEditor.putStringSet("uploadedTrips", uploadedTrips);
+                dbPreferencesEditor.commit();
+
+
+
+                /*//else if (position == -1) {
                     //auto upload case
                     Set<String> toBeUploadedTripSet = new HashSet<>();
                     toBeUploadedTripSet = dbPreferences.getStringSet("toBeUploadedTripSet", null);
@@ -219,7 +228,9 @@ public class S3UploadSevice extends IntentService {
                 dbPreferencesEditor.commit();
                 Intent uploadStatusIntent = new Intent("SET_UPLOADED_TRUE");
                 sendBroadcast(uploadStatusIntent);
-                Log.d("TripUploaded", "position number: " + position);
+                Log.d("TripUploaded", "position number: " + position);*/
+
+
                 if (prefs.getBoolean("file_delete", false)) {
                     File file = new File(getApplicationContext().getFilesDir(), "logs/" + filename);
                     file.delete();

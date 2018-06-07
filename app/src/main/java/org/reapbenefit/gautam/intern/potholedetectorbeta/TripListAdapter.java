@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -172,13 +173,12 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 distanceString = String.valueOf(roundTwoDecimals(trip.getDistanceInKM())) + "km";
                 uploadButton = holder.uploadButton;
                 uploadedTick = holder.uploadedTick;
-
-                //checking if item has been uploaded
-                /*if (trip_ids.contains(trip.getTrip_id()))
-                    trip.setUploaded(true);
                 Log.d("TripAdapter TripID", trip.getTrip_id());
-                Log.d("TripAdapter List", trip_ids.toString());*/
-                 if (trip.isUploaded()) {
+                Log.d("TripAdapter List", trip_ids.toString());
+                SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+                Set<String> tripIDSet = dbPreferences.getStringSet("trip_ids", new HashSet<String>());
+                if (tripIDSet.toString().contains(trip.getTrip_id()) || trip.isUploaded()) {
+                    Log.d("HELLO", "MATCH" + trip.getTrip_id());
                     uploadButton.setVisibility(View.GONE);
                     uploadedTick.setVisibility(View.VISIBLE);
                 }
