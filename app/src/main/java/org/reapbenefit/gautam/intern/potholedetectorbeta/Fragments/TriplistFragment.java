@@ -182,9 +182,15 @@ public class TriplistFragment extends Fragment {
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
+        SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        Set<String> newTripSet = dbPreferences.getStringSet("newTripJson", null);
+        Set<String> uploadedTrips = dbPreferences.getStringSet("uploadedTrips", null);
         if (isVisibleToUser) {
-            new UpdateDataAsyncTask().execute();
-            new UpdateTicksAsyncTask().execute();
+            if (newTripSet != null) {
+                new UpdateDataAsyncTask().execute();
+                if (uploadedTrips != null)
+                    new UpdateTicksAsyncTask().execute();
+            }
             //reading SharedPreferences to check if user has logged out
             SharedPreferences logoutPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             boolean loggedOut = logoutPreferences.getBoolean("loggedOut", false);
@@ -275,7 +281,6 @@ public class TriplistFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... voids) {
             //reading for new trip registered by LoggerService
-            SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             Set<String> newTripSet = dbPreferences.getStringSet("newTripJson", null);
             List<String> newTripJson = new ArrayList<>();
             if (newTripSet != null)
@@ -324,7 +329,6 @@ public class TriplistFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... voids) {
             //reading SharedPreferences to see if a recent upload has happened
-            SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             uploadStatus = dbPreferences.getBoolean("uploadStatus", false);
             Set<String> uploadedTrips = dbPreferences.getStringSet("uploadedTrips", null);
             Set<String> newTripSet = dbPreferences.getStringSet("newTripJson", null);
