@@ -1,24 +1,22 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
-import android.annotation.SuppressLint;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -27,44 +25,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.CompoundButton;
-import android.widget.RelativeLayout;
-import android.widget.Switch;
+import android.widget.Chronometer;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.CommonStatusCodes;
-import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.ActivityRecognitionClient;
-import com.google.android.gms.location.DetectedActivity;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadSevice;
-import org.w3c.dom.Text;
-
-import com.amazonaws.mobile.config.AWSConfiguration;
-import com.amazonaws.mobileconnectors.s3.transferutility.*;
-
-import java.util.List;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -93,7 +65,7 @@ public class EasyModeFragment extends Fragment {
     static public Uri uploadFileUri;
     private View bgframe;
     private TextView statusIndicatorText;
-    private Button startButton, stopButton;
+    private FloatingActionButton startFloatingActionButton, stopFloatingActionButton;
     private Intent loggerIntent;
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 389;
 
@@ -103,6 +75,8 @@ public class EasyModeFragment extends Fragment {
     private ActivityRecognitionClient activityRecognitionClient;
     private String currentActivity;
     private boolean currentlyInCar;
+    private Chronometer chronometer;
+    private long startTime;
 
     ApplicationClass app;
 
@@ -156,14 +130,14 @@ public class EasyModeFragment extends Fragment {
 
         View v = inflater.inflate(R.layout.fragment_easy_mode, container, false);
 
-        //getting value of inCar
+        chronometer = v.findViewById(R.id.chronometer);
         inCar = getArguments().getBoolean("inCar", false);
         Log.i(getClass().getSimpleName(), inCar + "");
-        bgframe = (RelativeLayout) v.findViewById(R.id.easyframe);
+        bgframe = (CoordinatorLayout) v.findViewById(R.id.easyframe);
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
         statusIndicatorText.setText(R.string.warnings);
-        startButton = (Button) v.findViewById(R.id.start_trip_button);
-        stopButton = (Button) v.findViewById(R.id.stop_trip_button);
+        startFloatingActionButton = (FloatingActionButton) v.findViewById(R.id.start_trip_button);
+        stopFloatingActionButton = (FloatingActionButton) v.findViewById(R.id.stop_trip_button);
         handler = new Handler(Looper.getMainLooper());
         handler.post(new Runnable() {
             @Override
@@ -188,33 +162,35 @@ public class EasyModeFragment extends Fragment {
         });
 
         if(!app.isTripInProgress() && !app.isTripEnded()){
-            startButton.setVisibility(View.VISIBLE);
-            stopButton.setVisibility(View.GONE);
+            startFloatingActionButton.setVisibility(View.VISIBLE);
+            stopFloatingActionButton.setVisibility(View.GONE);
             bgframe.setBackgroundResource(R.drawable.notlogging_bg);
         }else if(app.isTripInProgress()){       // This case handles both the first trip and trips after that during the same app launch
-            startButton.setVisibility(View.GONE);
-            stopButton.setVisibility(View.VISIBLE);
+            startFloatingActionButton.setVisibility(View.GONE);
+            stopFloatingActionButton.setVisibility(View.VISIBLE);
             bgframe.setBackgroundResource(R.drawable.logging_bg);
             statusIndicatorText.setText(getResources().getString(R.string.detecting));
         }else if(!app.isTripInProgress() && app.isTripEnded()) {
             statusIndicatorText.setText("Thanks for your contribution!");
         }
 
-        startButton.setOnClickListener(new View.OnClickListener() {
+        startFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!app.isTripInProgress() && checkPermissions() && (inCar || currentlyInCar || BuildConfig.DEBUG)) {
                     app.setTripInProgress(true);
+                    SharedPreferences timePreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+                    startTime = timePreferences.getLong("startTime", SystemClock.elapsedRealtime());
+                    chronometer.setBase(startTime);
+                    chronometer.start();
                     startLogger();
-                    bgframe.setBackgroundResource(R.drawable.logging_bg);
                     statusIndicatorText.setText(getResources().getString(R.string.detecting));
-                    startButton.setVisibility(View.GONE);
-                    stopButton.setVisibility(View.VISIBLE);
+                    startFloatingActionButton.setVisibility(View.GONE);
+                    stopFloatingActionButton.setVisibility(View.VISIBLE);
                 } else if (!checkPermissions()) {
                     requestPermissions();
-                    startButton.setVisibility(View.VISIBLE);
-                    stopButton.setVisibility(View.GONE);
-                    bgframe.setBackgroundResource(R.drawable.notlogging_bg);
+                    startFloatingActionButton.setVisibility(View.VISIBLE);
+                    stopFloatingActionButton.setVisibility(View.GONE);
                 }
                 else if (!inCar && !currentlyInCar) {
                     Toast.makeText(getContext(), "Logging cannot happen outside a vehicle", Toast.LENGTH_SHORT).show();
@@ -222,13 +198,16 @@ public class EasyModeFragment extends Fragment {
             }
         });
 
-        stopButton.setOnClickListener(new View.OnClickListener() {
+        stopFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 app.setTripInProgress(false);
+                chronometer.stop();
+                SharedPreferences timePreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+                timePreferences.edit().remove("startTime");
                 stopLogger();
-                startButton.setVisibility(View.VISIBLE);
-                stopButton.setVisibility(View.GONE);
+                startFloatingActionButton.setVisibility(View.VISIBLE);
+                stopFloatingActionButton.setVisibility(View.GONE);
                 statusIndicatorText.setText("");
                 bgframe.setBackgroundResource(R.drawable.notlogging_bg);
             }
@@ -264,8 +243,8 @@ public class EasyModeFragment extends Fragment {
                 }
                 ////////// redundant
                 bgframe.setBackgroundResource(R.drawable.notlogging_bg);
-                startButton.setVisibility(View.VISIBLE);
-                stopButton.setVisibility(View.GONE);
+                startFloatingActionButton.setVisibility(View.VISIBLE);
+                stopFloatingActionButton.setVisibility(View.GONE);
                 ////////// redundant
             }
         }
@@ -305,6 +284,29 @@ public class EasyModeFragment extends Fragment {
 
     // TODO : Just noticed that location may not update when hotspot is on. Check whether this is true even when user is outdoors and not using wifi routers to find location.
 
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        //reading chronometer value from SharedPreferences and restarting timer
+        app = ApplicationClass.getInstance();
+        if (app.isTripInProgress() && isVisibleToUser) {
+            SharedPreferences timePreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            startTime = timePreferences.getLong("startTime", SystemClock.elapsedRealtime());
+            if (chronometer != null) {
+                chronometer.setBase(startTime);
+                chronometer.start();
+            }
+        } else if (!isVisibleToUser && app.isTripInProgress()) {
+            SharedPreferences timePreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            if (chronometer != null)
+                timePreferences.edit().putLong("startTime", chronometer.getBase()).apply();
+        }
+        else if (!app.isTripInProgress()) {
+            SharedPreferences timePreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            timePreferences.edit().remove("startTime");
+        }
+    }
 
     public void startLogger(){
         if (inCar || currentlyInCar || BuildConfig.DEBUG)
@@ -373,7 +375,7 @@ public class EasyModeFragment extends Fragment {
     }
 
     // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
+    public void onFloatingActionButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
         }
@@ -417,4 +419,4 @@ public class EasyModeFragment extends Fragment {
     }
 }
 
-// TODO Annoying glitch, there's a delay between the button getting replaced and the nackground getting replaced from the broadcast
+// TODO Annoying glitch, there's a delay between the FloatingActionButton getting replaced and the nackground getting replaced from the broadcast
