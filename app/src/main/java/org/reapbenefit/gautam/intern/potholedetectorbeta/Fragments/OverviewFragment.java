@@ -28,8 +28,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.MapStateManager;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 public class OverviewFragment extends Fragment implements
@@ -51,6 +53,11 @@ public class OverviewFragment extends Fragment implements
     private GoogleMap googleMap;
     private GoogleApiClient googleApiClient;
     private FusedLocationProviderClient fusedLocationProviderClient;
+    private Location lastLocation;
+    private CameraPosition cameraPosition;
+    private boolean zoomFlag;
+    private static final String KEY_LOCATION = "keyLocation";
+    private static final String CAMERA_POSITION = "cameraPosition";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,9 +66,28 @@ public class OverviewFragment extends Fragment implements
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (googleMap != null) {
+            outState.putParcelable(CAMERA_POSITION, googleMap.getCameraPosition());
+            outState.putParcelable(KEY_LOCATION, lastLocation);
+            zoomFlag = true;
+            super.onSaveInstanceState(outState);
+        }
+        if (mapView != null)
+            mapView.onSaveInstanceState(outState);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View fragmentView = inflater.inflate(R.layout.fragment_overview, container, false);
+
+        if (savedInstanceState != null) {
+            lastLocation = savedInstanceState.getParcelable(KEY_LOCATION);
+            cameraPosition = savedInstanceState.getParcelable(CAMERA_POSITION);
+            zoomFlag = true;
+        }
 
         createLocationCallback();
         createLocationRequest();
@@ -149,6 +175,11 @@ public class OverviewFragment extends Fragment implements
     @Override
     public void onPause() {
         super.onPause();
+        if (mapView != null)
+            mapView.onPause();
+        MapStateManager mapStateManager = new MapStateManager(getContext());
+        if(googleMap != null)
+            mapStateManager.saveMapState(googleMap);
         stopLocationUpdates();
     }
 
