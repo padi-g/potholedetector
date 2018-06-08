@@ -76,9 +76,12 @@ public class EasyModeFragment extends Fragment {
     private String currentActivity;
     private boolean currentlyInCar;
     private Chronometer chronometer;
-    private long startTime;
+    private SharedPreferences timePreferences;
+    private SharedPreferences.Editor timePreferencesEditor;
+    private boolean isChronometerRunning;
 
     ApplicationClass app;
+    private int stoppedMilliseconds;
 
     public EasyModeFragment() {
         // Required empty public constructor
@@ -118,6 +121,8 @@ public class EasyModeFragment extends Fragment {
         app = ApplicationClass.getInstance();
         tripStatus = app.isTripInProgress();    // TODO check if this interferes with the broadcast
         loggerIntent = new Intent(getActivity(), LoggerService.class);
+        timePreferences = getActivity().getSharedPreferences("timePreferences", MODE_PRIVATE);
+        timePreferencesEditor = timePreferences.edit();
     }
 
     @Override
@@ -179,9 +184,8 @@ public class EasyModeFragment extends Fragment {
             public void onClick(View v) {
                 if (!app.isTripInProgress() && checkPermissions() && (inCar || currentlyInCar || BuildConfig.DEBUG)) {
                     app.setTripInProgress(true);
-                    SharedPreferences timePreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-                    startTime = timePreferences.getLong("startTime", SystemClock.elapsedRealtime());
-                    chronometer.setBase(startTime);
+                    timePreferencesEditor.putBoolean("isChronometerRunning", true).apply();
+                    chronometer.setBase(SystemClock.elapsedRealtime());
                     chronometer.start();
                     startLogger();
                     statusIndicatorText.setText(getResources().getString(R.string.detecting));
@@ -202,9 +206,8 @@ public class EasyModeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 app.setTripInProgress(false);
+                timePreferencesEditor.putBoolean("isChronometerRunning", false).apply();
                 chronometer.stop();
-                SharedPreferences timePreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-                timePreferences.edit().remove("startTime");
                 stopLogger();
                 startFloatingActionButton.setVisibility(View.VISIBLE);
                 stopFloatingActionButton.setVisibility(View.GONE);
@@ -288,24 +291,6 @@ public class EasyModeFragment extends Fragment {
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
-        //reading chronometer value from SharedPreferences and restarting timer
-        app = ApplicationClass.getInstance();
-        if (app.isTripInProgress() && isVisibleToUser) {
-            SharedPreferences timePreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-            startTime = timePreferences.getLong("startTime", SystemClock.elapsedRealtime());
-            if (chronometer != null) {
-                chronometer.setBase(startTime);
-                chronometer.start();
-            }
-        } else if (!isVisibleToUser && app.isTripInProgress()) {
-            SharedPreferences timePreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-            if (chronometer != null)
-                timePreferences.edit().putLong("startTime", chronometer.getBase()).apply();
-        }
-        else if (!app.isTripInProgress()) {
-            SharedPreferences timePreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-            timePreferences.edit().remove("startTime");
-        }
     }
 
     public void startLogger(){
@@ -359,6 +344,41 @@ public class EasyModeFragment extends Fragment {
                 getString(mainTextStringId),
                 Snackbar.LENGTH_INDEFINITE)
                 .setAction(getString(actionStringId), listener).show();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (timePreferences != null) {
+            isChronometerRunning = timePreferences.getBoolean("isChronometerRunning", false);
+            if (isChronometerRunning && chronometer != null) {
+                long startTime = timePreferences.getLong("startTime", SystemClock.elapsedRealtime());
+                Log.d("Chronometer new Base", String.valueOf(startTime));
+                chronometer.setBase(startTime);
+                chronometer.start();
+            }
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d("Chronometer", "Pausing EMF");
+        //getting current time of chronometer
+        String currentTime = chronometer.getText().toString();
+        String currentTimeArray[] = currentTime.split(":");
+        if (currentTimeArray.length == 2) {
+            stoppedMilliseconds = Integer.parseInt(currentTimeArray[0]) * 60 * 1000
+                    + Integer.parseInt(currentTimeArray[1]) * 1000;
+        } else if (currentTimeArray.length == 3) {
+            stoppedMilliseconds = Integer.parseInt(currentTimeArray[0]) * 60 * 60 * 1000
+                    + Integer.parseInt(currentTimeArray[1]) * 60 * 1000
+                    + Integer.parseInt(currentTimeArray[2]) * 1000;
+        }
+        long startTime = SystemClock.elapsedRealtime() - stoppedMilliseconds;
+        timePreferencesEditor.putLong("startTime", startTime)
+                .apply();
+        Log.d("Chronometer set base", SystemClock.elapsedRealtime() - chronometer.getBase() + "");
     }
 
     private boolean checkPermissions() {
