@@ -139,6 +139,7 @@ public class EasyModeFragment extends Fragment {
         inCar = getArguments().getBoolean("inCar", false);
         Log.i(getClass().getSimpleName(), inCar + "");
         bgframe = (CoordinatorLayout) v.findViewById(R.id.easyframe);
+        bgframe.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
         statusIndicatorText.setText(R.string.warnings);
         startFloatingActionButton = (FloatingActionButton) v.findViewById(R.id.start_trip_button);
@@ -169,14 +170,14 @@ public class EasyModeFragment extends Fragment {
         if(!app.isTripInProgress() && !app.isTripEnded()){
             startFloatingActionButton.setVisibility(View.VISIBLE);
             stopFloatingActionButton.setVisibility(View.GONE);
-            bgframe.setBackgroundResource(R.drawable.notlogging_bg);
         }else if(app.isTripInProgress()){       // This case handles both the first trip and trips after that during the same app launch
             startFloatingActionButton.setVisibility(View.GONE);
             stopFloatingActionButton.setVisibility(View.VISIBLE);
-            bgframe.setBackgroundResource(R.drawable.logging_bg);
             statusIndicatorText.setText(getResources().getString(R.string.detecting));
         }else if(!app.isTripInProgress() && app.isTripEnded()) {
             statusIndicatorText.setText("Thanks for your contribution!");
+            startFloatingActionButton.setVisibility(View.VISIBLE);
+            stopFloatingActionButton.setVisibility(View.GONE);
         }
 
         startFloatingActionButton.setOnClickListener(new View.OnClickListener() {
@@ -212,7 +213,6 @@ public class EasyModeFragment extends Fragment {
                 startFloatingActionButton.setVisibility(View.VISIBLE);
                 stopFloatingActionButton.setVisibility(View.GONE);
                 statusIndicatorText.setText("");
-                bgframe.setBackgroundResource(R.drawable.notlogging_bg);
             }
         });
 
@@ -245,7 +245,6 @@ public class EasyModeFragment extends Fragment {
                     openMap();
                 }
                 ////////// redundant
-                bgframe.setBackgroundResource(R.drawable.notlogging_bg);
                 startFloatingActionButton.setVisibility(View.VISIBLE);
                 stopFloatingActionButton.setVisibility(View.GONE);
                 ////////// redundant

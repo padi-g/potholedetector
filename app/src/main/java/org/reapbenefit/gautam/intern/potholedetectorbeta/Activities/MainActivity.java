@@ -56,6 +56,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TransitionAlarm;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.OverviewFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.NotifierService;
@@ -68,6 +69,7 @@ public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
         TriplistFragment.OnFragmentInteractionListener,
         EasyModeFragment.OnFragmentInteractionListener,
+        OverviewFragment.OnFragmentInteractionListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener{
 
@@ -127,12 +129,12 @@ public class MainActivity extends AppCompatActivity
         //Adding the tabs using addTab() method
         tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_action_home));
         tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_list));
+        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_map_black_24dp));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
 
         viewPager = (ViewPager) findViewById(R.id.pager);
         PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), inCar);
-        viewPager.setOffscreenPageLimit(2);//caches both pages in memory
         viewPager.setAdapter(adapter);
 
         //Adding onTabSelectedListener to swipe views

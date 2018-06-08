@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.util.Log;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.OverviewFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 
 public class PagerAdapter extends FragmentStatePagerAdapter {
@@ -37,6 +38,9 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
             case 1:
                 TriplistFragment tab2 = new TriplistFragment();
                 return tab2;
+            case 2:
+                OverviewFragment tab3 = new OverviewFragment();
+                return tab3;
             default:
                 return null;
         }
