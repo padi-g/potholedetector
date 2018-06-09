@@ -6,8 +6,6 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.preference.PreferenceManager;
-import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,10 +26,8 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.IllegalFormatCodePointException;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripListViewHolder> {
 
@@ -241,7 +237,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     }
 
     private void startUploadService(String json, Trip trip) {
-        Intent intent = new Intent(context.getApplicationContext(), S3UploadSevice.class);
+        Intent intent = new Intent(context.getApplicationContext(), S3UploadService.class);
         intent.setAction("upload_now");
         intent.putExtra("upload_uri", uploadFileUri);
         intent.putExtra("trip_json", json);

@@ -38,7 +38,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadSevice;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadService;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -335,7 +335,7 @@ public class EasyModeFragment extends Fragment {
     }
 
     public void startUploadService(){
-        Intent intent = new Intent(getContext(), S3UploadSevice.class);
+        Intent intent = new Intent(getContext(), S3UploadService.class);
         intent.setAction("upload_now");
         intent.putExtra("upload_uri", uploadFileUri);
         this.getContext().startService(intent);

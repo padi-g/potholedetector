@@ -1,10 +1,12 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.app.IntentService;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.amazonaws.AmazonServiceException;
@@ -23,8 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class S3UploadSevice extends IntentService {
+public class S3UploadService extends IntentService {
 
+    private NotificationCompat.Builder notificationBuilder;
+    private NotificationManager notificationManager;
     private static final int MEGABYTES_PER_PART = 5;
     private String clientRegion;
     private String bucketName;
@@ -37,12 +41,13 @@ public class S3UploadSevice extends IntentService {
     private static final String ACTION_UPLOAD_NOW = "upload_now";
     private static final String UPLOAD_URI = "upload_uri";
     private String userId;
+    private final String TAG = getClass().getSimpleName();
 
-    public S3UploadSevice() {
-        super("S3UploadSevice");
+    public S3UploadService() {
+        super("S3UploadService");
     }
 
-    public S3UploadSevice(String name) {
+    public S3UploadService(String name) {
         super(name);
     }
 
@@ -65,15 +70,21 @@ public class S3UploadSevice extends IntentService {
             Log.d(getClass().getSimpleName(), filepath);
             Log.d(getClass().getSimpleName(), bucketName);
 
+            initialiseNotification();
+
             s3Client = new AmazonS3Client(Util.getsCredProvider(this));
 
             //each ETag identifies the different parts into which the file has been split
             List<PartETag> partETags = new ArrayList<>();
-            InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest(bucketName, keyName);
+            InitiateMultipartUploadRequest initRequest = null;
             InitiateMultipartUploadResult initResult = null;
             File file = new File(uploadUri.getPath());
             CompleteMultipartUploadRequest completeMultipartUploadRequest = null;
             List<String> uploadIdList = new ArrayList<>();
+
+
+            initRequest = new InitiateMultipartUploadRequest(bucketName, keyName);
+            initResult = s3Client.initiateMultipartUpload(initRequest);
 
             long contentLength = file.length();
             long partSize = MEGABYTES_PER_PART * 1024 * 1024;
@@ -81,7 +92,6 @@ public class S3UploadSevice extends IntentService {
             long filePosition = 0;
             for (int i = 1; filePosition < contentLength; ++i) {
                 try {
-                    initResult = s3Client.initiateMultipartUpload(initRequest);
                     Log.d(getClass().getSimpleName(), "part " + i);
                     partSize = Math.min(partSize, (contentLength - filePosition));
                     UploadPartRequest uploadPartRequest = new UploadPartRequest()
@@ -94,6 +104,7 @@ public class S3UploadSevice extends IntentService {
                             .withPartSize(partSize);
 
                     UploadPartResult uploadPartResult = s3Client.uploadPart(uploadPartRequest);
+                    notificationManager.notify(mNotificationId, notificationBuilder.build());
                     partETags.add(uploadPartResult.getPartETag());
                     filePosition += partSize;
                     uploadIdList.add(initResult.getUploadId());
@@ -107,9 +118,17 @@ public class S3UploadSevice extends IntentService {
                 completeMultipartUploadRequest = new CompleteMultipartUploadRequest(
                         bucketName, keyName, uploadIdList.get(i), partETags
                 );
-            }
-            if (completeMultipartUploadRequest != null) {
+                Log.d(TAG + " " + i, uploadIdList.get(i));
                 s3Client.completeMultipartUpload(completeMultipartUploadRequest);
         }
+    }
+
+    private void initialiseNotification() {
+        notificationBuilder = new NotificationCompat.Builder(getApplicationContext())
+                .setSmallIcon(R.drawable.ic_upload)
+                .setContentTitle("Road Quality Audit")
+                .setContentTitle("Uploading pothole data")
+                .setOngoing(true);
+        notificationManager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
     }
 }

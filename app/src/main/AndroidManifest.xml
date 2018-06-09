@@ -130,7 +130,7 @@
         </activity>
 
         <service
-            android:name=".S3UploadSevice"
+            android:name=".S3UploadService"
             android:enabled="true"
             android:exported="true" />
         <service
