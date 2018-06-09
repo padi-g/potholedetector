@@ -99,7 +99,7 @@ public class TriplistFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
+        /*tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
         tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
             @Override
             public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
@@ -111,11 +111,11 @@ public class TriplistFragment extends Fragment {
                 }
                 trips = latestTrips;
                 Collections.sort(trips, new CustomTripComparator());
-                recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), trips,
+                /*recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), trips,
                         uploadStatus, positionChanged, tripViewModel);
                 recyclerView.setAdapter(recyclerAdapter);
             }
-        });
+        });*/
     }
 
     @Override
@@ -131,14 +131,13 @@ public class TriplistFragment extends Fragment {
         sharedPreferences = getActivity().getSharedPreferences("uploads", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
 
-        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-        positionChanged = dbPreferences.getInt("positionChanged", -1);
+        /*dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        positionChanged = dbPreferences.getInt("positionChanged", -1);*/
     }
 
 
 
     private long getTime(String date) throws ParseException{
-
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
         Date d = sdf.parse(date);
         Log.d("Times", String.valueOf(d.getTime())+d.toString());
@@ -183,7 +182,7 @@ public class TriplistFragment extends Fragment {
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
-        SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        /*SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         Set<String> newTripSet = dbPreferences.getStringSet("newTripJson", null);
         Set<String> uploadedTrips = dbPreferences.getStringSet("uploadedTrips", null);
         if (getActivity() != null)
@@ -210,7 +209,7 @@ public class TriplistFragment extends Fragment {
             if (getActivity() != null) {
                 getActivity().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
             }
-        }
+        }*/
     }
 
     @Override
@@ -218,11 +217,13 @@ public class TriplistFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_triplist, container, false);
+
         recyclerView = v.findViewById(R.id.trips_list);
         recyclerView.setHasFixedSize(true);
         recyclerLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerLayoutManager);
-        refreshButton = (ImageButton) v.findViewById(R.id.refreshButton);
+
+        /*refreshButton = (ImageButton) v.findViewById(R.id.refreshButton);
         refreshButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -236,12 +237,10 @@ public class TriplistFragment extends Fragment {
 
             }
         });
-
         if (broadcastReceiver != null)
             getContext().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
         else
-            Log.i(getClass().getSimpleName(), "broadcast receiver null");
-        Log.i(getClass().getSimpleName(), "uploaded status " + uploadStatus);
+            Log.i(getClass().getSimpleName(), "broadcast receiver null");*/
         return v;
     }
 

@@ -1,5 +1,6 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -216,6 +217,7 @@ public class LoggerService extends Service implements SensorEventListener {
 
     }
 
+    @SuppressLint("RestrictedApi")
     private void createLocationRequest() {
         mLocationRequest = new LocationRequest();
 

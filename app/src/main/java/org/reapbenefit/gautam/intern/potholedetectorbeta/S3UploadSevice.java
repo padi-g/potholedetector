@@ -1,275 +1,113 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.app.IntentService;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.ListView;
-import android.widget.Toast;
 
-import com.amazonaws.mobileconnectors.s3.transfermanager.TransferManager;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
-import com.google.gson.Gson;
-
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
+import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
+import com.amazonaws.services.s3.model.MultipartUpload;
+import com.amazonaws.services.s3.model.MultipartUploadListing;
+import com.amazonaws.services.s3.model.PartETag;
+import com.amazonaws.services.s3.model.UploadPartRequest;
+import com.amazonaws.services.s3.model.UploadPartResult;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.IllegalFormatCodePointException;
-import java.util.Set;
+import java.util.List;
+
 
 public class S3UploadSevice extends IntentService {
-    private TransferUtility transferUtility;
-    private TransferObserver observer;
-    NotificationManager mNotifyMgr;
+
+    private static final int MEGABYTES_PER_PART = 5;
+    private String clientRegion;
+    private String bucketName;
+    private String keyName;
+    private String filepath;
+    private AmazonS3Client s3Client;
+    private Uri uploadUri;
     int mNotificationId = 101;
-    NotificationCompat.Builder mBuilder;
-    int uploadProgress = 0;
-    SharedPreferences prefs;
     private static final String ACTION_UPLOAD_NOW = "upload_now";
     private static final String UPLOAD_URI = "upload_uri";
-    private Util util;
-    private String filename;
-    private TransferManager transferManager;
-
-    private String tripJson;
-    private ArrayList<Trip> trips;
-    private int position;
-    private Handler mHandler;
-    private final String TAG = getClass().getSimpleName();
-    private Trip tripToBeUploaded;
 
     public S3UploadSevice() {
-        super("UploadService");
+        super("S3UploadSevice");
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        mHandler = new Handler();
-    }
-
-    private void initialiseNotification() {
-        mBuilder = new NotificationCompat.Builder(getApplicationContext())
-                .setSmallIcon(R.drawable.ic_upload)
-                .setContentTitle("Road Quality Audit")
-                .setContentText("Data is being Uploaded")
-                .setOngoing(true);
-
-        mNotifyMgr =
-                (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
-        mNotifyMgr.notify(mNotificationId, mBuilder.build());
+    public S3UploadSevice(String name) {
+        super(name);
     }
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        prefs = getSharedPreferences("uploads", MODE_PRIVATE);
-        Log.d("Preferences", "Inside onHandleIntent Found file_delete = " + prefs.getBoolean("file_delete", false));
+        try {
+            Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
+            SharedPreferences sharedPreferences = getSharedPreferences("uploads", MODE_PRIVATE);
+            String userId = sharedPreferences.getString("FIREBASE_USER_ID", null);
+            clientRegion = Region.getRegion(Regions.AP_SOUTH_1).getName();
+            bucketName = getString(R.string.s3bucketname);
+            uploadUri = intent.getParcelableExtra(UPLOAD_URI);
+            filepath = uploadUri.toString().substring(uploadUri.toString().lastIndexOf('/'));
+            keyName = "debug/" + userId + filepath;
+            Log.d(getClass().getSimpleName(), keyName);
+            Log.d(getClass().getSimpleName(), filepath);
+            Log.d(getClass().getSimpleName(), bucketName);
 
-        transferManager = new TransferManager(Util.getsCredProvider(getApplicationContext()));
+            s3Client = new AmazonS3Client(Util.getsCredProvider(this));
 
-        position = intent.getIntExtra("position", -1);
-        Log.d(TAG, position + "");
+            //each ETag identifies the different parts into which the file has been split
+            List<PartETag> partETags = new ArrayList<>();
+            InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest(bucketName, keyName);
+            InitiateMultipartUploadResult initResult = s3Client.initiateMultipartUpload(initRequest);
 
-        tripToBeUploaded = intent.getParcelableExtra("trip_object");
+            File file = new File(uploadUri.getPath());
+            long contentLength = file.length();
+            long partSize = MEGABYTES_PER_PART * 1024 * 1024;
 
-        String action = intent.getAction();
-        if (action.equals(ACTION_UPLOAD_NOW)) {
-            //initialising TransferUtility
-            util = new Util();
-            transferUtility = Util.getsTransferUtility(this);
-            Uri uploadUri = intent.getParcelableExtra(UPLOAD_URI);
-            //mNotifyMgr.notify(mNotificationId, mBuilder.build());
-            uploadFile(uploadUri);
-        }
-    }
+            long filePosition = 0;
+            for (int i = 1; filePosition < contentLength; ++i) {
+                Log.d(getClass().getSimpleName(), "part " + i);
+                partSize = Math.min(partSize, (contentLength - filePosition));
+                UploadPartRequest uploadPartRequest = new UploadPartRequest()
+                        .withBucketName(bucketName)
+                        .withKey(keyName)
+                        .withUploadId(initResult.getUploadId())
+                        .withPartNumber(i)
+                        .withFileOffset(filePosition)
+                        .withFile(file)
+                        .withPartSize(partSize);
 
-    private void uploadFile(Uri uri) {
-        filename = uri.toString().substring(uri.toString().lastIndexOf('/'));
-        File file = new File(uri.getPath());
-        String userID = prefs.getString("FIREBASE_USER_ID", null);
-        Log.d("User ID", userID);
-        observer = null;
-        if (BuildConfig.DEBUG) {
-            try {
-                observer = transferUtility.upload("***REMOVED***",
-                        "debug/" + userID + filename,
-                        file);
-                initialiseNotification();
-            }
-            catch (Exception e){
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(S3UploadSevice.this, "File not found on device", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                return;
-            }
-        } else {
-            String[] debug_ids = getResources().getStringArray(R.array.debugging_ids);
-            //checking if current user ID is a debug ID
-            boolean debug_id_flag = false;
-            for (int i = 0; i < debug_ids.length; ++i) {
-                if (debug_ids[i] == userID) {
-                    try {
-                        observer = transferUtility.upload("***REMOVED***",
-                                "debug/" + userID + filename,
-                                file);
-                        debug_id_flag = true;
-                        break;
-                    }
-                    catch (Exception e) {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(S3UploadSevice.this, "File not found on device", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                        return;
-                    }
+                UploadPartResult uploadPartResult = s3Client.uploadPart(uploadPartRequest);
+                partETags.add(uploadPartResult.getPartETag());
+                filePosition += partSize;
+
+                // Retrieve a list of all in-progress multipart uploads.
+                ListMultipartUploadsRequest allMultipartUploadsRequest = new ListMultipartUploadsRequest(bucketName);
+                MultipartUploadListing multipartUploadListing = s3Client.listMultipartUploads(allMultipartUploadsRequest);
+                List<MultipartUpload> uploads = multipartUploadListing.getMultipartUploads();
+
+                Log.d(getClass().getSimpleName(), uploads.size() + " uploads in progress");
+                for (MultipartUpload u: uploads) {
+                    Log.d(getClass().getSimpleName(), "uploading " + u.getKey() + " " + u.getUploadId());
                 }
-            }
-            if (!debug_id_flag) {
-                try {
-                    observer = transferUtility.upload("***REMOVED***",
-                            "logs/" + userID + filename,
-                            file);
-                }
-                catch (Exception e) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(S3UploadSevice.this, "File not found on device", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    return;
-                }
+
+                CompleteMultipartUploadRequest compRequest = new CompleteMultipartUploadRequest(bucketName, keyName,
+                        initResult.getUploadId(), partETags);
+                s3Client.completeMultipartUpload(compRequest);
             }
         }
-        //adding listener to monitor progress of upload
-        observer.setTransferListener(new UploadListener());
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public void publishProgress(int progress) {
-        Log.i("Progress", "old method: " + progress);
-        if (progress == -1)
-            mBuilder.setContentText("Upload paused");
-        else if (progress == -2)
-            mBuilder.setContentText("Upload failed");
-        else if (progress == -3)
-            mBuilder.setContentText("Waiting for network");
-        else if (progress == -4)
-            mBuilder.setContentText("Network connection interrupted. Resuming upload...");
-        else {
-            mBuilder.setProgress(100, progress, false);
-            if (progress == 100) {
-                mBuilder.setContentText("Upload Complete");
-                mBuilder.setOngoing(false);//notification can now be swiped away
-                SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-                SharedPreferences.Editor dbPreferencesEditor = dbPreferences.edit();
-                dbPreferencesEditor.putBoolean("uploadStatus", true);
-                Set<String> uploadedTrips = dbPreferences.getStringSet("uploadedTrips", null);
-                if (uploadedTrips == null) {
-                    //first trip in current upload batch
-                    uploadedTrips = new HashSet<>();
-                }
-                if (tripToBeUploaded != null) {
-                    Log.d(TAG, tripToBeUploaded.getTrip_id() + " = Trip ID");
-                    uploadedTrips.add(tripToBeUploaded.getTrip_id());
-                }
-                Log.d(TAG, uploadedTrips.toString());
-                dbPreferencesEditor.putStringSet("uploadedTrips", uploadedTrips);
-                dbPreferencesEditor.commit();
-                Intent uploadStatusIntent = new Intent("SET_UPLOADED_TRUE");
-                sendBroadcast(uploadStatusIntent);
-
-
-                if (prefs.getBoolean("file_delete", false)) {
-                    File file = new File(getApplicationContext().getFilesDir(), "logs/" + filename);
-                    file.delete();
-                }
-            } else {
-                mBuilder.setContentText(progress + "% done");
-                mBuilder.setOngoing(true);
-            }
-        }
-        mNotifyMgr.notify(mNotificationId, mBuilder.build());
-    }
-
-    private boolean internetAvailable() {
-        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        boolean isWifiConn = networkInfo.isConnected();
-        networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-        boolean isMobileConn = networkInfo.isConnected();
-        if(isMobileConn || isWifiConn)
-            return true;
-        else
-            return false;
-    }
-
-    private class UploadListener implements TransferListener {
-
-        @Override
-        public void onStateChanged(int id, TransferState state) {
-            Log.d("S3UploadService", "onStateChanged: " + id + ", " + state);
-            boolean tryPause = false;
-            if (state == TransferState.PAUSED) {
-                publishProgress(-1);
-                //saving state of upload
-                tryPause = transferUtility.pause(id);
-            }
-            else if (state == TransferState.WAITING_FOR_NETWORK) {
-                publishProgress(-3);
-                tryPause = transferUtility.pause(id);
-            }
-            else if (state == TransferState.PART_COMPLETED) {
-                publishProgress(-4);
-                tryPause = transferUtility.pause(id);
-            }
-            else if (state == TransferState.IN_PROGRESS) {
-                TransferObserver resumed = transferUtility.resume(id);
-                observer.setTransferListener(new UploadListener());
-            }
-        }
-
-        @Override
-        public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
-            Log.d("S3UploadService", String.format("onProgressChanged: %d, total: %d, current: %d",
-                    id, observer.getBytesTotal(), observer.getBytesTransferred()));
-            bytesCurrent = observer.getBytesTransferred();
-            bytesTotal = observer.getBytesTotal();
-            uploadProgress = (int) (((double) bytesCurrent / (double) bytesTotal) * 100.0);
-            publishProgress(uploadProgress);
-        }
-
-        @Override
-        public void onError(int id, Exception ex) {
-            Log.e("S3UploadService", "Error during upload: " + id, ex);
-            publishProgress(-2);
+        catch (AmazonServiceException e) {
+            //returned when the client sends the call to upload, but S3 cannot process it
+            Log.e(getClass().getSimpleName(), e.getMessage());
         }
     }
 }
