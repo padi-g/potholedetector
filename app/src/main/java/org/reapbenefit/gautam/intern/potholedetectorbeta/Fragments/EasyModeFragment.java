@@ -1,5 +1,7 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -79,6 +81,8 @@ public class EasyModeFragment extends Fragment {
     private SharedPreferences timePreferences;
     private SharedPreferences.Editor timePreferencesEditor;
     private boolean isChronometerRunning;
+    private SharedPreferences animatorPreferences;
+    private SharedPreferences.Editor animatorPreferencesEditor;
 
     ApplicationClass app;
     private int stoppedMilliseconds;
@@ -123,6 +127,8 @@ public class EasyModeFragment extends Fragment {
         loggerIntent = new Intent(getActivity(), LoggerService.class);
         timePreferences = getActivity().getSharedPreferences("timePreferences", MODE_PRIVATE);
         timePreferencesEditor = timePreferences.edit();
+        animatorPreferences = getActivity().getSharedPreferences("animatorPreferences", MODE_PRIVATE);
+        animatorPreferencesEditor = animatorPreferences.edit();
     }
 
     @Override
@@ -136,6 +142,7 @@ public class EasyModeFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_easy_mode, container, false);
 
         chronometer = v.findViewById(R.id.chronometer);
+
         inCar = getArguments().getBoolean("inCar", false);
         Log.i(getClass().getSimpleName(), inCar + "");
         bgframe = (CoordinatorLayout) v.findViewById(R.id.easyframe);
@@ -174,6 +181,32 @@ public class EasyModeFragment extends Fragment {
             startFloatingActionButton.setVisibility(View.GONE);
             stopFloatingActionButton.setVisibility(View.VISIBLE);
             statusIndicatorText.setText(getResources().getString(R.string.detecting));
+            ObjectAnimator animator = ObjectAnimator.ofFloat(chronometer, "translationY", -150.0f);
+            animator.setDuration(500);
+            animator.start();
+            animator.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animator) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animator) {
+                    statusIndicatorText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                    statusIndicatorText.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animator) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animator) {
+
+                }
+            });
+
         }else if(!app.isTripInProgress() && app.isTripEnded()) {
             statusIndicatorText.setText("Thanks for your contribution!");
             startFloatingActionButton.setVisibility(View.VISIBLE);
@@ -188,7 +221,33 @@ public class EasyModeFragment extends Fragment {
                     timePreferencesEditor.putBoolean("isChronometerRunning", true).apply();
                     chronometer.setBase(SystemClock.elapsedRealtime());
                     chronometer.start();
+                    ObjectAnimator animator = ObjectAnimator.ofFloat(chronometer, "translationY", -150.0f);
+                    animator.setDuration(500);
+                    animator.start();
+                    animator.addListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animator) {
+
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animator animator) {
+                            statusIndicatorText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                            statusIndicatorText.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animator) {
+
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animator animator) {
+
+                        }
+                    });
                     startLogger();
+                    animatorPreferencesEditor.putBoolean("animated", true).apply();
                     statusIndicatorText.setText(getResources().getString(R.string.detecting));
                     startFloatingActionButton.setVisibility(View.GONE);
                     stopFloatingActionButton.setVisibility(View.VISIBLE);
@@ -210,6 +269,11 @@ public class EasyModeFragment extends Fragment {
                 timePreferencesEditor.putBoolean("isChronometerRunning", false).apply();
                 chronometer.stop();
                 stopLogger();
+                animatorPreferencesEditor.putBoolean("animated", false).apply();
+                statusIndicatorText.setVisibility(View.INVISIBLE);
+                ObjectAnimator animator = ObjectAnimator.ofFloat(chronometer, "translationY", 0.0f);
+                animator.setDuration(500);
+                animator.start();
                 startFloatingActionButton.setVisibility(View.VISIBLE);
                 stopFloatingActionButton.setVisibility(View.GONE);
                 statusIndicatorText.setText("");
@@ -360,7 +424,7 @@ public class EasyModeFragment extends Fragment {
     }
 
     @Override
-    public void onPause() {
+        public void onPause() {
         super.onPause();
         Log.d("Chronometer", "Pausing EMF");
         //getting current time of chronometer

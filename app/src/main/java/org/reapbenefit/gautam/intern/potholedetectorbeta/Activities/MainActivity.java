@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity
         /*
         getting user data from AWS
          */
-        new GetUserDataAsyncTask().execute();
+        //new GetUserDataAsyncTask().execute();
 
         //Initializing the tablayout
         tabLayout = (TabLayout) findViewById(R.id.tabLayout);
@@ -393,21 +393,31 @@ public class MainActivity extends AppCompatActivity
         Intent intent = new Intent();
         if (id == R.id.actions_about) {
             intent = new Intent(this, AboutActivity.class);
+            startActivity(intent);
         }
         if (id == R.id.actions_credits) {
             intent = new Intent(this, CreditsActivity.class);
+            startActivity(intent);
         }
         if (id == R.id.actions_partners) {
             intent = new Intent(this, PartnersActivity.class);
+            startActivity(intent);
         }
         if (id == R.id.actions_login) {
             intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
         }
         if(id == R.id.actions_settings){
             intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
         }
-
-        startActivity(intent);
+        if (id == R.id.actions_invite) {
+            intent = new Intent();
+            //intent.setAction(Intent.ACTION_SEND);
+            intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.invite_message));
+            intent.setType("text/plain");
+            startActivity(intent.createChooser(intent, "Help your friends map potholes"));
+        }
         return super.onOptionsItemSelected(item);
     }
 

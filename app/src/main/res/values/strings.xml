@@ -57,4 +57,5 @@
     </string-array>
     <string name="s3bucketname">***REMOVED***</string>
     <string name="notification_channel_id">PotholeNotifier</string>
+    <string name="invite_message">Hi! Check out this app to map potholes on Indian streets and help make our roads safer.</string>
 </resources>
