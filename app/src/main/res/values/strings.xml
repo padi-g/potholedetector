@@ -10,7 +10,7 @@
     <string name="dialog_negative">No</string>
     <string name="not_detecting">Press on the toggle to start your trip</string>
     <string name="uploading">Uploading latest file ....</string>
-    <string name="detecting">Sit tight and drive safe! We are detecting potholes</string>
+    <string name="detecting">Detecting potholes. Drive safe.</string>
     <string name="menu_login">Login</string>
     <string name="menu_partners">Partners</string>
 

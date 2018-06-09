@@ -10,6 +10,8 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.event.ProgressEvent;
+import com.amazonaws.event.ProgressListener;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -23,6 +25,8 @@ import com.amazonaws.services.s3.model.UploadPartResult;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.lang.String.valueOf;
 
 
 public class S3UploadService extends IntentService {
@@ -86,7 +90,7 @@ public class S3UploadService extends IntentService {
             initRequest = new InitiateMultipartUploadRequest(bucketName, keyName);
             initResult = s3Client.initiateMultipartUpload(initRequest);
 
-            long contentLength = file.length();
+            final long contentLength = file.length();
             long partSize = MEGABYTES_PER_PART * 1024 * 1024;
 
             long filePosition = 0;
@@ -103,23 +107,38 @@ public class S3UploadService extends IntentService {
                             .withFile(file)
                             .withPartSize(partSize);
 
-                    UploadPartResult uploadPartResult = s3Client.uploadPart(uploadPartRequest);
+                    long megabytesUploaded = (i - 1) * partSize;
+                    int progress = (int)(((double)filePosition/(double)contentLength) * 100.0);
+                    Log.d("progress fp", String.valueOf(filePosition));
+                    Log.d("progress contentLength", String.valueOf(contentLength));
+                    Log.d("progress int", String.valueOf(progress));
+                    notificationBuilder.setContentText(progress + "% uploaded");
                     notificationManager.notify(mNotificationId, notificationBuilder.build());
+
+                    UploadPartResult uploadPartResult = s3Client.uploadPart(uploadPartRequest);
                     partETags.add(uploadPartResult.getPartETag());
                     filePosition += partSize;
                     uploadIdList.add(initResult.getUploadId());
                     Log.d(getClass().getSimpleName(), partETags.toString());
-                    } catch (AmazonServiceException e) {
-                    //returned when the client sends the call to upload, but S3 cannot process it
+                    } catch (Exception e) {
                     Log.e(getClass().getSimpleName(), e.getMessage());
+                    notificationBuilder.setContentText("Upload failed");
+                    notificationBuilder.setOngoing(false);
+                    notificationManager.notify(mNotificationId, notificationBuilder.build());
                 }
             }
-            for (int i = 0; i < uploadIdList.size(); ++i) {
-                completeMultipartUploadRequest = new CompleteMultipartUploadRequest(
-                        bucketName, keyName, uploadIdList.get(i), partETags
-                );
-                Log.d(TAG + " " + i, uploadIdList.get(i));
-                s3Client.completeMultipartUpload(completeMultipartUploadRequest);
+            if (uploadIdList != null) {
+                for (int i = 0; i < uploadIdList.size(); ++i) {
+                    completeMultipartUploadRequest = new CompleteMultipartUploadRequest(
+                            bucketName, keyName, uploadIdList.get(i), partETags
+                    );
+                    Log.d(TAG + " " + i, uploadIdList.get(i));
+                    s3Client.completeMultipartUpload(completeMultipartUploadRequest);
+                    Log.d("progress int", "100");
+                    notificationBuilder.setContentText("100% uploaded");
+                    notificationBuilder.setOngoing(false);
+                    notificationManager.notify(mNotificationId, notificationBuilder.build());
+            }
         }
     }
 
@@ -127,7 +146,7 @@ public class S3UploadService extends IntentService {
         notificationBuilder = new NotificationCompat.Builder(getApplicationContext())
                 .setSmallIcon(R.drawable.ic_upload)
                 .setContentTitle("Road Quality Audit")
-                .setContentTitle("Uploading pothole data")
+                .setContentText("Uploading pothole data")
                 .setOngoing(true);
         notificationManager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
     }
