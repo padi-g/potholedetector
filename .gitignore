@@ -1,3 +1,11 @@
+/.idea/libraries/
+/.idea/gradle.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/vcs.xml
+/.idea/workspaces.xml
+/local.properties
+*.jar
 /.gradle
 /captures
 .externalNativeBuild
