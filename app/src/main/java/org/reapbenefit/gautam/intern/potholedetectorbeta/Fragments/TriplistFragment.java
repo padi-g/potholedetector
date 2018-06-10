@@ -1,6 +1,7 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
 import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -76,6 +77,7 @@ public class TriplistFragment extends Fragment {
     private SharedPreferences dbPreferences;
 
 
+
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -91,8 +93,8 @@ public class TriplistFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        /*tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
-        tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
+        tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
+        /*tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
             @Override
             public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
                 ArrayList<Trip> latestTrips = new ArrayList<>();

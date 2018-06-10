@@ -1,9 +1,11 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -70,6 +72,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GridLayout resultGrid;
     private TextView accuracyLowTime;
 
+    private SharedPreferences dbPreferences;
+    private SharedPreferences.Editor dbPreferencesEditor;
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -80,6 +85,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+
+        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        dbPreferencesEditor = dbPreferences.edit();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -213,17 +222,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void setUserPercievedAccuracy(int a){
-        db = FirebaseDatabase.getInstance().getReference();
-        db = db.child(finishedTrip.getUser_id()).child(finishedTrip.getTrip_id()).child("userRating");
         ApplicationClass.getInstance().getTrip().setUserRating(a);
-        db.setValue(a);
+        dbPreferencesEditor.putInt("userPerceivedAccuracy", a);
     }
 
     private void setPotholeCount(int a){
-        db = FirebaseDatabase.getInstance().getReference();
-        db = db.child(finishedTrip.getUser_id()).child(finishedTrip.getTrip_id()).child("potholeCount");
         ApplicationClass.getInstance().getTrip().setPotholeCount(a);
-        db.setValue(a);
+        //data required by TLF for updating TripViewModel instance
+        dbPreferencesEditor.putInt("potholeCount", a);
+        dbPreferencesEditor.apply();
     }
 
     public void logAnalytics(String data){
