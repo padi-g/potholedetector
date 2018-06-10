@@ -14,6 +14,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -62,6 +63,7 @@ public class TriplistFragment extends Fragment {
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+
     //TODO: CHECK IF TIMESCORE AND DISTANCESCORE NEED TO BE REIMPLEMENTED
     private long timeScore = 0;  // calculated based on time logged
     private long distanceScore = 0;  // calculated based on distance logged
@@ -75,26 +77,27 @@ public class TriplistFragment extends Fragment {
     private RecyclerView.LayoutManager recyclerLayoutManager;
     private TriplistFragment triplistFragment = this;
     private SharedPreferences dbPreferences;
-
+    private TripViewModel tripViewModel;
+    private String TAG = getClass().getSimpleName();
 
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            uploadStatus = true;
-            Log.d("BroadcastReceiver", uploadStatus + "");
-            new UpdateTicksAsyncTask().execute();
+            Log.d(TAG, "broadcast received");
+            if (tripViewModel != null) {
+                String tripUploadedJson = intent.getStringExtra("tripUploaded");
+                Trip uploadedTrip = new Gson().fromJson(tripUploadedJson, Trip.class);
+                tripViewModel.setUploaded(Trip.tripToLocalTripEntity(uploadedTrip));
+            }
         }
     };
-
-    private TripViewModel tripViewModel;
-    private String TAG = getClass().getSimpleName();
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
-        /*tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
+        tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
             @Override
             public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
                 ArrayList<Trip> latestTrips = new ArrayList<>();
@@ -107,9 +110,9 @@ public class TriplistFragment extends Fragment {
                 Collections.sort(trips, new CustomTripComparator());
                 /*recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), trips,
                         uploadStatus, positionChanged, tripViewModel);
-                recyclerView.setAdapter(recyclerAdapter);
+                recyclerView.setAdapter(recyclerAdapter);*/
             }
-        });*/
+        });
     }
 
     @Override
@@ -124,6 +127,8 @@ public class TriplistFragment extends Fragment {
         comparator = new CustomTripComparator();
         sharedPreferences = getActivity().getSharedPreferences("uploads", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
+
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(broadcastReceiver, new IntentFilter(getString(R.string.set_uploaded_true)));
 
         /*dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         positionChanged = dbPreferences.getInt("positionChanged", -1);*/
@@ -150,12 +155,6 @@ public class TriplistFragment extends Fragment {
             return true;
         else
             return false;
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        getActivity().unregisterReceiver(broadcastReceiver);
     }
 
     private void createListView(){
@@ -260,6 +259,13 @@ public class TriplistFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(broadcastReceiver);
     }
 
     public interface OnFragmentInteractionListener {

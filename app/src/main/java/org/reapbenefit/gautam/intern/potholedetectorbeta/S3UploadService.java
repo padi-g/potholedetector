@@ -7,11 +7,9 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.event.ProgressEvent;
-import com.amazonaws.event.ProgressListener;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -25,8 +23,6 @@ import com.amazonaws.services.s3.model.UploadPartResult;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.lang.String.valueOf;
 
 
 public class S3UploadService extends IntentService {
@@ -138,6 +134,13 @@ public class S3UploadService extends IntentService {
                     notificationBuilder.setContentText("100% uploaded");
                     notificationBuilder.setOngoing(false);
                     notificationManager.notify(mNotificationId, notificationBuilder.build());
+
+                    //initiating DB update through TripViewModel
+                    String tripUploaded = intent.getStringExtra("trip_json");
+                    Log.d("tripUploaded", tripUploaded + "");
+                    Intent dbUpdateIntent = new Intent(getString(R.string.set_uploaded_true));
+                    dbUpdateIntent.putExtra("tripUploaded", tripUploaded);
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(dbUpdateIntent);
             }
         }
     }

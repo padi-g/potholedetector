@@ -43,4 +43,7 @@ public interface LocalTripTableDao {
 
     @Update
     void setUploaded(LocalTripEntity localTripEntity);
+
+    @Query("SELECT * FROM localtriptable WHERE uploaded='FALSE'")
+    LiveData<List<LocalTripEntity>> getAllOfflineTrips();
 }

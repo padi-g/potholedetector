@@ -18,6 +18,7 @@ public class TripRepository {
     private float distanceInKm;
     private long filesize;
     private String user_id;
+    private LiveData<List<LocalTripEntity>> offlineTrips;
 
     public TripRepository(Application app) {
         LocalTripDatabase localTripDatabase = LocalTripDatabase.getInstance(app);
@@ -30,6 +31,7 @@ public class TripRepository {
         distanceInKm = getDistanceInKm();
         filesize = getFilesize();
         user_id = getUser_id();
+        offlineTrips = dao.getAllOfflineTrips();
     }
 
     //Executed on a separate thread by Room automatically
@@ -175,5 +177,9 @@ public class TripRepository {
             asyncTaskDao.setUploaded(localTripEntities[0]);
             return null;
         }
+    }
+
+    public LiveData<List<LocalTripEntity>> getAllOfflineTrips() {
+        return offlineTrips;
     }
 }

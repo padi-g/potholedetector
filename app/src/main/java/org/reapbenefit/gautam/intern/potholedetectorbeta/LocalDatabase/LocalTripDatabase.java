@@ -52,7 +52,6 @@ public abstract class LocalTripDatabase extends RoomDatabase {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            List<LocalTripEntity> localTripEntityList = localTripTableDao.getAllTrips().getValue();
             return null;
         }
     }
