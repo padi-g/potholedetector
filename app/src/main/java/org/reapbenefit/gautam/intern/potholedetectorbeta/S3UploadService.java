@@ -57,6 +57,7 @@ public class S3UploadService extends IntentService {
     private final String TAG = getClass().getSimpleName();
     private String tripUploadedId;
     private SharedPreferences dbPreferences;
+    private Trip tripUploaded;
 
     public S3UploadService() {
         super("S3UploadService");
@@ -70,7 +71,7 @@ public class S3UploadService extends IntentService {
     protected void onHandleIntent(@Nullable Intent intent) {
         Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-        Trip tripUploaded = intent.getParcelableExtra("trip_object");
+        tripUploaded = intent.getParcelableExtra("trip_object");
         if (tripUploaded == null)
             tripUploaded = new Gson().fromJson(dbPreferences.getString("uploadedTripJson", null), Trip.class);
         tripUploadedId = tripUploaded.getTrip_id();
@@ -180,6 +181,7 @@ public class S3UploadService extends IntentService {
             notificationManager.notify(mNotificationId, notificationBuilder.build());
             dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             dbPreferences.edit().putString("tripUploadedId", null).commit();
+            stopSelf();
         }
     }
 
@@ -188,7 +190,7 @@ public class S3UploadService extends IntentService {
         if (isInternetAvailable()) {
             Intent restartServiceIntent = new Intent(getApplicationContext(), this.getClass());
             restartServiceIntent.putExtra("upload_uri", uploadUri);
-            restartServiceIntent.putExtra("trip_object", )
+            restartServiceIntent.putExtra("trip_object", tripUploaded);
             restartServiceIntent.setPackage(getPackageName());
             PendingIntent restartServicePendingIntent = PendingIntent.getService(getApplicationContext(), 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT);
             AlarmManager alarmService = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
