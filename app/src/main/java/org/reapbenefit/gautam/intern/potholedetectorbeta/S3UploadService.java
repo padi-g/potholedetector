@@ -10,6 +10,9 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -58,6 +61,7 @@ public class S3UploadService extends IntentService {
     private String tripUploadedId;
     private SharedPreferences dbPreferences;
     private Trip tripUploaded;
+    private boolean isWifiConnected;
 
     public S3UploadService() {
         super("S3UploadService");
@@ -81,7 +85,6 @@ public class S3UploadService extends IntentService {
         if (uploadUri == null)
             uploadUri = new Gson().fromJson(dbPreferences.getString("uploadUriJson", null), Uri.class);
         initialiseNotification();
-
         if (isInternetAvailable()) {
 
             sharedPreferences = getSharedPreferences("uploads", MODE_PRIVATE);
@@ -210,34 +213,19 @@ public class S3UploadService extends IntentService {
         boolean isConnected = activeNetwork != null && activeNetwork.isConnected();
         if (!isConnected)
             return false;
+        //TODO: HOW TO FIX THIS WHEN ASYNCTASK MIGHT TAKE TIME TO COMPLETE?
+        //new CheckWifiNoInternetAsyncTask().execute();
         return true;
+    }
 
-        //TODO: TAKE CARE OF WIFI CONNECTED, NO INTERNET
 
-        /*new Thread(new Runnable() {
-            @Override
-            public void run() {
-                HttpURLConnection httpURLConnection = null;
-                try {
-                    httpURLConnection = (HttpURLConnection) (new URL("http://www.google.com").openConnection());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                httpURLConnection.setRequestProperty("User-Agent", "Test");
-                httpURLConnection.setRequestProperty("Connection", "close");
-                httpURLConnection.setConnectTimeout(1000);
-                try {
-                    httpURLConnection.connect();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try {
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });*/
+    private void confirmConnectionNotification() {
+        if (!isWifiConnected) {
+            notificationBuilder.setOngoing(false)
+                    .setContentText("Upload timed out. Check your network connection.");
+            notificationManager.notify(mNotificationId, notificationBuilder.build());
+            stopSelf();
+        }
     }
 
 
@@ -248,5 +236,32 @@ public class S3UploadService extends IntentService {
                 .setContentText("Uploading pothole data")
                 .setOngoing(true);
         notificationManager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
+    }
+
+    private class CheckWifiNoInternetAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                HttpURLConnection httpURLConnection = null;
+                httpURLConnection = (HttpURLConnection) (new URL("http://www.google.com").openConnection());
+                httpURLConnection.setRequestProperty("User-Agent", "Test");
+                httpURLConnection.setRequestProperty("Connection", "close");
+                httpURLConnection.setConnectTimeout(1000);
+                httpURLConnection.connect();
+                isWifiConnected = (httpURLConnection.getResponseCode() == 200);
+            }
+            catch (IOException ioException) {
+                isWifiConnected = false;
+                Log.e(TAG, "WifiConnectionTest threw Exception");
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            S3UploadService.this.confirmConnectionNotification();
+        }
     }
 }
