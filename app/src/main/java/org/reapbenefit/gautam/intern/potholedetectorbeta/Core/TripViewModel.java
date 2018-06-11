@@ -15,6 +15,7 @@ public class TripViewModel extends AndroidViewModel {
 
     private TripRepository tripRepository;
     private LiveData<List<LocalTripEntity>> allTrips;
+    private LiveData<List<LocalTripEntity>> offlineTrips;
     private String trip_id;
     private int potholeCount;
     private String startTime;
@@ -22,6 +23,7 @@ public class TripViewModel extends AndroidViewModel {
     private float distanceInKm;
     private long filesize;
     private String user_id;
+    private LiveData<List<LocalTripEntity>> highestPotholeTrips;
 
     public TripViewModel(@NonNull Application application) {
         super(application);
@@ -34,6 +36,8 @@ public class TripViewModel extends AndroidViewModel {
         distanceInKm = tripRepository.getDistanceInKm();
         filesize = tripRepository.getFilesize();
         user_id = tripRepository.getUser_id();
+        offlineTrips = tripRepository.getAllOfflineTrips();
+        highestPotholeTrips = tripRepository.getHighestPotholeTrips();
     }
 
     public LiveData<List<LocalTripEntity>> getAllTrips() {
@@ -78,5 +82,13 @@ public class TripViewModel extends AndroidViewModel {
 
     public void setUploaded(LocalTripEntity trip) {
         tripRepository.setUploaded(trip);
+    }
+
+    public LiveData<List<LocalTripEntity>> getOfflineTrips() {
+        return offlineTrips;
+    }
+
+    public LiveData<List<LocalTripEntity>> getHighestPotholeTrips() {
+        return highestPotholeTrips;
     }
 }

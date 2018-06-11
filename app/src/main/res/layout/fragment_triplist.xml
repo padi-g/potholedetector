@@ -2,48 +2,33 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:backgroundTint="?attr/colorPrimary"
     tools:context="org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment">
 
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-
-    <GridLayout
-    android:id="@+id/content_profiles"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:paddingBottom="10dp"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="10dp"
-    android:columnCount="1"
-    android:rowCount="1"
-    android:background="@color/colorPrimaryDark"
-    android:layout_gravity="top">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="0"
-            android:layout_column="0"
-            android:text="Trips with most potholes"
-            android:textAlignment="center"
-            android:textColor="#fff"
-            android:textSize="25dp"
-            android:layout_columnWeight="5"
-            android:fontFamily="sans-serif-condensed"
-            android:paddingLeft="@dimen/activity_horizontal_margin"/>
-    </GridLayout>
+    <TextView
+        android:id="@+id/offline_trips_heading"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:text="Trips not yet uploaded"
+        android:textAlignment="center"
+        android:textColor="#fff"
+        android:textSize="25dp"
+        android:fontFamily="sans-serif-condensed"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:background="@color/colorPrimaryDark"
+        android:paddingRight="@dimen/activity_horizontal_margin"/>
 
     <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/trips_list"
-        android:scrollbars="vertical">
+        android:scrollbars="vertical"
+        android:visibility="visible">
     </android.support.v7.widget.RecyclerView>
-    </android.support.v4.widget.SwipeRefreshLayout>
 
 </LinearLayout>

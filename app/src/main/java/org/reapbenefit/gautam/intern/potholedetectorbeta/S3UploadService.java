@@ -136,8 +136,7 @@ public class S3UploadService extends IntentService {
                     notificationManager.notify(mNotificationId, notificationBuilder.build());
 
                     //initiating DB update through TripViewModel
-                    String tripUploaded = intent.getStringExtra("trip_json");
-                    Log.d("tripUploaded", tripUploaded + "");
+                    Trip tripUploaded = intent.getParcelableExtra("trip_object");
                     Intent dbUpdateIntent = new Intent(getString(R.string.set_uploaded_true));
                     dbUpdateIntent.putExtra("tripUploaded", tripUploaded);
                     LocalBroadcastManager.getInstance(this).sendBroadcast(dbUpdateIntent);

@@ -21,12 +21,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
-import android.widget.ListView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 
+import org.apache.commons.math3.distribution.LogisticDistribution;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
@@ -40,26 +39,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
 public class TriplistFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     private OnFragmentInteractionListener mListener;
 
-    private ListView l;
-    private ImageButton refreshButton;
-
-    private ArrayList<Trip> trips = new ArrayList<>();
+    private ArrayList<Trip> offlineTrips = new ArrayList<>();
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
@@ -78,17 +67,31 @@ public class TriplistFragment extends Fragment {
     private TriplistFragment triplistFragment = this;
     private SharedPreferences dbPreferences;
     private TripViewModel tripViewModel;
+    private ArrayList<Trip> highestPotholeTrips = new ArrayList<>();
     private String TAG = getClass().getSimpleName();
 
+    private BroadcastReceiver newTripReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (tripViewModel != null) {
+                Trip newTrip = intent.getParcelableExtra("trip_object");
+                tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
+                Log.d(TAG, "Trip inserted " + newTrip.getTrip_id());
+                offlineTrips.add(newTrip);
+                createOfflineTripsListView();
+            }
+        }
+    };
 
-    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver uploadBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "broadcast received");
             if (tripViewModel != null) {
-                String tripUploadedJson = intent.getStringExtra("tripUploaded");
-                Trip uploadedTrip = new Gson().fromJson(tripUploadedJson, Trip.class);
+                Trip uploadedTrip = intent.getParcelableExtra("tripUploaded");
                 tripViewModel.setUploaded(Trip.tripToLocalTripEntity(uploadedTrip));
+                offlineTrips.remove(uploadedTrip);
+                createOfflineTripsListView();
             }
         }
     };
@@ -97,20 +100,30 @@ public class TriplistFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
-        tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
+
+        tripViewModel.getOfflineTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
             @Override
             public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
-                ArrayList<Trip> latestTrips = new ArrayList<>();
-                for (int i = 0; i < localTripEntities.size(); ++i) {
-                    Trip trip = Trip.localTripEntityToTrip(localTripEntities.get(i));
-                    Log.i(TAG, i + " " + new Gson().toJson(trip.toString()));
-                    latestTrips.add(trip);
+                Set<Trip> tripSet = new HashSet<>();
+                for (LocalTripEntity offlineTripEntity: localTripEntities) {
+                    Trip offlineTrip = Trip.localTripEntityToTrip(offlineTripEntity);
+                    tripSet.add(offlineTrip);
                 }
-                trips = latestTrips;
-                Collections.sort(trips, new CustomTripComparator());
-                /*recyclerAdapter = new TripListAdapter(getContext().getApplicationContext(), trips,
-                        uploadStatus, positionChanged, tripViewModel);
-                recyclerView.setAdapter(recyclerAdapter);*/
+                offlineTrips = new ArrayList<>(tripSet);
+                createOfflineTripsListView();
+            }
+        });
+
+        tripViewModel.getHighestPotholeTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
+            @Override
+            public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
+                ArrayList<Trip> highestPotholeTrips = new ArrayList<>();
+                for (LocalTripEntity highestPotholeTrip: localTripEntities) {
+                    Trip highPotholeTrip = Trip.localTripEntityToTrip(highestPotholeTrip);
+                    highestPotholeTrips.add(highPotholeTrip);
+                }
+                TriplistFragment.this.highestPotholeTrips = highestPotholeTrips;
+                //createHighestPotholeListView();
             }
         });
     }
@@ -118,30 +131,19 @@ public class TriplistFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-
         app = ApplicationClass.getInstance();
         comparator = new CustomTripComparator();
         sharedPreferences = getActivity().getSharedPreferences("uploads", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
-
-        LocalBroadcastManager.getInstance(getContext()).registerReceiver(broadcastReceiver, new IntentFilter(getString(R.string.set_uploaded_true)));
-
-        /*dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-        positionChanged = dbPreferences.getInt("positionChanged", -1);*/
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(uploadBroadcastReceiver, new IntentFilter(getString(R.string.set_uploaded_true)));
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(newTripReceiver, new IntentFilter(getString(R.string.new_trip_insert)));
     }
-
-
 
     private long getTime(String date) throws ParseException{
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
         Date d = sdf.parse(date);
         Log.d("Times", String.valueOf(d.getTime())+d.toString());
         return d.getTime();
-
     }
 
     private boolean internetAvailable(){
@@ -157,19 +159,36 @@ public class TriplistFragment extends Fragment {
             return false;
     }
 
-    private void createListView(){
-        if(!trips.isEmpty() && getActivity()!=null) {
-            Collections.sort(trips, new CustomTripComparator());
-            recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, 0, tripViewModel);
+    private void createOfflineTripsListView(){
+        Log.d(TAG, offlineTrips.toString());
+        if(!offlineTrips.isEmpty() && getActivity()!=null) {
+            Log.d(TAG, "inside OfflineTLV");
+            Collections.sort(offlineTrips, comparator);
+            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, 0, tripViewModel);
             recyclerView.setAdapter(recyclerAdapter);
-            recyclerAdapter.notifyItemChanged(positionChanged);;
+            recyclerAdapter.notifyDataSetChanged();
+        }
+        else if (offlineTrips.isEmpty() && getActivity() != null) {
+            Log.d(TAG, "inside OfflineTLV empty");
+            Collections.sort(offlineTrips, comparator);
+            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, 0, tripViewModel);
+            recyclerView.setAdapter(recyclerAdapter);
+            recyclerAdapter.notifyDataSetChanged();
+        }
+    }
+
+    private void createHighestPotholeListView() {
+        if(!highestPotholeTrips.isEmpty() && getActivity()!=null) {
+            Collections.sort(highestPotholeTrips, comparator);
+            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, 0, tripViewModel);
+            recyclerView.setAdapter(recyclerAdapter);
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        getActivity().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
+        getActivity().registerReceiver(uploadBroadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
     }
 
     @Override
@@ -179,7 +198,7 @@ public class TriplistFragment extends Fragment {
         Set<String> newTripSet = dbPreferences.getStringSet("newTripJson", null);
         Set<String> uploadedTrips = dbPreferences.getStringSet("uploadedTrips", null);
         if (getActivity() != null)
-            getActivity().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
+            getActivity().registerReceiver(uploadBroadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
         if (isVisibleToUser) {
             if (newTripSet != null)
                 new UpdateDataAsyncTask().execute();
@@ -200,7 +219,7 @@ public class TriplistFragment extends Fragment {
         }
         else {
             if (getActivity() != null) {
-                getActivity().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
+                getActivity().registerReceiver(uploadBroadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
             }
         }*/
     }
@@ -215,44 +234,26 @@ public class TriplistFragment extends Fragment {
         recyclerView.setHasFixedSize(true);
         recyclerLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerLayoutManager);
-
-        /*refreshButton = (ImageButton) v.findViewById(R.id.refreshButton);
-        refreshButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                createListView();
-                if(internetAvailable() && !trips.isEmpty())
-                    Toast.makeText(getActivity(), "Refreshed", Toast.LENGTH_SHORT).show();
-                else if(trips.isEmpty())
-                    Toast.makeText(getActivity(), "Refreshing", Toast.LENGTH_SHORT).show();
-                else
-                    Toast.makeText(getActivity(), "Internet not available, try later", Toast.LENGTH_SHORT).show();
-
-            }
-        });
-        if (broadcastReceiver != null)
-            getContext().registerReceiver(broadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
-        else
-            Log.i(getClass().getSimpleName(), "broadcast receiver null");*/
+        createOfflineTripsListView();
         return v;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(uploadBroadcastReceiver);
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(newTripReceiver);
     }
+
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
         }
+        else
+            throw new RuntimeException(context.toString() + "must implement OnFragmentInteractionListener");
     }
 
     @Override
@@ -262,14 +263,7 @@ public class TriplistFragment extends Fragment {
     }
 
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(broadcastReceiver);
-    }
-
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
 
@@ -309,7 +303,7 @@ public class TriplistFragment extends Fragment {
                                     Log.i(TAG, i + " " + new Gson().toJson(trip.toString()));
                                     latestTrips.add(trip);
                                 }
-                                trips = latestTrips;
+                                offlineTrips = latestTrips;
                             }
                         });
                     } catch (IllegalStateException e) {
@@ -321,8 +315,8 @@ public class TriplistFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, null, tripViewModel);
-            Collections.sort(trips, new CustomTripComparator());
+            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, null, tripViewModel);
+            Collections.sort(offlineTrips, new CustomTripComparator());
             recyclerView.setAdapter(recyclerAdapter);
         }
     }
@@ -348,7 +342,7 @@ public class TriplistFragment extends Fragment {
                         LocalTripEntity matchedTripEntity = localTripEntityList.get(i);
                         matchedTripEntity.uploaded = true;
                         tripViewModel.insert(matchedTripEntity);
-                        trips.add(Trip.localTripEntityToTrip(matchedTripEntity));
+                        offlineTrips.add(Trip.localTripEntityToTrip(matchedTripEntity));
                     }
                 }
             }
@@ -359,8 +353,8 @@ public class TriplistFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            recyclerAdapter = new TripListAdapter(getActivity(), trips, uploadStatus, trip_ids, tripViewModel);
-            Collections.sort(trips, new CustomTripComparator());
+            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, trip_ids, tripViewModel);
+            Collections.sort(offlineTrips, new CustomTripComparator());
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
         }

@@ -1,5 +1,6 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,6 +56,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         public TextView time;
         public TextView size;
         public TextView distance;
+        public ProgressBar uploadProgressBar;
         public TripListViewHolder(View itemView) {
             super(itemView);
             uploadButton = (ImageButton) itemView.findViewById(R.id.upload_button);
@@ -63,6 +66,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             time = (TextView) itemView.findViewById(R.id.start_time);
             size = (TextView) itemView.findViewById(R.id.size);
             distance = (TextView) itemView.findViewById(R.id.distance_view);
+            uploadProgressBar = (ProgressBar) itemView.findViewById(R.id.upload_progress_bar);
         }
     }
 
@@ -105,6 +109,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         View rowView = layoutInflater.inflate(R.layout.trip_list_item, parent, false);
         String countString, timeString, durationString, distanceString;
         ImageButton uploadButton, uploadedTick, mapButton;
+        ProgressBar uploadProgressBar;
         TextView date, time, size, distance;
         TripListViewHolder rowViewHolder = null;
         try {
@@ -116,6 +121,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 time = (TextView) rowView.findViewById(R.id.start_time);
                 size = (TextView) rowView.findViewById(R.id.size);
                 distance = (TextView) rowView.findViewById(R.id.distance_view);
+                uploadProgressBar = (ProgressBar) rowView.findViewById(R.id.upload_progress_bar);
                 rowViewHolder = new TripListViewHolder(rowView);
             }
             else {
@@ -166,8 +172,9 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                     Log.e(getClass().getSimpleName(), "TripViewModel is null");
 
                 String countString, timeString, durationString, distanceString;
-                ImageButton uploadButton, uploadedTick, mapButton;
+                final ImageButton uploadButton, uploadedTick, mapButton;
                 TextView date, time, size, distance;
+                final ProgressBar uploadProgressBar;
                 countString = String.valueOf(trip.getPotholeCount()) + " potholes";
                 Log.i("countString", countString);
                 Log.i("timeString", trip.getStartTime() + "");
@@ -177,6 +184,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 distanceString = String.valueOf(roundTwoDecimals(trip.getDistanceInKM())) + "km";
                 uploadButton = holder.uploadButton;
                 uploadedTick = holder.uploadedTick;
+                uploadProgressBar = holder.uploadProgressBar;
                 Log.d("TripAdapter TripID", trip.getTrip_id());
                 Log.d("TripAdapter List", trip_ids.toString());
                 if (databaseTrips.contains(trip)) {
@@ -198,6 +206,9 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                             String json = gson.toJson(trip);
                             positionChanged = position;
                             startUploadService(json, trip);
+                            uploadProgressBar.setIndeterminate(true);
+                            uploadProgressBar.setVisibility(View.VISIBLE);
+                            uploadButton.setVisibility(View.GONE);
                         } else {
                             Toast.makeText(context.getApplicationContext(), "Internet not available. Try again later", Toast.LENGTH_LONG).show();
                         }

@@ -467,6 +467,7 @@ public class LoggerService extends Service implements SensorEventListener {
         Intent iTemp = new Intent("tripstatus");
         iTemp.putExtra("LoggingStatus", status);
         iTemp.putExtra("filename", uploadFileId);
+        iTemp.putExtra("trip_object", newtrip);
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
         l.sendBroadcast(iTemp);
     }

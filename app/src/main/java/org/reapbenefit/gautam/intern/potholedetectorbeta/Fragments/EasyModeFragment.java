@@ -39,6 +39,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadService;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -283,6 +284,7 @@ public class EasyModeFragment extends Fragment {
         return v;
     }
 
+    private Trip newTrip;
     /*
     *   receives the broadcast from the logger service once the trip is ended
     *   Sets the bg to one of two states depending on whether the last trip was successful
@@ -291,7 +293,7 @@ public class EasyModeFragment extends Fragment {
     private final BroadcastReceiver b = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-
+            newTrip = intent.getParcelableExtra("trip_object");
             tripStatus = intent.getBooleanExtra("LoggingStatus", false);
             if(!tripStatus){
                 uploadFileUri = intent.getParcelableExtra("filename");
@@ -337,6 +339,7 @@ public class EasyModeFragment extends Fragment {
     public void startUploadService(){
         Intent intent = new Intent(getContext(), S3UploadService.class);
         intent.setAction("upload_now");
+        intent.putExtra("trip_object", newTrip);
         intent.putExtra("upload_uri", uploadFileUri);
         this.getContext().startService(intent);
 

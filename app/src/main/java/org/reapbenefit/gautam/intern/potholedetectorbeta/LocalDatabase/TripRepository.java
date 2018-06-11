@@ -19,6 +19,7 @@ public class TripRepository {
     private long filesize;
     private String user_id;
     private LiveData<List<LocalTripEntity>> offlineTrips;
+    private LiveData<List<LocalTripEntity>> highestPotholeTrips;
 
     public TripRepository(Application app) {
         LocalTripDatabase localTripDatabase = LocalTripDatabase.getInstance(app);
@@ -32,10 +33,9 @@ public class TripRepository {
         filesize = getFilesize();
         user_id = getUser_id();
         offlineTrips = dao.getAllOfflineTrips();
+        highestPotholeTrips = dao.getHighestPotholeTrips();
     }
 
-    //Executed on a separate thread by Room automatically
-    //Observer will be notified when data is changed
     public LiveData<List<LocalTripEntity>> getLiveDataTrips() {
         return liveDataTrips;
     }
@@ -181,5 +181,9 @@ public class TripRepository {
 
     public LiveData<List<LocalTripEntity>> getAllOfflineTrips() {
         return offlineTrips;
+    }
+
+    public LiveData<List<LocalTripEntity>> getHighestPotholeTrips() {
+        return highestPotholeTrips;
     }
 }
