@@ -151,6 +151,7 @@ public class S3UploadService extends IntentService {
                     notificationBuilder.setContentText("Upload failed");
                     notificationBuilder.setOngoing(false);
                     notificationManager.notify(mNotificationId, notificationBuilder.build());
+                    break;
                 }
             }
             if (uploadIdList != null) {
@@ -210,6 +211,8 @@ public class S3UploadService extends IntentService {
         if (!isConnected)
             return false;
         return true;
+
+        //TODO: TAKE CARE OF WIFI CONNECTED, NO INTERNET
 
         /*new Thread(new Runnable() {
             @Override
