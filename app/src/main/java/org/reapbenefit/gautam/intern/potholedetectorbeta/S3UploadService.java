@@ -1,13 +1,16 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
+import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -66,17 +69,24 @@ public class S3UploadService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
+        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        Trip tripUploaded = intent.getParcelableExtra("trip_object");
+        if (tripUploaded == null)
+            tripUploaded = new Gson().fromJson(dbPreferences.getString("uploadedTripJson", null), Trip.class);
+        tripUploadedId = tripUploaded.getTrip_id();
+        dbPreferences.edit().putString("uploadedTripJson", new Gson().toJson(tripUploaded)).commit();
+        uploadUri = intent.getParcelableExtra(UPLOAD_URI);
+        dbPreferences.edit().putString("uploadUriJson", new Gson().toJson(uploadUri)).commit();
+        if (uploadUri == null)
+            uploadUri = new Gson().fromJson(dbPreferences.getString("uploadUriJson", null), Uri.class);
+        initialiseNotification();
 
         if (isInternetAvailable()) {
-            Trip tripUploaded = intent.getParcelableExtra("trip_object");
-            tripUploadedId = tripUploaded.getTrip_id();
 
-            dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             sharedPreferences = getSharedPreferences("uploads", MODE_PRIVATE);
             userId = sharedPreferences.getString("FIREBASE_USER_ID", null);
             clientRegion = Region.getRegion(Regions.AP_SOUTH_1).getName();
             bucketName = getString(R.string.s3bucketname);
-            uploadUri = intent.getParcelableExtra(UPLOAD_URI);
             filepath = uploadUri.toString().substring(uploadUri.toString().lastIndexOf('/'));
 
             dbPreferences.edit().putString("tripUploadedJson", tripUploadedId).commit();
@@ -90,8 +100,6 @@ public class S3UploadService extends IntentService {
             Log.d(getClass().getSimpleName(), keyName);
             Log.d(getClass().getSimpleName(), filepath);
             Log.d(getClass().getSimpleName(), bucketName);
-
-            initialiseNotification();
 
             s3Client = new AmazonS3Client(Util.getsCredProvider(this));
 
@@ -175,25 +183,58 @@ public class S3UploadService extends IntentService {
         }
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        if (isInternetAvailable()) {
+            Intent restartServiceIntent = new Intent(getApplicationContext(), this.getClass());
+            restartServiceIntent.putExtra("upload_uri", uploadUri);
+            restartServiceIntent.putExtra("trip_object", )
+            restartServiceIntent.setPackage(getPackageName());
+            PendingIntent restartServicePendingIntent = PendingIntent.getService(getApplicationContext(), 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT);
+            AlarmManager alarmService = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+            alarmService.set(
+                    AlarmManager.ELAPSED_REALTIME,
+                    SystemClock.elapsedRealtime() + 1000,
+                    restartServicePendingIntent
+            );
+        }
+        super.onTaskRemoved(rootIntent);
+    }
+
     private boolean isInternetAvailable() {
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
         boolean isConnected = activeNetwork != null && activeNetwork.isConnected();
         if (!isConnected)
             return false;
+        return true;
 
-        try {
-            HttpURLConnection httpURLConnection = (HttpURLConnection)(new URL("http://www.google.com").openConnection());
-            httpURLConnection.setRequestProperty("User-Agent", "Test");
-            httpURLConnection.setRequestProperty("Connection", "close");
-            httpURLConnection.setConnectTimeout(1000);
-            httpURLConnection.connect();
-            return (httpURLConnection.getResponseCode() == 200);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
+        /*new Thread(new Runnable() {
+            @Override
+            public void run() {
+                HttpURLConnection httpURLConnection = null;
+                try {
+                    httpURLConnection = (HttpURLConnection) (new URL("http://www.google.com").openConnection());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                httpURLConnection.setRequestProperty("User-Agent", "Test");
+                httpURLConnection.setRequestProperty("Connection", "close");
+                httpURLConnection.setConnectTimeout(1000);
+                try {
+                    httpURLConnection.connect();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try {
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });*/
     }
+
 
     private void initialiseNotification() {
         notificationBuilder = new NotificationCompat.Builder(getApplicationContext())

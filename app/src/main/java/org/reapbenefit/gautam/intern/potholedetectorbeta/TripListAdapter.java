@@ -241,14 +241,14 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     }
 
     private void startUploadService(String json, Trip trip) {
-        Intent intent = new Intent(context, S3UploadService.class);
+        Intent intent = new Intent(context.getApplicationContext(), S3UploadService.class);
         intent.setAction("upload_now");
         intent.putExtra("upload_uri", uploadFileUri);
         intent.putExtra("trip_json", json);
         intent.putExtra("trips_arraylist", trips);
         intent.putExtra("position", positionChanged);
         intent.putExtra("trip_object", trip);
-        context.startService(intent);
+        context.getApplicationContext().startService(intent);
     }
 
     private float roundTwoDecimals(float f) {
