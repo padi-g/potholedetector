@@ -12,6 +12,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
@@ -89,7 +90,9 @@ public class TriplistFragment extends Fragment {
             Log.d(TAG, "broadcast received");
             if (tripViewModel != null) {
                 Trip uploadedTrip = intent.getParcelableExtra("tripUploaded");
-                tripViewModel.setUploaded(Trip.tripToLocalTripEntity(uploadedTrip));
+                uploadedTrip.setUploaded(true);
+                tripViewModel.insert(Trip.tripToLocalTripEntity(uploadedTrip));
+                Log.d("tripUploaded", new Gson().toJson(uploadedTrip));
                 offlineTrips.remove(uploadedTrip);
                 createOfflineTripsListView();
             }
@@ -117,12 +120,12 @@ public class TriplistFragment extends Fragment {
         tripViewModel.getHighestPotholeTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
             @Override
             public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
-                ArrayList<Trip> highestPotholeTrips = new ArrayList<>();
+                Set<Trip> highestPotholeTripSet = new HashSet<>();
                 for (LocalTripEntity highestPotholeTrip: localTripEntities) {
                     Trip highPotholeTrip = Trip.localTripEntityToTrip(highestPotholeTrip);
-                    highestPotholeTrips.add(highPotholeTrip);
+                    highestPotholeTripSet.add(highPotholeTrip);
                 }
-                TriplistFragment.this.highestPotholeTrips = highestPotholeTrips;
+                highestPotholeTrips = new ArrayList<>(highestPotholeTripSet);
                 //createHighestPotholeListView();
             }
         });
@@ -164,6 +167,7 @@ public class TriplistFragment extends Fragment {
         if(!offlineTrips.isEmpty() && getActivity()!=null) {
             Log.d(TAG, "inside OfflineTLV");
             Collections.sort(offlineTrips, comparator);
+            Log.d("OfflineTLV", new Gson().toJson(offlineTrips));
             recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, 0, tripViewModel);
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
@@ -194,18 +198,7 @@ public class TriplistFragment extends Fragment {
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
-        /*SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-        Set<String> newTripSet = dbPreferences.getStringSet("newTripJson", null);
-        Set<String> uploadedTrips = dbPreferences.getStringSet("uploadedTrips", null);
-        if (getActivity() != null)
-            getActivity().registerReceiver(uploadBroadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
         if (isVisibleToUser) {
-            if (newTripSet != null)
-                new UpdateDataAsyncTask().execute();
-
-            if (uploadedTrips != null)
-                new UpdateTicksAsyncTask().execute();
-
             //reading SharedPreferences to check if user has logged out
             SharedPreferences logoutPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             boolean loggedOut = logoutPreferences.getBoolean("loggedOut", false);
@@ -217,11 +210,6 @@ public class TriplistFragment extends Fragment {
                 tripViewModel.deleteAll();
             }
         }
-        else {
-            if (getActivity() != null) {
-                getActivity().registerReceiver(uploadBroadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
-            }
-        }*/
     }
 
     @Override

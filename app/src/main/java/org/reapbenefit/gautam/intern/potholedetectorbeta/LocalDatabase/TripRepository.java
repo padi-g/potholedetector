@@ -160,25 +160,6 @@ public class TripRepository {
         }
     }
 
-    public void setUploaded(LocalTripEntity trip) {
-        new SetUploadedAsyncTask(dao).execute(trip);
-    }
-
-    private static class SetUploadedAsyncTask extends AsyncTask<LocalTripEntity, Void, Void> {
-
-        private LocalTripTableDao asyncTaskDao;
-
-        public SetUploadedAsyncTask(LocalTripTableDao dao) {
-            asyncTaskDao = dao;
-        }
-
-        @Override
-        protected Void doInBackground(LocalTripEntity... localTripEntities) {
-            asyncTaskDao.setUploaded(localTripEntities[0]);
-            return null;
-        }
-    }
-
     public LiveData<List<LocalTripEntity>> getAllOfflineTrips() {
         return offlineTrips;
     }

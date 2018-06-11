@@ -41,9 +41,6 @@ public interface LocalTripTableDao {
     @Query("DELETE FROM localtriptable")
     void deleteAll();
 
-    @Update
-    void setUploaded(LocalTripEntity localTripEntity);
-
     @Query("SELECT * FROM localtriptable WHERE uploaded = 0")
     LiveData<List<LocalTripEntity>> getAllOfflineTrips();
 

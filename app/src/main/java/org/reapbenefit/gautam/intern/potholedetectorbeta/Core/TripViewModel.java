@@ -80,10 +80,6 @@ public class TripViewModel extends AndroidViewModel {
         tripRepository.deleteAll();
     }
 
-    public void setUploaded(LocalTripEntity trip) {
-        tripRepository.setUploaded(trip);
-    }
-
     public LiveData<List<LocalTripEntity>> getOfflineTrips() {
         return offlineTrips;
     }
