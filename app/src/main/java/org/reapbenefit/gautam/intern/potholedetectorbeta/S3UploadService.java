@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -22,6 +23,9 @@ import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
 import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
+import com.google.gson.Gson;
+
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,6 +52,8 @@ public class S3UploadService extends IntentService {
     private static final String UPLOAD_URI = "upload_uri";
     private String userId;
     private final String TAG = getClass().getSimpleName();
+    private String tripUploadedId;
+    private SharedPreferences dbPreferences;
 
     public S3UploadService() {
         super("S3UploadService");
@@ -62,12 +68,19 @@ public class S3UploadService extends IntentService {
         Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
 
         if (isInternetAvailable()) {
+            Trip tripUploaded = intent.getParcelableExtra("trip_object");
+            tripUploadedId = tripUploaded.getTrip_id();
+
+            dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             sharedPreferences = getSharedPreferences("uploads", MODE_PRIVATE);
             userId = sharedPreferences.getString("FIREBASE_USER_ID", null);
             clientRegion = Region.getRegion(Regions.AP_SOUTH_1).getName();
             bucketName = getString(R.string.s3bucketname);
             uploadUri = intent.getParcelableExtra(UPLOAD_URI);
             filepath = uploadUri.toString().substring(uploadUri.toString().lastIndexOf('/'));
+
+            dbPreferences.edit().putString("tripUploadedJson", tripUploadedId).commit();
+            Log.d(TAG, "tripUploaded " + tripUploadedId);
 
             if (BuildConfig.DEBUG)
                 keyName = "debug/" + userId + filepath;
@@ -144,17 +157,21 @@ public class S3UploadService extends IntentService {
                     notificationManager.notify(mNotificationId, notificationBuilder.build());
 
                     //initiating DB update through TripViewModel
-                    Trip tripUploaded = intent.getParcelableExtra("trip_object");
                     Intent dbUpdateIntent = new Intent(getString(R.string.set_uploaded_true));
                     dbUpdateIntent.putExtra("tripUploaded", tripUploaded);
                     LocalBroadcastManager.getInstance(this).sendBroadcast(dbUpdateIntent);
+
+                    dbPreferences.edit().putString("tripUploadedId", tripUploadedId).commit();
                 }
             }
         }
         else {
             initialiseNotification();
             notificationBuilder.setContentText("Network connection unavailable. Please try again later.");
+            notificationBuilder.setOngoing(false);
             notificationManager.notify(mNotificationId, notificationBuilder.build());
+            dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            dbPreferences.edit().putString("tripUploadedId", null).commit();
         }
     }
 
@@ -169,7 +186,7 @@ public class S3UploadService extends IntentService {
             HttpURLConnection httpURLConnection = (HttpURLConnection)(new URL("http://www.google.com").openConnection());
             httpURLConnection.setRequestProperty("User-Agent", "Test");
             httpURLConnection.setRequestProperty("Connection", "close");
-            httpURLConnection.setConnectTimeout(5000);
+            httpURLConnection.setConnectTimeout(1000);
             httpURLConnection.connect();
             return (httpURLConnection.getResponseCode() == 200);
         } catch (IOException e) {

@@ -1,14 +1,17 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
 import android.annotation.SuppressLint;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -30,9 +33,23 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MapStateManager;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class OverviewFragment extends Fragment implements
         OnMapReadyCallback,
@@ -58,6 +75,27 @@ public class OverviewFragment extends Fragment implements
     private boolean zoomFlag;
     private static final String KEY_LOCATION = "keyLocation";
     private static final String CAMERA_POSITION = "cameraPosition";
+    private FloatingActionButton starButton;
+    private TripViewModel tripViewModel;
+    private List<LatLng> potholeLocations = new ArrayList<>();
+    private List<String> tripIds = new ArrayList<>();
+    private List<LocalTripEntity> localTripEntities = new ArrayList<>();
+    private HashMap<Integer, String> pointsOfInterest = new HashMap<>();
+    private int locIndex;
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
+        tripViewModel.getAllTrips().observe(getActivity(), new android.arch.lifecycle.Observer<List<LocalTripEntity>>() {
+            @Override
+            public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
+                if (localTripEntities != null)
+                    OverviewFragment.this.localTripEntities = localTripEntities;
+            }
+        });
+        new ProcessFileTask().execute(localTripEntities);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,7 +120,7 @@ public class OverviewFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View fragmentView = inflater.inflate(R.layout.fragment_overview, container, false);
-
+        starButton = fragmentView.findViewById(R.id.personal_scores);
         if (savedInstanceState != null) {
             lastLocation = savedInstanceState.getParcelable(KEY_LOCATION);
             cameraPosition = savedInstanceState.getParcelable(CAMERA_POSITION);
@@ -114,6 +152,23 @@ public class OverviewFragment extends Fragment implements
     }
 
     private void drawMarkers() {
+        Iterator it = pointsOfInterest.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            potholeLocations.add(extractLatLng((String) pair.getValue()));
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+        if (potholeLocations != null) {
+            for (LatLng potholeLocation: potholeLocations) {
+                googleMap.addMarker(new MarkerOptions().position(potholeLocation));
+            }
+        }
+    }
+
+    private LatLng extractLatLng(String line) {
+        String vals[] = line.split(",");
+        LatLng l = new LatLng(Double.valueOf(vals[locIndex]), Double.valueOf(vals[locIndex+1]));
+        return l;
     }
 
     private void createLocationCallback() {
@@ -160,7 +215,7 @@ public class OverviewFragment extends Fragment implements
 
     @Override
     public void onResume() {
-    super.onResume();
+        super.onResume();
         if (mapView != null) {
             if (googleMap != null && !(ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
                 googleMap.setMyLocationEnabled(true);
@@ -178,7 +233,7 @@ public class OverviewFragment extends Fragment implements
         if (mapView != null)
             mapView.onPause();
         MapStateManager mapStateManager = new MapStateManager(getContext());
-        if(googleMap != null)
+        if (googleMap != null)
             mapStateManager.saveMapState(googleMap);
         stopLocationUpdates();
     }
@@ -233,5 +288,66 @@ public class OverviewFragment extends Fragment implements
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
+    }
+
+    private class ProcessFileTask extends AsyncTask<List<LocalTripEntity>, Void, Integer> {
+
+        int lineNumber = 0, prevLineNumber = 0;
+        FileInputStream is;
+        int axisIndex, locIndex;
+        private HashMap<Integer, String> pointsOfInterest = new HashMap<>();
+
+        @Override
+        protected Integer doInBackground(List<LocalTripEntity>... params) {
+            for (int i = 0; i < params[0].size(); ++i) {
+                String tripID = params[0].get(i).trip_id;
+                File file = new File(getActivity().getApplicationContext().getFilesDir(), "logs/" + tripID + ".csv");
+                try {
+                    is = new FileInputStream(file);
+                    InputStreamReader isr = new InputStreamReader(is);
+                    BufferedReader bufferedReader = new BufferedReader(isr);
+                    String line;
+                    try {
+                        //extracting the index of the value to be compared in a given line of data
+                        line = bufferedReader.readLine();
+                        String tokens[] = line.split(",");
+                        for (int j = 0; j < tokens.length; j++) {
+                            if (tokens[j].contains(params[0].get(i).axis)) {
+                                axisIndex = j;
+                            }
+                            if (tokens[i].contains("latitude")) {
+                                locIndex = j;
+                            }
+                        }
+
+                        // populating our set of the points we are interested in
+                        while ((line = bufferedReader.readLine()) != null) {
+                            String values[] = line.split(",");
+                            lineNumber++;
+                            if (Float.valueOf(values[axisIndex]) > params[0].get(i).threshold && lineNumber > prevLineNumber + (params[0].get(i).no_of_lines * 3)) {
+                                // this ignores the first period of data
+                                pointsOfInterest.put(lineNumber, line);
+                                prevLineNumber = lineNumber;
+                            }
+                        }
+
+                    } catch (Exception e) {
+
+                    }
+                    return pointsOfInterest.size();
+                } catch (FileNotFoundException e) {
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Integer integer) {
+            super.onPostExecute(integer);
+            OverviewFragment.this.pointsOfInterest = pointsOfInterest;
+            OverviewFragment.this.locIndex = locIndex;
+            drawMarkers();
+        }
     }
 }

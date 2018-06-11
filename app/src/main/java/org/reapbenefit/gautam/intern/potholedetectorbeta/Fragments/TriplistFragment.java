@@ -26,7 +26,6 @@ import android.view.ViewGroup;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 
-import org.apache.commons.math3.distribution.LogisticDistribution;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
@@ -69,6 +68,7 @@ public class TriplistFragment extends Fragment {
     private SharedPreferences dbPreferences;
     private TripViewModel tripViewModel;
     private ArrayList<Trip> highestPotholeTrips = new ArrayList<>();
+    private String tripUploadedId = null;
     private String TAG = getClass().getSimpleName();
 
     private BroadcastReceiver newTripReceiver = new BroadcastReceiver() {
@@ -129,6 +129,13 @@ public class TriplistFragment extends Fragment {
                 //createHighestPotholeListView();
             }
         });
+        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        tripUploadedId = dbPreferences.getString("tripUploadedId", null);
+        if (tripUploadedId != null) {
+            uploadStatus = true;
+            createOfflineTripsListView();
+        }
+        Log.d(TAG, "tripUploaded " + tripUploadedId);
     }
 
     @Override
@@ -168,14 +175,14 @@ public class TriplistFragment extends Fragment {
             Log.d(TAG, "inside OfflineTLV");
             Collections.sort(offlineTrips, comparator);
             Log.d("OfflineTLV", new Gson().toJson(offlineTrips));
-            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, 0, tripViewModel);
+            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripViewModel, getActivity().getBaseContext());
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
         }
         else if (offlineTrips.isEmpty() && getActivity() != null) {
             Log.d(TAG, "inside OfflineTLV empty");
             Collections.sort(offlineTrips, comparator);
-            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, 0, tripViewModel);
+            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripViewModel, getActivity().getBaseContext());
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
         }
@@ -184,7 +191,7 @@ public class TriplistFragment extends Fragment {
     private void createHighestPotholeListView() {
         if(!highestPotholeTrips.isEmpty() && getActivity()!=null) {
             Collections.sort(highestPotholeTrips, comparator);
-            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, 0, tripViewModel);
+            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripViewModel, getActivity().getBaseContext());
             recyclerView.setAdapter(recyclerAdapter);
         }
     }
@@ -267,6 +274,10 @@ public class TriplistFragment extends Fragment {
         }
     }
 
+    public TripViewModel getTripViewModel() {
+        return tripViewModel;
+    }
+
     private class UpdateDataAsyncTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... voids) {
@@ -303,7 +314,7 @@ public class TriplistFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, null, tripViewModel);
+            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, null, tripViewModel, getActivity().getBaseContext());
             Collections.sort(offlineTrips, new CustomTripComparator());
             recyclerView.setAdapter(recyclerAdapter);
         }
@@ -341,7 +352,7 @@ public class TriplistFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, trip_ids, tripViewModel);
+            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripViewModel, getActivity().getBaseContext());
             Collections.sort(offlineTrips, new CustomTripComparator());
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
