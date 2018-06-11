@@ -2,8 +2,11 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -21,6 +24,9 @@ import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +59,9 @@ public class S3UploadService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-            Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
+        Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
+
+        if (isInternetAvailable()) {
             sharedPreferences = getSharedPreferences("uploads", MODE_PRIVATE);
             userId = sharedPreferences.getString("FIREBASE_USER_ID", null);
             clientRegion = Region.getRegion(Regions.AP_SOUTH_1).getName();
@@ -140,7 +148,33 @@ public class S3UploadService extends IntentService {
                     Intent dbUpdateIntent = new Intent(getString(R.string.set_uploaded_true));
                     dbUpdateIntent.putExtra("tripUploaded", tripUploaded);
                     LocalBroadcastManager.getInstance(this).sendBroadcast(dbUpdateIntent);
+                }
             }
+        }
+        else {
+            initialiseNotification();
+            notificationBuilder.setContentText("Network connection unavailable. Please try again later.");
+            notificationManager.notify(mNotificationId, notificationBuilder.build());
+        }
+    }
+
+    private boolean isInternetAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null && activeNetwork.isConnected();
+        if (!isConnected)
+            return false;
+
+        try {
+            HttpURLConnection httpURLConnection = (HttpURLConnection)(new URL("http://www.google.com").openConnection());
+            httpURLConnection.setRequestProperty("User-Agent", "Test");
+            httpURLConnection.setRequestProperty("Connection", "close");
+            httpURLConnection.setConnectTimeout(5000);
+            httpURLConnection.connect();
+            return (httpURLConnection.getResponseCode() == 200);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
