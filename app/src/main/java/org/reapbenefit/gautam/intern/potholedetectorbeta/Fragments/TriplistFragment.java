@@ -130,7 +130,7 @@ public class TriplistFragment extends Fragment {
             createOfflineTripsListView();
         }
         if (highestPotholeTrip != null)
-            dbPreferences.edit().putString("highestPotholeTrip", new Gson().toJson(highestPotholeTrip));
+            dbPreferences.edit().putString("highestPotholeTrip", new Gson().toJson(highestPotholeTrip)).apply();
         Log.d(TAG, "tripUploaded " + tripUploadedId);
     }
 

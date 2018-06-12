@@ -151,6 +151,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
 
     @Override
     public void onBindViewHolder(TripListViewHolder holder, final int position) {
+        holder.setIsRecyclable(false);
         //this method is called for every item in the list
         Log.i(getClass().getSimpleName(), "inside onBindViewHolder");
         Log.d(TAG, "position = " + position);
