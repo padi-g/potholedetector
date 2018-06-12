@@ -184,7 +184,7 @@ public class OverviewFragment extends Fragment implements
         mapView.onCreate(savedInstanceState);
         if (mapView != null)
             mapView.getMapAsync((OnMapReadyCallback) this);
-        getMarkers();
+        drawMarkers();
 
         definitePotholeCount = tripStatsPreferences.getInt("definitePotholes", 0);
         probablePotholeCount = tripStatsPreferences.getInt("probablePotholes", 0);
@@ -196,10 +196,6 @@ public class OverviewFragment extends Fragment implements
         bottomSheetText.setText(bottomSheetString);
         List<Trip> tempPotholeList = new ArrayList<>();
         tempPotholeList.add(highestPotholeTrip);
-        highestPotholeListView = fragmentView.findViewById(R.id.overview_listview);
-        highestPotholeAdapter = new TripListAdapter(getActivity(), (ArrayList<Trip>) tempPotholeList, false,
-                null, null, getActivity().getBaseContext());
-        highestPotholeListView.setAdapter(highestPotholeAdapter);
         return fragmentView;
     }
 
@@ -224,6 +220,7 @@ public class OverviewFragment extends Fragment implements
             it.remove(); // avoids a ConcurrentModificationException
         }
         if (potholeLocations != null) {
+            Log.d(getClass().getSimpleName(), "inside if marker");
             for (LatLng potholeLocation: potholeLocations) {
                 googleMap.addMarker(new MarkerOptions().position(potholeLocation));
             }
@@ -285,7 +282,7 @@ public class OverviewFragment extends Fragment implements
             if (googleMap != null && !(ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
                 googleMap.setMyLocationEnabled(true);
                 googleMap.getUiSettings().setMyLocationButtonEnabled(true);
-                getMarkers();
+                drawMarkers();
             }
             mapView.onResume();
         }

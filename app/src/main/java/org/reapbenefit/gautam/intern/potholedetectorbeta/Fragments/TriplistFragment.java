@@ -71,6 +71,7 @@ public class TriplistFragment extends Fragment {
     private String tripUploadedId = null;
     private ImageButton uploadAllButton;
     private String TAG = getClass().getSimpleName();
+    private int maxPotholeCount;
 
     private BroadcastReceiver newTripReceiver = new BroadcastReceiver() {
         @Override
@@ -80,6 +81,11 @@ public class TriplistFragment extends Fragment {
                 tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
                 Log.d(TAG, "Trip inserted " + newTrip.getTrip_id());
                 offlineTrips.add(newTrip);
+
+                if (newTrip.getPotholeCount() >= maxPotholeCount) {
+                    highestPotholeTrip = newTrip;
+                    dbPreferences.edit().putString("highestPotholeTrip", new Gson().toJson(highestPotholeTrip)).apply();
+                }
                 createOfflineTripsListView();
             }
         }
@@ -117,20 +123,12 @@ public class TriplistFragment extends Fragment {
                 createOfflineTripsListView();
             }
         });
-        tripViewModel.getHighestPotholeTrip(getActivity(), new Observer<List<LocalTripEntity>>() {
-            @Override
-            public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
-                highestPotholeTrip = Trip.localTripEntityToTrip(localTripEntities.get(0));
-            }
-        });
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         tripUploadedId = dbPreferences.getString("tripUploadedId", null);
         if (tripUploadedId != null) {
             uploadStatus = true;
             createOfflineTripsListView();
         }
-        if (highestPotholeTrip != null)
-            dbPreferences.edit().putString("highestPotholeTrip", new Gson().toJson(highestPotholeTrip)).apply();
         Log.d(TAG, "tripUploaded " + tripUploadedId);
     }
 
@@ -143,6 +141,8 @@ public class TriplistFragment extends Fragment {
         editor = sharedPreferences.edit();
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(uploadBroadcastReceiver, new IntentFilter(getString(R.string.set_uploaded_true)));
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(newTripReceiver, new IntentFilter(getString(R.string.new_trip_insert)));
+        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        maxPotholeCount = dbPreferences.getInt("maxPotholeCount", 0);
     }
 
     private long getTime(String date) throws ParseException{
