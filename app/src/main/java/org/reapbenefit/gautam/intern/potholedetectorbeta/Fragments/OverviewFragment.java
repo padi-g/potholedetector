@@ -11,12 +11,14 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -82,6 +84,7 @@ public class OverviewFragment extends Fragment implements
     private List<LocalTripEntity> localTripEntities = new ArrayList<>();
     private HashMap<Integer, String> pointsOfInterest = new HashMap<>();
     private int locIndex;
+    private LinearLayout bottomSheet;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -126,6 +129,28 @@ public class OverviewFragment extends Fragment implements
             cameraPosition = savedInstanceState.getParcelable(CAMERA_POSITION);
             zoomFlag = true;
         }
+
+        bottomSheet = fragmentView.findViewById(R.id.bottom_sheet);
+        final BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+
+        bottomSheet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
+        });
+
+        bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                starButton.animate().scaleX(1 - slideOffset).scaleY(1 - slideOffset).setDuration(0).start();
+            }
+        });
 
         createLocationCallback();
         createLocationRequest();
