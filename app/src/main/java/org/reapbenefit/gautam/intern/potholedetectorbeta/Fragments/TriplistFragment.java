@@ -67,7 +67,7 @@ public class TriplistFragment extends Fragment {
     private TriplistFragment triplistFragment = this;
     private SharedPreferences dbPreferences;
     private TripViewModel tripViewModel;
-    private ArrayList<Trip> highestPotholeTrips = new ArrayList<>();
+    private Trip highestPotholeTrip;
     private String tripUploadedId = null;
     private ImageButton uploadAllButton;
     private String TAG = getClass().getSimpleName();
@@ -117,17 +117,10 @@ public class TriplistFragment extends Fragment {
                 createOfflineTripsListView();
             }
         });
-
-        tripViewModel.getHighestPotholeTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
+        tripViewModel.getHighestPotholeTrip(getActivity(), new Observer<List<LocalTripEntity>>() {
             @Override
             public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
-                Set<Trip> highestPotholeTripSet = new HashSet<>();
-                for (LocalTripEntity highestPotholeTrip: localTripEntities) {
-                    Trip highPotholeTrip = Trip.localTripEntityToTrip(highestPotholeTrip);
-                    highestPotholeTripSet.add(highPotholeTrip);
-                }
-                highestPotholeTrips = new ArrayList<>(highestPotholeTripSet);
-                //createHighestPotholeListView();
+                highestPotholeTrip = Trip.localTripEntityToTrip(localTripEntities.get(0));
             }
         });
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
@@ -136,6 +129,8 @@ public class TriplistFragment extends Fragment {
             uploadStatus = true;
             createOfflineTripsListView();
         }
+        if (highestPotholeTrip != null)
+            dbPreferences.edit().putString("highestPotholeTrip", new Gson().toJson(highestPotholeTrip));
         Log.d(TAG, "tripUploaded " + tripUploadedId);
     }
 
@@ -186,14 +181,6 @@ public class TriplistFragment extends Fragment {
             recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripViewModel, getActivity().getBaseContext());
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
-        }
-    }
-
-    private void createHighestPotholeListView() {
-        if(!highestPotholeTrips.isEmpty() && getActivity()!=null) {
-            Collections.sort(highestPotholeTrips, comparator);
-            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripViewModel, getActivity().getBaseContext());
-            recyclerView.setAdapter(recyclerAdapter);
         }
     }
 

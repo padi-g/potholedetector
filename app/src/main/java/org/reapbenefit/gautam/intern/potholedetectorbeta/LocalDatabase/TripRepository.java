@@ -19,7 +19,7 @@ public class TripRepository {
     private long filesize;
     private String user_id;
     private LiveData<List<LocalTripEntity>> offlineTrips;
-    private LiveData<List<LocalTripEntity>> highestPotholeTrips;
+    private LiveData<LocalTripEntity> highestPotholeTrip;
 
     public TripRepository(Application app) {
         LocalTripDatabase localTripDatabase = LocalTripDatabase.getInstance(app);
@@ -33,7 +33,7 @@ public class TripRepository {
         filesize = getFilesize();
         user_id = getUser_id();
         offlineTrips = dao.getAllOfflineTrips();
-        highestPotholeTrips = dao.getHighestPotholeTrips();
+        highestPotholeTrip = dao.getHighestPotholeTrip();
     }
 
     public LiveData<List<LocalTripEntity>> getLiveDataTrips() {
@@ -164,7 +164,7 @@ public class TripRepository {
         return offlineTrips;
     }
 
-    public LiveData<List<LocalTripEntity>> getHighestPotholeTrips() {
-        return highestPotholeTrips;
+    public LiveData<LocalTripEntity> getHighestPotholeTrip() {
+        return highestPotholeTrip;
     }
 }

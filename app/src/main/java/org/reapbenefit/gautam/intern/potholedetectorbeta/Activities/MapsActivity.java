@@ -30,6 +30,7 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
@@ -311,11 +312,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             resultGrid.setVisibility(View.VISIBLE);
             accuracySeekbar.setVisibility(View.VISIBLE);
             submitButton.setVisibility(View.VISIBLE);
-            if(finishedTrip.getDistanceInKM() < 0.5){
+            if(finishedTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG){
                 distance.setText(" < 0.5 km");
                 potholecount.setText("Sorry, you must travel at least 0.5 km");
             }else {
-                distance.setText(roundTwoDecimals(finishedTrip.getDistanceInKM()) + "km");
+                distance.setText(roundTwoDecimals(finishedTrip.getDistanceInKM()) + " km");
                 potholecount.setText(Integer.toString(result));
                 populatePotholeMarkerPoints();
                 mapFragment.getMapAsync(MapsActivity.this);

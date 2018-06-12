@@ -17,10 +17,15 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -39,12 +44,15 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MapStateManager;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -52,6 +60,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -91,6 +100,9 @@ public class OverviewFragment extends Fragment implements
     private LinearLayout bottomSheet;
     private TextView bottomSheetText;
     private SharedPreferences tripStatsPreferences;
+    private RecyclerView highestPotholeListView;
+    private Trip highestPotholeTrip;
+    private TripListAdapter highestPotholeAdapter;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -111,6 +123,11 @@ public class OverviewFragment extends Fragment implements
         super.onCreate(savedInstanceState);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getContext());
         tripStatsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        String highestPotholeTripJson = tripStatsPreferences.getString("highestPotholeTrip", null);
+        Log.d(getClass().getSimpleName(), highestPotholeTripJson + "");
+        if (highestPotholeTripJson != null) {
+            highestPotholeTrip = new Gson().fromJson(highestPotholeTripJson, Trip.class);
+        }
     }
 
     @Override
@@ -126,6 +143,7 @@ public class OverviewFragment extends Fragment implements
             mapView.onSaveInstanceState(outState);
     }
 
+    @SuppressLint("ResourceType")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -173,6 +191,14 @@ public class OverviewFragment extends Fragment implements
                 "\n" + tripStatsPreferences.getInt("definitePotholes", 0) + " definite potholes" +
                 "\n" + tripStatsPreferences.getInt("probablePotholes", 0) + " probable potholes";
         bottomSheetText.setText(bottomSheetString);
+        Trip[] tempPotholeArray = new Trip[1];
+        tempPotholeArray[0] = highestPotholeTrip;
+        List<Trip> tempPotholeList = new ArrayList<>();
+        tempPotholeList.add(highestPotholeTrip);
+        highestPotholeListView = fragmentView.findViewById(R.id.overview_listview);
+        highestPotholeAdapter = new TripListAdapter(getActivity(), (ArrayList<Trip>) tempPotholeList, false,
+                null, null, getActivity().getBaseContext());
+        highestPotholeListView.setAdapter(highestPotholeAdapter);
         return fragmentView;
     }
 

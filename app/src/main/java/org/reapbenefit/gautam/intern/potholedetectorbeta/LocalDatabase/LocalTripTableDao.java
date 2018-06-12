@@ -44,6 +44,6 @@ public interface LocalTripTableDao {
     @Query("SELECT * FROM localtriptable WHERE uploaded = 0")
     LiveData<List<LocalTripEntity>> getAllOfflineTrips();
 
-    @Query("SELECT * FROM localtriptable ORDER BY (potholeCount/distanceInKM) DESC LIMIT 3")
-    LiveData<List<LocalTripEntity>> getHighestPotholeTrips();
+    @Query("SELECT * FROM localtriptable ORDER BY (potholeCount) DESC")
+    LiveData<LocalTripEntity> getHighestPotholeTrip();
 }

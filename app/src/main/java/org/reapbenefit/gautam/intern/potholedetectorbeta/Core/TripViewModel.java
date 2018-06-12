@@ -3,7 +3,9 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
 import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentActivity;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.TripRepository;
@@ -23,7 +25,7 @@ public class TripViewModel extends AndroidViewModel {
     private float distanceInKm;
     private long filesize;
     private String user_id;
-    private LiveData<List<LocalTripEntity>> highestPotholeTrips;
+    private LiveData<LocalTripEntity> highestPotholeTrip;
 
     public TripViewModel(@NonNull Application application) {
         super(application);
@@ -37,7 +39,7 @@ public class TripViewModel extends AndroidViewModel {
         filesize = tripRepository.getFilesize();
         user_id = tripRepository.getUser_id();
         offlineTrips = tripRepository.getAllOfflineTrips();
-        highestPotholeTrips = tripRepository.getHighestPotholeTrips();
+        highestPotholeTrip = tripRepository.getHighestPotholeTrip();
     }
 
     public LiveData<List<LocalTripEntity>> getAllTrips() {
@@ -84,7 +86,7 @@ public class TripViewModel extends AndroidViewModel {
         return offlineTrips;
     }
 
-    public LiveData<List<LocalTripEntity>> getHighestPotholeTrips() {
-        return highestPotholeTrips;
+    public LiveData<LocalTripEntity> getHighestPotholeTrip(FragmentActivity activity, Observer<List<LocalTripEntity>> observer) {
+        return highestPotholeTrip;
     }
 }
