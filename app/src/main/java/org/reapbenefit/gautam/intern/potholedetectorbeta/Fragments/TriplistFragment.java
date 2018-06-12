@@ -22,6 +22,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageButton;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
@@ -29,6 +31,7 @@ import com.google.gson.Gson;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.MultipleFileUploadService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
@@ -43,6 +46,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
+import static org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment.uploadFileUri;
 
 public class TriplistFragment extends Fragment {
 
@@ -69,6 +74,7 @@ public class TriplistFragment extends Fragment {
     private TripViewModel tripViewModel;
     private ArrayList<Trip> highestPotholeTrips = new ArrayList<>();
     private String tripUploadedId = null;
+    private ImageButton uploadAllButton;
     private String TAG = getClass().getSimpleName();
 
     private BroadcastReceiver newTripReceiver = new BroadcastReceiver() {
@@ -230,6 +236,17 @@ public class TriplistFragment extends Fragment {
         recyclerLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerLayoutManager);
         createOfflineTripsListView();
+        uploadAllButton = (ImageButton) v.findViewById(R.id.upload_all_button);
+        uploadAllButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (offlineTrips != null) {
+                    Intent uploadMultipleTrips = new Intent(TriplistFragment.this.getContext(), MultipleFileUploadService.class);
+                    uploadMultipleTrips.putParcelableArrayListExtra("offlineTrips", offlineTrips);
+                    TriplistFragment.this.getContext().startService(uploadMultipleTrips);
+                }
+            }
+        });
         return v;
     }
 

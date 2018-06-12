@@ -91,6 +91,8 @@ public class S3UploadService extends IntentService {
             userId = sharedPreferences.getString("FIREBASE_USER_ID", null);
             clientRegion = Region.getRegion(Regions.AP_SOUTH_1).getName();
             bucketName = getString(R.string.s3bucketname);
+            if (uploadUri == null)
+                return;
             filepath = uploadUri.toString().substring(uploadUri.toString().lastIndexOf('/'));
 
             dbPreferences.edit().putString("tripUploadedJson", tripUploadedId).commit();
