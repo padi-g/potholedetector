@@ -3,12 +3,14 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 import android.annotation.SuppressLint;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
@@ -19,6 +21,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -37,6 +40,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MapStateManager;
@@ -85,6 +89,8 @@ public class OverviewFragment extends Fragment implements
     private HashMap<Integer, String> pointsOfInterest = new HashMap<>();
     private int locIndex;
     private LinearLayout bottomSheet;
+    private TextView bottomSheetText;
+    private SharedPreferences tripStatsPreferences;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -104,6 +110,7 @@ public class OverviewFragment extends Fragment implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getContext());
+        tripStatsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
     }
 
     @Override
@@ -160,6 +167,12 @@ public class OverviewFragment extends Fragment implements
         if (mapView != null)
             mapView.getMapAsync((OnMapReadyCallback) this);
         getMarkers();
+
+        bottomSheetText = fragmentView.findViewById(R.id.overview_sheet_text);
+        String bottomSheetString = tripStatsPreferences.getInt("validTrips", 0) + " trips taken" +
+                "\n" + tripStatsPreferences.getInt("definitePotholes", 0) + " definite potholes" +
+                "\n" + tripStatsPreferences.getInt("probablePotholes", 0) + " probable potholes";
+        bottomSheetText.setText(bottomSheetString);
         return fragmentView;
     }
 

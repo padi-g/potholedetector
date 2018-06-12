@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -22,7 +21,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -31,7 +29,6 @@ import com.google.gson.Gson;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.MultipleFileUploadService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
@@ -46,8 +43,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-
-import static org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment.uploadFileUri;
 
 public class TriplistFragment extends Fragment {
 
@@ -236,18 +231,43 @@ public class TriplistFragment extends Fragment {
         recyclerLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerLayoutManager);
         createOfflineTripsListView();
-        uploadAllButton = (ImageButton) v.findViewById(R.id.upload_all_button);
+        /*uploadAllButton = (ImageButton) v.findViewById(R.id.upload_all_button);
         uploadAllButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (offlineTrips != null) {
-                    Intent uploadMultipleTrips = new Intent(TriplistFragment.this.getContext(), MultipleFileUploadService.class);
-                    uploadMultipleTrips.putParcelableArrayListExtra("offlineTrips", offlineTrips);
-                    TriplistFragment.this.getContext().startService(uploadMultipleTrips);
+                Log.d(TAG, "inside listener");
+                Log.d(TAG, offlineTrips.toString());
+                if (offlineTrips != null && !dbPreferences.getBoolean("multipleUploads", false)) {
+                    Log.d(TAG, "inside if");
+                    for (int i = 0; i < offlineTrips.size(); ++i) {
+                    if (isInternetAvailable()) {
+                        Intent uploadIntent = new Intent(getActivity(), S3UploadService.class);
+                        uploadIntent.setAction("upload_now");
+                        if (uploadFileUri == null) {
+                            String path = getActivity().getApplicationContext().getFilesDir() + "/logs" + offlineTrips.get(i).getTrip_id()
+                                    + ".csv";
+                            File file = new File(path);
+                            uploadFileUri = Uri.fromFile(file);
+                        }
+                        uploadIntent.putExtra("upload_uri", uploadFileUri);
+                        uploadIntent.putExtra("trip_object", offlineTrips.get(i));
+                        getActivity().startService(uploadIntent);
+                    }
                 }
             }
-        });
+        }});*/
         return v;
+    }
+
+    private boolean isInternetAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null && activeNetwork.isConnected();
+        if (!isConnected)
+            return false;
+        //TODO: HOW TO FIX THIS WHEN ASYNCTASK MIGHT TAKE TIME TO COMPLETE?
+        //new CheckWifiNoInternetAsyncTask().execute();
+        return true;
     }
 
     @Override
@@ -293,86 +313,5 @@ public class TriplistFragment extends Fragment {
 
     public TripViewModel getTripViewModel() {
         return tripViewModel;
-    }
-
-    private class UpdateDataAsyncTask extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... voids) {
-            //reading for new trip registered by LoggerService
-            Set<String> newTripSet = dbPreferences.getStringSet("newTripJson", null);
-            List<String> newTripJson = new ArrayList<>();
-            if (newTripSet != null)
-                newTripJson = new ArrayList<>(newTripSet);
-            if (newTripJson != null && tripViewModel != null) {
-                for (int i = 0; i < newTripJson.size(); ++i) {
-                    Trip newTrip = new Gson().fromJson(newTripJson.get(i), Trip.class);
-                    tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
-                }
-
-                    try {
-                        tripViewModel.getAllTrips().observe(getActivity(), new Observer<List<LocalTripEntity>>() {
-                            @Override
-                            public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
-                                ArrayList<Trip> latestTrips = new ArrayList<>();
-                                for (int i = 0; i < localTripEntities.size(); ++i) {
-                                    Trip trip = Trip.localTripEntityToTrip(localTripEntities.get(i));
-                                    Log.i(TAG, i + " " + new Gson().toJson(trip.toString()));
-                                    latestTrips.add(trip);
-                                }
-                                offlineTrips = latestTrips;
-                            }
-                        });
-                    } catch (IllegalStateException e) {
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, null, tripViewModel, getActivity().getBaseContext());
-            Collections.sort(offlineTrips, new CustomTripComparator());
-            recyclerView.setAdapter(recyclerAdapter);
-        }
-    }
-
-    private class UpdateTicksAsyncTask extends AsyncTask<Void, Void, Void> {
-
-        private LocalTripEntity tripEntityUploaded;
-        private boolean uploadStatus;
-        private boolean autoUpload;
-        private ArrayList<String> trip_ids = new ArrayList<>();
-        @Override
-        protected Void doInBackground(Void... voids) {
-            //reading SharedPreferences to see if a recent upload has happened
-            Set<String> uploadedTrips = dbPreferences.getStringSet("uploadedTrips", null);
-            if (uploadedTrips == null)
-                return null;
-            Log.d("TLF UTS", uploadedTrips.toString());
-            if (tripViewModel != null) {
-                List<LocalTripEntity> localTripEntityList = tripViewModel.getAllTrips().getValue();
-                for (int i = localTripEntityList.size() - 1; i >= 0; --i) {
-                    if (uploadedTrips.contains(localTripEntityList.get(i).trip_id)) {
-                        //ID matched with trip in database, must update ticks of trip with this ID
-                        LocalTripEntity matchedTripEntity = localTripEntityList.get(i);
-                        matchedTripEntity.uploaded = true;
-                        tripViewModel.insert(matchedTripEntity);
-                        offlineTrips.add(Trip.localTripEntityToTrip(matchedTripEntity));
-                    }
-                }
-            }
-            dbPreferences.edit().putStringSet("uploadedTrips", null).commit();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripViewModel, getActivity().getBaseContext());
-            Collections.sort(offlineTrips, new CustomTripComparator());
-            recyclerView.setAdapter(recyclerAdapter);
-            recyclerAdapter.notifyDataSetChanged();
-        }
     }
 }

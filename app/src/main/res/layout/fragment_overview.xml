@@ -44,27 +44,38 @@
 
         <TextView
             android:layout_width="match_parent"
-            android:layout_height="80dp"
+            android:layout_height="100dp"
             android:paddingTop="13dp"
             android:textSize="16dp"
             android:id="@+id/overview_sheet_text"
-            android:background="@color/colorPrimary"
-            android:text="100 trips taken\n20 definite potholes\n30 probable potholes"
+            android:background="?attr/colorPrimary"
             android:textColor="@android:color/white"
             android:textAlignment="center"
             android:layout_gravity="center|top"
             android:gravity="center|top"
+            android:paddingBottom="20dp"
             android:fontFamily="sans-serif-condensed"/>
 
         <TextView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
+            android:paddingTop="15dp"
+            android:paddingBottom="15dp"
+            android:layout_height="wrap_content"
+            android:text="Trip with most potholes"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
             android:textSize="20dp"
-            android:background="@android:color/white"
-            android:text="Overview details"
             android:fontFamily="sans-serif-condensed"
-            android:textColor="@color/colorPrimary" />
+            android:background="?attr/colorPrimaryDark"/>
+
+        <android.support.v7.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/overview_card">
+
+            <include layout="@layout/trip_list_item" />
+
+        </android.support.v7.widget.CardView>
 
     </LinearLayout>
 

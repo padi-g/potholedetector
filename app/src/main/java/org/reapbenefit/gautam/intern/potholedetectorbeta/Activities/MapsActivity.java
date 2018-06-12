@@ -71,6 +71,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private int accuracy_result = 0;
     private GridLayout resultGrid;
     private TextView accuracyLowTime;
+    private SharedPreferences tripStatsPreferences;
+    private SharedPreferences.Editor tripStatsEditor;
+
 
     private SharedPreferences dbPreferences;
     private SharedPreferences.Editor dbPreferencesEditor;
@@ -86,6 +89,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        tripStatsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        tripStatsEditor = tripStatsPreferences.edit();
 
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         dbPreferencesEditor = dbPreferences.edit();
@@ -299,7 +304,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             super.onPostExecute(result);
             setPotholeCount(result);
             spinner.setVisibility(View.GONE);
-            duration.setText(finishedTrip.getDuration() + " mins");
+            duration.setText(finishedTrip.getDuration() + " minutes");
             date.setText(finishedTrip.getStartTime().substring(0,11));
             trafficTime.setText(finishedTrip.getMinutesWasted() + " minutes");
             accuracyLowTime.setText(finishedTrip.getMinutesAccuracyLow() + " minutes");
@@ -307,13 +312,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             accuracySeekbar.setVisibility(View.VISIBLE);
             submitButton.setVisibility(View.VISIBLE);
             if(finishedTrip.getDistanceInKM() < 0.5){
-                distance.setText(" < 0.5km");
-                potholecount.setText("sorry, you must travel at least 0.5km");
+                distance.setText(" < 0.5 km");
+                potholecount.setText("Sorry, you must travel at least 0.5 km");
             }else {
                 distance.setText(roundTwoDecimals(finishedTrip.getDistanceInKM()) + "km");
                 potholecount.setText(Integer.toString(result));
                 populatePotholeMarkerPoints();
                 mapFragment.getMapAsync(MapsActivity.this);
+                int validTrips = tripStatsPreferences.getInt("validTrips", 0);
+                tripStatsEditor.putInt("validTrips", validTrips + 1);
+                int probablePotholes = tripStatsPreferences.getInt("probablePotholes", 0);
+                tripStatsEditor.putInt("probablePotholes", probablePotholes + result);
             }
         }
     }
