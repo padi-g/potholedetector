@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -319,12 +320,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 distance.setText(roundTwoDecimals(finishedTrip.getDistanceInKM()) + " km");
                 potholecount.setText(Integer.toString(result));
                 populatePotholeMarkerPoints();
-                mapFragment.getMapAsync(MapsActivity.this);
                 int validTrips = tripStatsPreferences.getInt("validTrips", 0);
                 tripStatsEditor.putInt("validTrips", validTrips + 1);
                 int probablePotholes = tripStatsPreferences.getInt("probablePotholes", 0);
                 tripStatsEditor.putInt("probablePotholes", probablePotholes + result);
                 tripStatsEditor.commit();
+                //only registering trip in database if it is useful to us
+                Intent newTripIntent = new Intent(getString(R.string.new_trip_insert));
+                newTripIntent.putExtra("trip_object", finishedTrip);
+                LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(MapsActivity.this);
+                localBroadcastManager.sendBroadcast(newTripIntent);
+                mapFragment.getMapAsync(MapsActivity.this);
             }
         }
     }
