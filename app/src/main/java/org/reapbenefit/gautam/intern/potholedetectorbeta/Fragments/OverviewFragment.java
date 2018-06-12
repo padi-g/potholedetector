@@ -2,7 +2,9 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
 import android.annotation.SuppressLint;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -22,10 +24,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -60,7 +59,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -103,6 +101,8 @@ public class OverviewFragment extends Fragment implements
     private RecyclerView highestPotholeListView;
     private Trip highestPotholeTrip;
     private TripListAdapter highestPotholeAdapter;
+    private int definitePotholeCount;
+    private int probablePotholeCount;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -186,13 +186,14 @@ public class OverviewFragment extends Fragment implements
             mapView.getMapAsync((OnMapReadyCallback) this);
         getMarkers();
 
+        definitePotholeCount = tripStatsPreferences.getInt("definitePotholes", 0);
+        probablePotholeCount = tripStatsPreferences.getInt("probablePotholes", 0);
+
         bottomSheetText = fragmentView.findViewById(R.id.overview_sheet_text);
         String bottomSheetString = tripStatsPreferences.getInt("validTrips", 0) + " trips taken" +
-                "\n" + tripStatsPreferences.getInt("definitePotholes", 0) + " definite potholes" +
-                "\n" + tripStatsPreferences.getInt("probablePotholes", 0) + " probable potholes";
+                "\n" + definitePotholeCount + " definite potholes" +
+                "\n" + probablePotholeCount + " probable potholes";
         bottomSheetText.setText(bottomSheetString);
-        Trip[] tempPotholeArray = new Trip[1];
-        tempPotholeArray[0] = highestPotholeTrip;
         List<Trip> tempPotholeList = new ArrayList<>();
         tempPotholeList.add(highestPotholeTrip);
         highestPotholeListView = fragmentView.findViewById(R.id.overview_listview);

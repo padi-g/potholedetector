@@ -322,8 +322,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mapFragment.getMapAsync(MapsActivity.this);
                 int validTrips = tripStatsPreferences.getInt("validTrips", 0);
                 tripStatsEditor.putInt("validTrips", validTrips + 1);
-                int probablePotholes = tripStatsPreferences.getInt("probablePotholes", 0);
+                int probablePotholes = tripStatsPreferences.getInt("probablePotholes", 1);
                 tripStatsEditor.putInt("probablePotholes", probablePotholes + result);
+                tripStatsEditor.commit();
             }
         }
     }
