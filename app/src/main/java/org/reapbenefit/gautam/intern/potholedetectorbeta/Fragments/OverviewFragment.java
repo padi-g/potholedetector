@@ -103,6 +103,10 @@ public class OverviewFragment extends Fragment implements
     private TripListAdapter highestPotholeAdapter;
     private int definitePotholeCount;
     private int probablePotholeCount;
+    private TextView startTimeTextView;
+    private TextView countTextView;
+    private TextView distanceTextView;
+    private TextView sizeTextView;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -194,8 +198,19 @@ public class OverviewFragment extends Fragment implements
                 "\n" + definitePotholeCount + " definite potholes" +
                 "\n" + probablePotholeCount + " probable potholes";
         bottomSheetText.setText(bottomSheetString);
-        List<Trip> tempPotholeList = new ArrayList<>();
-        tempPotholeList.add(highestPotholeTrip);
+
+        startTimeTextView = fragmentView.findViewById(R.id.start_time);
+        countTextView = fragmentView.findViewById(R.id.count);
+        distanceTextView = fragmentView.findViewById(R.id.distance_view);
+        sizeTextView = fragmentView.findViewById(R.id.size);
+
+        //adding details of highestPotholeTrip to GridLayout
+        String startTime = highestPotholeTrip.getStartTime();
+        startTime = startTime.substring(4, startTime.indexOf("GMT") - 4);
+        startTimeTextView.setText(startTime);
+        countTextView.setText(highestPotholeTrip.getPotholeCount() + " potholes");
+        distanceTextView.setText(highestPotholeTrip.getDistanceInKM() + "km");
+        sizeTextView.setText(TripListAdapter.humanReadableByteCount(highestPotholeTrip.getFilesize(), true));
         return fragmentView;
     }
 

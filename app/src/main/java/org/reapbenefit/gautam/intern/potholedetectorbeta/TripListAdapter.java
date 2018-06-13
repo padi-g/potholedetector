@@ -68,23 +68,6 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         }
     }
 
-    public TripListAdapter(Context context, ArrayList<Trip> trips, boolean uploadStatus, int positionChanged, TripViewModel tripViewModel) {
-        this.context = context;
-        this.trips = trips;
-        this.uploadStatus = uploadStatus;
-        this.positionChanged = positionChanged;
-        if (context != null) {
-            SharedPreferences adapterPreferences = ApplicationClass.getInstance().getSharedPreferences("adapterPreferences", Context.MODE_PRIVATE);
-            this.positionChangedSet = adapterPreferences.getStringSet("positionChangedSet", null);
-            if (positionChangedSet == null)
-                positionChangedSet = new HashSet<>();
-            positionChangedSet.add(String.valueOf(positionChanged));
-            adapterPreferences.edit().putStringSet("positionChangedSet", positionChangedSet).apply();
-            this.tripViewModel = tripViewModel;
-            Log.d(TAG, "positionChanged = " + positionChanged);
-        }
-    }
-
     public TripListAdapter(Context context, ArrayList<Trip> trips, boolean uploadStatus, String tripId, TripViewModel tripViewModel, Context baseContext) {
         Log.d("Constructor", "Hello");
         this.context = context;
@@ -140,13 +123,6 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         }
         else
             return false;
-    }
-
-
-    @Override
-    public void onViewRecycled(TripListViewHolder holder) {
-        super.onViewRecycled(holder);
-
     }
 
     @Override
@@ -252,12 +228,12 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         context.getApplicationContext().startService(intent);
     }
 
-    private float roundTwoDecimals(float f) {
+    public static float roundTwoDecimals(float f) {
         DecimalFormat twoDForm = new DecimalFormat("#.##");
         return Float.valueOf(twoDForm.format(f));
     }
 
-    private String humanReadableByteCount(long bytes, boolean si) {
+    public static String humanReadableByteCount(long bytes, boolean si) {
         int unit = si ? 1000 : 1024;
         if (bytes < unit) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(unit));
