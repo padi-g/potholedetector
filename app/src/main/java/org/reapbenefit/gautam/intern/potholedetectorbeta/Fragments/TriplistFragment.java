@@ -26,6 +26,7 @@ import android.widget.ImageButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
@@ -78,6 +79,8 @@ public class TriplistFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             if (tripViewModel != null) {
                 Trip newTrip = intent.getParcelableExtra("trip_object");
+                if (newTrip.getDistanceInKM() < 0.5 || !BuildConfig.DEBUG)
+                    return;
                 tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
                 Log.d(TAG, "Trip inserted " + newTrip.getTrip_id());
                 offlineTrips.add(newTrip);
