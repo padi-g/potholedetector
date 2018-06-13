@@ -152,11 +152,10 @@ public class EasyModeFragment extends Fragment {
         statusIndicatorText.setText(R.string.warnings);
         startFloatingActionButton = (FloatingActionButton) v.findViewById(R.id.start_trip_button);
         stopFloatingActionButton = (FloatingActionButton) v.findViewById(R.id.stop_trip_button);
-        handler = new Handler(Looper.getMainLooper());
+        /*handler = new Handler(Looper.getMainLooper());
         handler.post(new Runnable() {
             @Override
             public void run() {
-                //keeps checking current activity in a separate thread to stay updated
                 arsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
                 currentActivity = arsPreferences.getString("currentActivity", null);
                 if (currentActivity == null) {
@@ -173,7 +172,7 @@ public class EasyModeFragment extends Fragment {
                     }
                 }
             }
-        });
+        });*/
 
         if(!app.isTripInProgress() && !app.isTripEnded()){
             startFloatingActionButton.setVisibility(View.VISIBLE);
@@ -217,7 +216,7 @@ public class EasyModeFragment extends Fragment {
         startFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!app.isTripInProgress() && checkPermissions() && (inCar || currentlyInCar || BuildConfig.DEBUG)) {
+                if (!app.isTripInProgress() && checkPermissions()) {
                     app.setTripInProgress(true);
                     timePreferencesEditor.putBoolean("isChronometerRunning", true).apply();
                     chronometer.setBase(SystemClock.elapsedRealtime());
