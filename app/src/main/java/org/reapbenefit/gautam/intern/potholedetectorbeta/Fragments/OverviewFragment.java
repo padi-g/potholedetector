@@ -221,7 +221,7 @@ public class OverviewFragment extends Fragment implements
         startTime = startTime.substring(4, startTime.indexOf("GMT") - 4);
         startTimeTextView.setText(startTime);
         countTextView.setText(highestPotholeTrip.getPotholeCount() + " potholes");
-        distanceTextView.setText(highestPotholeTrip.getDistanceInKM() + "km");
+        distanceTextView.setText(TripListAdapter.roundTwoDecimals(highestPotholeTrip.getDistanceInKM()) + "km");
         sizeTextView.setText(TripListAdapter.humanReadableByteCount(highestPotholeTrip.getFilesize(), true));
 
         mostPotholesGrid = fragmentView.findViewById(R.id.highest_pothole_grid);

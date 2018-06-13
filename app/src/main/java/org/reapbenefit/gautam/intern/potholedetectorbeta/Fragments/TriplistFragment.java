@@ -37,6 +37,8 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.S3MultipleFileUploadSer
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
 
+import java.io.File;
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -229,14 +231,14 @@ public class TriplistFragment extends Fragment {
         recyclerLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerLayoutManager);
         createOfflineTripsListView();
-        uploadAllButton = (ImageButton) v.findViewById(R.id.upload_all_button);
+        /*uploadAllButton = (ImageButton) v.findViewById(R.id.upload_all_button);
         uploadAllButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent uploadAllIntent = new Intent(getContext(), S3MultipleFileUploadService.class);
                 getContext().startService(uploadAllIntent);
             }
-        });
+        });*/
         return v;
     }
 
