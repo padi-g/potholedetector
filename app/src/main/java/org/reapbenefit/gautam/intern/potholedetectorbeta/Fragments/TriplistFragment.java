@@ -105,7 +105,7 @@ public class TriplistFragment extends Fragment {
     private BroadcastReceiver uploadBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "broadcast received");
+            Log.d("uploadBroadcast", "broadcast received");
             if (tripViewModel != null) {
                 Trip uploadedTrip = intent.getParcelableExtra("tripUploaded");
                 uploadedTrip.setUploaded(true);

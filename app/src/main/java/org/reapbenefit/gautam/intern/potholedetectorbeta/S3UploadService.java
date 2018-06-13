@@ -60,6 +60,7 @@ public class S3UploadService extends IntentService {
     private final String TAG = getClass().getSimpleName();
     private String tripUploadedId;
     private SharedPreferences dbPreferences;
+    private SharedPreferences.Editor dbPreferencesEditor;
     private Trip tripUploaded;
     private boolean isWifiConnected;
 
@@ -75,13 +76,14 @@ public class S3UploadService extends IntentService {
     protected void onHandleIntent(@Nullable Intent intent) {
         Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        dbPreferencesEditor = dbPreferences.edit();
         tripUploaded = intent.getParcelableExtra("trip_object");
         if (tripUploaded == null)
             tripUploaded = new Gson().fromJson(dbPreferences.getString("uploadedTripJson", null), Trip.class);
         tripUploadedId = tripUploaded.getTrip_id();
-        dbPreferences.edit().putString("uploadedTripJson", new Gson().toJson(tripUploaded)).commit();
+        dbPreferencesEditor.putString("uploadedTripJson", new Gson().toJson(tripUploaded)).commit();
         uploadUri = intent.getParcelableExtra(UPLOAD_URI);
-        dbPreferences.edit().putString("uploadUriJson", new Gson().toJson(uploadUri)).commit();
+        dbPreferencesEditor.putString("uploadUriJson", new Gson().toJson(uploadUri)).commit();
         if (uploadUri == null)
             uploadUri = new Gson().fromJson(dbPreferences.getString("uploadUriJson", null), Uri.class);
         initialiseNotification();
@@ -93,7 +95,7 @@ public class S3UploadService extends IntentService {
             bucketName = getString(R.string.s3bucketname);
             filepath = uploadUri.toString().substring(uploadUri.toString().lastIndexOf('/'));
 
-            dbPreferences.edit().putString("tripUploadedJson", tripUploadedId).commit();
+            dbPreferencesEditor.putString("tripUploadedJson", tripUploadedId).commit();
             Log.d(TAG, "tripUploaded " + tripUploadedId);
 
             if (BuildConfig.DEBUG)
@@ -174,7 +176,9 @@ public class S3UploadService extends IntentService {
                     dbUpdateIntent.putExtra("tripUploaded", tripUploaded);
                     LocalBroadcastManager.getInstance(this).sendBroadcast(dbUpdateIntent);
 
-                    dbPreferences.edit().putString("tripUploadedId", tripUploadedId).commit();
+                    //in case TLF is not in memory, BroadcastReceiver won't work
+                    dbPreferencesEditor.putString("tripUploaded", new Gson().toJson(tripUploaded).toString());
+                    dbPreferencesEditor.putString("tripUploadedId", tripUploadedId).commit();
                 }
             }
         }
@@ -184,7 +188,8 @@ public class S3UploadService extends IntentService {
             notificationBuilder.setOngoing(false);
             notificationManager.notify(mNotificationId, notificationBuilder.build());
             dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-            dbPreferences.edit().putString("tripUploadedId", null).commit();
+            dbPreferencesEditor = dbPreferences.edit();
+            dbPreferencesEditor.putString("tripUploadedId", null).commit();
             stopSelf();
         }
     }

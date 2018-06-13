@@ -153,16 +153,6 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             uploadButton = holder.uploadButton;
             uploadedTick = holder.uploadedTick;
             uploadProgressBar = holder.uploadProgressBar;
-            Log.d("TripAdapter TripID", trip.getTrip_id());
-            Log.d("TripID received", tripId + "");
-            if (databaseTrips.contains(trip)) {
-                Log.d("InsideIf1", "Hello");
-                if(databaseTrips.get(databaseTrips.indexOf(trip)).isUploaded()) {
-                    Log.d("InsideIf2", "Hello");
-                    uploadButton.setVisibility(View.GONE);
-                    uploadedTick.setVisibility(View.VISIBLE);
-                }
-            }
 
             if (uploadStatus && trip.getTrip_id().equals(tripId)) {
                 uploadProgressBar.setIndeterminate(true);

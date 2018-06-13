@@ -14,12 +14,14 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -64,6 +66,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
@@ -73,6 +76,8 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.OverviewFragm
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadService;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Util;
 
 import java.net.URI;
@@ -94,6 +99,8 @@ public class MainActivity extends AppCompatActivity
     private Intent loggerIntent;
     private FusedLocationProviderClient mFusedLocationClient;
 
+    private SharedPreferences dbPreferences;
+
     private FirebaseAuth mAuth;
     private Toolbar toolbar;
     ApplicationClass app;
@@ -114,6 +121,18 @@ public class MainActivity extends AppCompatActivity
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         setContentView(R.layout.activity_main);
+
+        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        String tripUploadedJson = dbPreferences.getString("tripUploaded", null);
+        Log.d(getClass().getSimpleName(), tripUploadedJson + "");
+        if (tripUploadedJson != null) {
+            //initiating DB update through TripViewModel
+            Intent dbUpdateIntent = new Intent(getString(R.string.set_uploaded_true));
+            dbUpdateIntent.putExtra("tripUploaded", new Gson().fromJson(tripUploadedJson, Trip.class));
+            LocalBroadcastManager.getInstance(this).sendBroadcast(dbUpdateIntent);
+            dbPreferences.edit().putString("tripUploaded", null).commit();
+        }
+
         inCar = getIntent().getBooleanExtra("inCar", false);
         Log.i("inCar MainActivity old", inCar + "");
         //Adding toolbar to the activity
