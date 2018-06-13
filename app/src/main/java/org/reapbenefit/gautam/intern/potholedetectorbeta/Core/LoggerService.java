@@ -528,7 +528,7 @@ public class LoggerService extends Service implements SensorEventListener {
 
         if (minutesWasted != -1) {
             Log.i("minutesWasted", minutesWasted + " milliseconds");
-            minutesWasted = Math.round((minutesWasted/1000.0)/60.0);
+            minutesWasted = TimeUnit.MILLISECONDS.toMinutes(minutesWasted);
             newtrip.setMinutesWasted(minutesWasted);
         }
         else
