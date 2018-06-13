@@ -30,6 +30,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
@@ -46,8 +47,10 @@ import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -216,12 +219,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 polyline.add(l);
             }
             mMap.addPolyline(polyline);
-
+            Set<String> potholeLocationSet = tripStatsPreferences.getStringSet(getString(R.string.pothole_location_set), new HashSet<String>());
             if (!potholelatLngs.isEmpty()) {
+
                 for (LatLng l : potholelatLngs) {
                     mMap.addMarker(new MarkerOptions()
                             .position(l));
+                    potholeLocationSet.add(new Gson().toJson(l));
                 }
+                //saving set of locations in SharedPreferences
+                dbPreferencesEditor.putStringSet(getString(R.string.pothole_location_set), potholeLocationSet).apply();
             }
         }else {
             textview.setText("No locations found");

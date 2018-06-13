@@ -80,7 +80,7 @@ public class TriplistFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             if (tripViewModel != null) {
                 Trip newTrip = intent.getParcelableExtra("trip_object");
-                if (newTrip.getDistanceInKM() < 0.5 || !BuildConfig.DEBUG)
+                if (newTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG)
                     return;
                 tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
                 Log.d(TAG, "Trip inserted " + newTrip.getTrip_id());

@@ -6,8 +6,10 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -20,6 +22,7 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -43,8 +46,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 
@@ -64,9 +69,11 @@ import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class OverviewFragment extends Fragment implements
         OnMapReadyCallback,
@@ -97,7 +104,7 @@ public class OverviewFragment extends Fragment implements
     private List<LatLng> potholeLocations = new ArrayList<>();
     private List<String> tripIds = new ArrayList<>();
     private List<LocalTripEntity> localTripEntities = new ArrayList<>();
-    private HashMap<Integer, String> pointsOfInterest = new HashMap<>();
+    private List<LatLng> latLngList = new ArrayList<>();
     private int locIndex;
     private LinearLayout bottomSheet;
     private TextView bottomSheetText;
@@ -124,7 +131,6 @@ public class OverviewFragment extends Fragment implements
                     OverviewFragment.this.localTripEntities = localTripEntities;
             }
         });
-        new ProcessFileTask().execute(localTripEntities);
     }
 
     @Override
@@ -137,6 +143,7 @@ public class OverviewFragment extends Fragment implements
         if (highestPotholeTripJson != null) {
             highestPotholeTrip = new Gson().fromJson(highestPotholeTripJson, Trip.class);
         }
+        
     }
 
     @Override
@@ -157,6 +164,7 @@ public class OverviewFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View fragmentView = inflater.inflate(R.layout.fragment_overview, container, false);
+        
         starButton = fragmentView.findViewById(R.id.personal_scores);
         if (savedInstanceState != null) {
             lastLocation = savedInstanceState.getParcelable(KEY_LOCATION);
@@ -193,7 +201,6 @@ public class OverviewFragment extends Fragment implements
         mapView.onCreate(savedInstanceState);
         if (mapView != null)
             mapView.getMapAsync((OnMapReadyCallback) this);
-        drawMarkers();
 
         definitePotholeCount = tripStatsPreferences.getInt("definitePotholes", 0);
         probablePotholeCount = tripStatsPreferences.getInt("probablePotholes", 0);
@@ -235,6 +242,16 @@ public class OverviewFragment extends Fragment implements
                 }
             }
         });
+
+        //getting Set<String> from SharedPreferences
+        Set<String> potholeLocationStringSet = tripStatsPreferences.getStringSet(getString(R.string.pothole_location_set), null);
+        if (potholeLocationStringSet != null) {
+            List<String> potholeLocationStringList = new ArrayList<>(potholeLocationStringSet);
+            for (String potholeLocationString: potholeLocationStringList) {
+                latLngList.add(new Gson().fromJson(potholeLocationString, LatLng.class));
+            }
+        }
+        Log.d(getClass().getSimpleName(), latLngList.toString());
         return fragmentView;
     }
 
@@ -248,28 +265,13 @@ public class OverviewFragment extends Fragment implements
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
     }
 
-    private void getMarkers() {
-    }
-
     private void drawMarkers() {
-        Iterator it = pointsOfInterest.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
-            potholeLocations.add(extractLatLng((String) pair.getValue()));
-            it.remove(); // avoids a ConcurrentModificationException
-        }
-        if (potholeLocations != null) {
-            Log.d(getClass().getSimpleName(), "inside if marker");
-            for (LatLng potholeLocation: potholeLocations) {
-                googleMap.addMarker(new MarkerOptions().position(potholeLocation));
+        if (googleMap != null) {
+            for (LatLng potholeLocation : latLngList) {
+                Log.d(getClass().getSimpleName(), "adding marker");
+                googleMap.addMarker(new MarkerOptions().position(potholeLocation).icon(BitmapDescriptorFactory.defaultMarker()));
             }
         }
-    }
-
-    private LatLng extractLatLng(String line) {
-        String vals[] = line.split(",");
-        LatLng l = new LatLng(Double.valueOf(vals[locIndex]), Double.valueOf(vals[locIndex+1]));
-        return l;
     }
 
     private void createLocationCallback() {
@@ -317,14 +319,15 @@ public class OverviewFragment extends Fragment implements
     @Override
     public void onResume() {
         super.onResume();
+        
         if (mapView != null) {
             if (googleMap != null && !(ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
                 googleMap.setMyLocationEnabled(true);
                 googleMap.getUiSettings().setMyLocationButtonEnabled(true);
-                drawMarkers();
             }
             mapView.onResume();
         }
+        drawMarkers();
         startLocationUpdates();
     }
 
@@ -389,66 +392,5 @@ public class OverviewFragment extends Fragment implements
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
-    }
-
-    private class ProcessFileTask extends AsyncTask<List<LocalTripEntity>, Void, Integer> {
-
-        int lineNumber = 0, prevLineNumber = 0;
-        FileInputStream is;
-        int axisIndex, locIndex;
-        private HashMap<Integer, String> pointsOfInterest = new HashMap<>();
-
-        @Override
-        protected Integer doInBackground(List<LocalTripEntity>... params) {
-            for (int i = 0; i < params[0].size(); ++i) {
-                String tripID = params[0].get(i).trip_id;
-                File file = new File(getActivity().getApplicationContext().getFilesDir(), "logs/" + tripID + ".csv");
-                try {
-                    is = new FileInputStream(file);
-                    InputStreamReader isr = new InputStreamReader(is);
-                    BufferedReader bufferedReader = new BufferedReader(isr);
-                    String line;
-                    try {
-                        //extracting the index of the value to be compared in a given line of data
-                        line = bufferedReader.readLine();
-                        String tokens[] = line.split(",");
-                        for (int j = 0; j < tokens.length; j++) {
-                            if (tokens[j].contains(params[0].get(i).axis)) {
-                                axisIndex = j;
-                            }
-                            if (tokens[i].contains("latitude")) {
-                                locIndex = j;
-                            }
-                        }
-
-                        // populating our set of the points we are interested in
-                        while ((line = bufferedReader.readLine()) != null) {
-                            String values[] = line.split(",");
-                            lineNumber++;
-                            if (Float.valueOf(values[axisIndex]) > params[0].get(i).threshold && lineNumber > prevLineNumber + (params[0].get(i).no_of_lines * 3)) {
-                                // this ignores the first period of data
-                                pointsOfInterest.put(lineNumber, line);
-                                prevLineNumber = lineNumber;
-                            }
-                        }
-
-                    } catch (Exception e) {
-
-                    }
-                    return pointsOfInterest.size();
-                } catch (FileNotFoundException e) {
-                    return null;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Integer integer) {
-            super.onPostExecute(integer);
-            OverviewFragment.this.pointsOfInterest = pointsOfInterest;
-            OverviewFragment.this.locIndex = locIndex;
-            drawMarkers();
-        }
     }
 }
