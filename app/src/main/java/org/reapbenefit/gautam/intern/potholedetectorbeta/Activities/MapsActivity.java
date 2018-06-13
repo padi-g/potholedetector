@@ -78,7 +78,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private TextView accuracyLowTime;
     private SharedPreferences tripStatsPreferences;
     private SharedPreferences.Editor tripStatsEditor;
-
+    private Set<String> tripIdSet;
 
     private SharedPreferences dbPreferences;
     private SharedPreferences.Editor dbPreferencesEditor;
@@ -228,7 +228,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     potholeLocationSet.add(new Gson().toJson(l));
                 }
                 //saving set of locations in SharedPreferences
-                dbPreferencesEditor.putStringSet(getString(R.string.pothole_location_set), potholeLocationSet).apply();
+                Log.d("Slim", potholeLocationSet.toString() + "");
+                tripStatsEditor.putStringSet(getString(R.string.pothole_location_set), potholeLocationSet);
             }
         }else {
             textview.setText("No locations found");
@@ -323,14 +324,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             if(finishedTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG){
                 distance.setText(" < 0.5 km");
                 potholecount.setText("Sorry, you must travel at least 0.5 km");
-            }else {
+            }else{
                 distance.setText(roundTwoDecimals(finishedTrip.getDistanceInKM()) + " km");
                 potholecount.setText(Integer.toString(result));
                 populatePotholeMarkerPoints();
-                int validTrips = tripStatsPreferences.getInt("validTrips", 0);
-                tripStatsEditor.putInt("validTrips", validTrips + 1);
-                int probablePotholes = tripStatsPreferences.getInt("probablePotholes", 0);
-                tripStatsEditor.putInt("probablePotholes", probablePotholes + result);
+                tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
+                if (!tripIdSet.contains(finishedTrip.getTrip_id())) {
+                    Log.d("MapsActivity", tripID + "");
+                    int validTrips = tripStatsPreferences.getInt("validTrips", 0);
+                    tripStatsEditor.putInt("validTrips", validTrips + 1);
+                    int probablePotholes = tripStatsPreferences.getInt("probablePotholes", 0);
+                    tripStatsEditor.putInt("probablePotholes", probablePotholes + result);
+                }
+                tripIdSet.add(finishedTrip.getTrip_id());
+                tripStatsEditor.putStringSet("tripIdSet", tripIdSet);
                 tripStatsEditor.commit();
                 //only registering trip in database if it is useful to us
                 Intent newTripIntent = new Intent(getString(R.string.new_trip_insert));

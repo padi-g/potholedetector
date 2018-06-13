@@ -87,10 +87,15 @@ public class TriplistFragment extends Fragment {
                 tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
                 Log.d(TAG, "Trip inserted " + newTrip.getTrip_id());
                 offlineTrips.add(newTrip);
-
+                maxPotholeCount = dbPreferences.getInt("maxPotholeCount", 0);
                 if (newTrip.getPotholeCount() >= maxPotholeCount) {
+                    Log.d("newTrippc", newTrip.getPotholeCount() + "");
+                    Log.d("maxPc", newTrip.getPotholeCount() + "");
+                    Log.d(TAG, "inside if potholeCount");
                     highestPotholeTrip = newTrip;
                     dbPreferences.edit().putString("highestPotholeTrip", new Gson().toJson(highestPotholeTrip)).apply();
+                    maxPotholeCount = newTrip.getPotholeCount();
+                    dbPreferences.edit().putInt("maxPotholeCount", maxPotholeCount).apply();
                 }
                 createOfflineTripsListView();
             }

@@ -36,33 +36,6 @@ public class TransitionsReceiver extends IntentService {
         super("TransitionsReceiver");
     }
 
-    @Override
-    public void onCreate() {
-        //try {
-            super.onCreate();
-            /*sharedPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-            editor = sharedPreferences.edit();
-            createNotificationChannel();
-            mainIntent = new Intent(this, MainActivity.class);
-            mainIntent.putExtra("inCar", true);
-            mainIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            pendingIntent = PendingIntent.getActivity(this, 0,
-                    mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            builder = new NotificationCompat.Builder(this,
-                    getString(R.string.notification_channel_id))
-                    .setSmallIcon(R.drawable.ic_launcher)
-                    .setContentTitle("Looks like you're in a car")
-                    .setContentText("Tap to start logging potholes.")
-                    .setPriority(NotificationManager.IMPORTANCE_HIGH)
-                    .setContentIntent(pendingIntent)
-                    .setAutoCancel(true);
-            notificationManagerCompat = NotificationManagerCompat.from(this);
-        }
-        catch (Exception e) {
-            Log.i(getClass().getSimpleName(), "Exception found");
-        }*/
-    }
-
     @SuppressLint("RestrictedApi")
     @Override
     public void onHandleIntent(Intent intent) {
@@ -77,8 +50,8 @@ public class TransitionsReceiver extends IntentService {
                 mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder = new NotificationCompat.Builder(this,
                 getString(R.string.notification_channel_id))
-                .setSmallIcon(R.drawable.ic_launcher)
-                .setContentTitle("Looks like you're in a car")
+                .setSmallIcon(R.drawable.ic_directions_car_black_24dp)
+                .setContentTitle("Are you in a car?")
                 .setContentText("Tap to start logging potholes.")
                 .setPriority(NotificationManager.IMPORTANCE_HIGH)
                 .setContentIntent(pendingIntent)
@@ -92,7 +65,7 @@ public class TransitionsReceiver extends IntentService {
             //committing current activity to shared prefs
             editor.putString("currentActivity", detectedActivity.toString());
             editor.commit();
-            if (detectedActivity.toString().contains("VEHICLE")) {
+            if (detectedActivity.toString().contains("VEHICLE") && !ApplicationClass.getInstance().isTripInProgress()) {
                 //sending notification to user
                 notificationManagerCompat.notify(0, builder.build());
             }

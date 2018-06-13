@@ -244,7 +244,7 @@ public class OverviewFragment extends Fragment implements
         });
 
         //getting Set<String> from SharedPreferences
-        Set<String> potholeLocationStringSet = tripStatsPreferences.getStringSet(getString(R.string.pothole_location_set), null);
+        Set<String> potholeLocationStringSet = tripStatsPreferences.getStringSet(getString(R.string.pothole_location_set), new HashSet<String>());
         if (potholeLocationStringSet != null) {
             List<String> potholeLocationStringList = new ArrayList<>(potholeLocationStringSet);
             for (String potholeLocationString: potholeLocationStringList) {
