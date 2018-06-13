@@ -205,6 +205,25 @@ public class TriplistFragment extends Fragment {
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
+            String tripUploadedJson = dbPreferences.getString("tripUploaded", null);
+            Log.d(getClass().getSimpleName(), tripUploadedJson + "");
+            if (tripUploadedJson != null) {
+                //initiating DB update through TripViewModel
+                Log.d("uploadBroadcast", "broadcast received");
+                Trip uploadedTrip = new Gson().fromJson(tripUploadedJson, Trip.class);
+                if (tripViewModel != null) {
+                    try {
+                        Log.d("uploadBroadcast", "inside try");
+                        Trip tempTrip = uploadedTrip;
+                        tempTrip.setUploaded(true);
+                        tripViewModel.insert(Trip.tripToLocalTripEntity(tempTrip));
+                        Log.d("tripUploaded", new Gson().toJson(uploadedTrip));
+                        offlineTrips.remove(uploadedTrip);
+                    } catch (Exception e) {}
+                }
+                dbPreferences.edit().putString("tripUploaded", null).apply();
+            }
+            createOfflineTripsListView();
             //reading SharedPreferences to check if user has logged out
             SharedPreferences logoutPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             boolean loggedOut = logoutPreferences.getBoolean("loggedOut", false);
@@ -228,6 +247,7 @@ public class TriplistFragment extends Fragment {
         recyclerView.setHasFixedSize(true);
         recyclerLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerLayoutManager);
+        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         createOfflineTripsListView();
         /*uploadAllButton = (ImageButton) v.findViewById(R.id.upload_all_button);
         uploadAllButton.setOnClickListener(new View.OnClickListener() {
@@ -237,18 +257,8 @@ public class TriplistFragment extends Fragment {
                 getContext().startService(uploadAllIntent);
             }
         });*/
-        return v;
-    }
 
-    private boolean isInternetAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
-        boolean isConnected = activeNetwork != null && activeNetwork.isConnected();
-        if (!isConnected)
-            return false;
-        //TODO: HOW TO FIX THIS WHEN ASYNCTASK MIGHT TAKE TIME TO COMPLETE?
-        //new CheckWifiNoInternetAsyncTask().execute();
-        return true;
+        return v;
     }
 
     @Override

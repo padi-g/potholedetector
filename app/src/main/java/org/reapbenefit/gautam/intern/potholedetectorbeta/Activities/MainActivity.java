@@ -122,17 +122,6 @@ public class MainActivity extends AppCompatActivity
 
         setContentView(R.layout.activity_main);
 
-        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-        String tripUploadedJson = dbPreferences.getString("tripUploaded", null);
-        Log.d(getClass().getSimpleName(), tripUploadedJson + "");
-        if (tripUploadedJson != null) {
-            //initiating DB update through TripViewModel
-            Intent dbUpdateIntent = new Intent(getString(R.string.set_uploaded_true));
-            dbUpdateIntent.putExtra("tripUploaded", new Gson().fromJson(tripUploadedJson, Trip.class));
-            LocalBroadcastManager.getInstance(this).sendBroadcast(dbUpdateIntent);
-            dbPreferences.edit().putString("tripUploaded", null).commit();
-        }
-
         inCar = getIntent().getBooleanExtra("inCar", false);
         Log.i("inCar MainActivity old", inCar + "");
         //Adding toolbar to the activity
