@@ -1,18 +1,13 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
 import android.annotation.SuppressLint;
-import android.app.Application;
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
 import android.preference.PreferenceManager;
@@ -22,7 +17,6 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -49,7 +43,6 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 
@@ -62,17 +55,10 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class OverviewFragment extends Fragment implements
@@ -104,7 +90,8 @@ public class OverviewFragment extends Fragment implements
     private List<LatLng> potholeLocations = new ArrayList<>();
     private List<String> tripIds = new ArrayList<>();
     private List<LocalTripEntity> localTripEntities = new ArrayList<>();
-    private List<LatLng> latLngList = new ArrayList<>();
+    private List<LatLng> probableLatLngList = new ArrayList<>();
+    private List<LatLng> definiteLatLngList = new ArrayList<>();
     private int locIndex;
     private LinearLayout bottomSheet;
     private TextView bottomSheetText;
@@ -215,43 +202,53 @@ public class OverviewFragment extends Fragment implements
         countTextView = fragmentView.findViewById(R.id.count);
         distanceTextView = fragmentView.findViewById(R.id.distance_view);
         sizeTextView = fragmentView.findViewById(R.id.size);
+        if (highestPotholeTrip != null) {
+            //adding details of highestPotholeTrip to GridLayout
+            String startTime = highestPotholeTrip.getStartTime();
+            startTime = startTime.substring(4, startTime.indexOf("GMT") - 4);
+            startTimeTextView.setText(startTime);
+            countTextView.setText(highestPotholeTrip.getProbablePotholeCount() +
+                    highestPotholeTrip.getDefinitePotholeCount() + " potholes");
+            distanceTextView.setText(TripListAdapter.roundTwoDecimals(highestPotholeTrip.getDistanceInKM()) + "km");
+            sizeTextView.setText(TripListAdapter.humanReadableByteCount(highestPotholeTrip.getFilesize(), true));
 
-        //adding details of highestPotholeTrip to GridLayout
-        String startTime = highestPotholeTrip.getStartTime();
-        startTime = startTime.substring(4, startTime.indexOf("GMT") - 4);
-        startTimeTextView.setText(startTime);
-        countTextView.setText(highestPotholeTrip.getPotholeCount() + " potholes");
-        distanceTextView.setText(TripListAdapter.roundTwoDecimals(highestPotholeTrip.getDistanceInKM()) + "km");
-        sizeTextView.setText(TripListAdapter.humanReadableByteCount(highestPotholeTrip.getFilesize(), true));
-
-        mostPotholesGrid = fragmentView.findViewById(R.id.highest_pothole_grid);
-        mostPotholesGrid.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                File dataFile = new File(getContext().getApplicationContext().getFilesDir(), "logs/" + highestPotholeTrip.getTrip_id() + ".csv");
-                File file = new File(getContext().getApplicationContext().getFilesDir(), "analysis/" + highestPotholeTrip.getTrip_id() + ".csv");
-                if (dataFile.exists()) {
-                    if (file.exists()) { // check if file of same name is available in the analytics folder
-                        Intent i = new Intent(getContext(), MapsActivity.class);
-                        i.putExtra("trip", highestPotholeTrip);
-                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        getContext().startActivity(i);
+            mostPotholesGrid = fragmentView.findViewById(R.id.highest_pothole_grid);
+            mostPotholesGrid.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    File dataFile = new File(getContext().getApplicationContext().getFilesDir(), "logs/" + highestPotholeTrip.getTrip_id() + ".csv");
+                    File file = new File(getContext().getApplicationContext().getFilesDir(), "analysis/" + highestPotholeTrip.getTrip_id() + ".csv");
+                    if (dataFile.exists()) {
+                        if (file.exists()) { // check if file of same name is available in the analytics folder
+                            Intent i = new Intent(getContext(), MapsActivity.class);
+                            i.putExtra("trip", highestPotholeTrip);
+                            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            getContext().startActivity(i);
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Sorry, file has been deleted", Toast.LENGTH_SHORT).show();
                     }
-                } else {
-                    Toast.makeText(getContext(), "Sorry, file has been deleted", Toast.LENGTH_SHORT).show();
                 }
-            }
-        });
+            });
+        }
 
         //getting Set<String> from SharedPreferences
-        Set<String> potholeLocationStringSet = tripStatsPreferences.getStringSet(getString(R.string.pothole_location_set), new HashSet<String>());
-        if (potholeLocationStringSet != null) {
-            List<String> potholeLocationStringList = new ArrayList<>(potholeLocationStringSet);
-            for (String potholeLocationString: potholeLocationStringList) {
-                latLngList.add(new Gson().fromJson(potholeLocationString, LatLng.class));
+        Set<String> probablePotholeLocationSet = tripStatsPreferences.getStringSet(getString(R.string.probable_pothole_location_set), new HashSet<String>());
+        Set<String> definitePotholeLocationSet = tripStatsPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
+        if (probablePotholeLocationSet != null) {
+            List<String> probablePotholeLocationArrayList = new ArrayList<>(probablePotholeLocationSet);
+            for (String potholeLocationString: probablePotholeLocationArrayList) {
+                probableLatLngList.add(new Gson().fromJson(potholeLocationString, LatLng.class));
             }
         }
-        Log.d(getClass().getSimpleName(), latLngList.toString());
+        Log.d(getClass().getSimpleName(), probableLatLngList.toString());
+        if (definitePotholeLocationSet != null) {
+            List<String> definitePotholeLocationArrayList = new ArrayList<>(definitePotholeLocationSet);
+            for (String definitePotholeLocationString: definitePotholeLocationArrayList) {
+                definiteLatLngList.add(new Gson().fromJson(definitePotholeLocationString, LatLng.class));
+            }
+        }
+        Log.d(getClass().getSimpleName(), definiteLatLngList.toString());
         return fragmentView;
     }
 
@@ -267,9 +264,12 @@ public class OverviewFragment extends Fragment implements
 
     private void drawMarkers() {
         if (googleMap != null) {
-            for (LatLng potholeLocation : latLngList) {
+            for (LatLng potholeLocation : probableLatLngList) {
                 Log.d(getClass().getSimpleName(), "adding marker");
-                googleMap.addMarker(new MarkerOptions().position(potholeLocation).icon(BitmapDescriptorFactory.defaultMarker()));
+                googleMap.addMarker(new MarkerOptions().position(potholeLocation).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+            }
+            for (LatLng potholeLocation : definiteLatLngList) {
+                googleMap.addMarker(new MarkerOptions().position(potholeLocation).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
             }
         }
     }

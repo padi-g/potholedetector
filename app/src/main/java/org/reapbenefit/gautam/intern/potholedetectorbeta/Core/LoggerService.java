@@ -135,6 +135,8 @@ public class LoggerService extends Service implements SensorEventListener {
     private TripViewModel tripViewModel;
     private Set<String> newTripSet;
     private Set<String> toBeUploadedTripSet;
+    private float speed;
+    private float speedAccuracy;
 
     public LoggerService() {
         super();
@@ -253,9 +255,7 @@ public class LoggerService extends Service implements SensorEventListener {
                     }
                 }
                 mCurrentLocation = location;
-                String speed = location.getSpeed() + "";
-                //Toast.makeText(getApplicationContext(), speed, Toast.LENGTH_SHORT).show();
-                Log.d("Phone speed", speed);
+                speed = location.getSpeed();
                 mLastUpdateTime = getCurrentTime();
                 LocData = getLocData();
             }
@@ -400,9 +400,9 @@ public class LoggerService extends Service implements SensorEventListener {
 
         if(gAvailable)
 
-            data = floatArraytoString(acc) + floatArraytoString(gyr) + LocationData + ", " + Marks + "\n";
+            data = floatArraytoString(acc) + floatArraytoString(gyr) + LocationData + ", " + Marks + speed + "\n";
         else
-            data = floatArraytoString(acc) + LocationData + ", " + Marks + "\n";
+            data = floatArraytoString(acc) + LocationData + ", " + Marks + speed + "\n";
 
         try {
             out.write(data.getBytes());
@@ -446,11 +446,11 @@ public class LoggerService extends Service implements SensorEventListener {
         String data;
 
         if (gAvailable){
-            // Accx, Acc y, Axxz, Gyrx, gyry, gyrz, lat, long, timestamp, accuracy
-            data = "AccX, AccY, AccZ, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy, proximity\n";
+            // Accx, Acc y, Axxz, Gyrx, gyry, gyrz, lat, long, timestamp, accuracy, speed
+            data = "AccX, AccY, AccZ, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy, proximity, speed\n";
         }else{
             // Accx, Acc y, Axxz, lat, long, timestamp, accuracy
-            data = "AccX, AccY, AccZ, latitude, longitude, timestamp, accuracy, proximity\n";
+            data = "AccX, AccY, AccZ, latitude, longitude, timestamp, accuracy, proximity, speed\n";
         }
 
         try {

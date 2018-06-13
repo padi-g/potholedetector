@@ -61,5 +61,6 @@
     <string name="db_update_from_maps_activity">DB_UPDATE_FROM_MAPS</string>
     <string name="set_uploaded_true">org.reapbenefit.gautam.intern.potholedetectorbeta.SET_UPLOADED_TRUE</string>
     <string name="new_trip_insert">tripstatus</string>
-    <string name="pothole_location_set">potholelatLngs</string>
+    <string name="probable_pothole_location_set">probablePotholelatLngs</string>
+    <string name="definite_pothole_location_set">definitePotholelatLngs</string>
 </resources>

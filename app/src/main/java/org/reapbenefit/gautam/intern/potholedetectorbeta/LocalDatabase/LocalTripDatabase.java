@@ -27,7 +27,7 @@ public abstract class LocalTripDatabase extends RoomDatabase {
                     //creating database instance
                     instance = Room.databaseBuilder(context.getApplicationContext(),
                             LocalTripDatabase.class, "LocalTripDatabase")
-                            .addCallback(roomDatabaseCallback).build();
+                            .build();
                 }
             }
         }

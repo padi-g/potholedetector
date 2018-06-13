@@ -20,7 +20,7 @@
     <GridLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:rowCount="6"
+        android:rowCount="7"
         android:columnCount="2"
         android:id="@+id/map_result_grid"
         android:visibility="gone">
@@ -46,12 +46,13 @@
             android:layout_row="0"
             android:layout_column="1"/>
 
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:fontFamily="sans-serif-condensed"
-            android:text="Potholes Detected"
+            android:text="Probable potholes detected"
             android:layout_row="1"
             android:layout_column="0"/>
 
@@ -59,11 +60,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:id="@+id/potholecount"
+            android:id="@+id/probablepotholecount"
             android:fontFamily="sans-serif-condensed"
             android:textStyle="bold"
             android:layout_row="1"
             android:layout_column="1"/>
+
 
         <TextView
             android:layout_width="wrap_content"
@@ -141,6 +143,26 @@
             android:fontFamily="sans-serif-condensed"
             android:textStyle="bold"
             android:layout_row="5"
+            android:layout_column="1" />
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:fontFamily="sans-serif-condensed"
+            android:text="Definite potholes detected"
+            android:layout_row="6"
+            android:layout_column="0"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:id="@+id/definitepotholecount"
+            android:fontFamily="sans-serif-condensed"
+            android:textStyle="bold"
+            android:layout_row="6"
             android:layout_column="1"/>
 
     </GridLayout>

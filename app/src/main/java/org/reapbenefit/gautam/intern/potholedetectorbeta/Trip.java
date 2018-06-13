@@ -32,7 +32,8 @@ public class Trip implements Parcelable {
     private int userRating;
     private String axis;
     private float threshold;
-    private int potholeCount;
+    private int probablePotholeCount;
+    private int definitePotholeCount;
 
     private long minutesWasted;
     private long minutesAccuracyLow;
@@ -180,12 +181,20 @@ public class Trip implements Parcelable {
         this.threshold = threshold;
     }
 
-    public int getPotholeCount() {
-        return potholeCount;
+    public int getDefinitePotholeCount() {
+        return definitePotholeCount;
     }
 
-    public void setPotholeCount(int potholeCount) {
-        this.potholeCount = potholeCount;
+    public void setDefinitePotholeCount(int definitePotholeCount) {
+        this.definitePotholeCount = definitePotholeCount;
+    }
+
+    public void setProbablePotholeCount(int probablePotholeCount) {
+        this.probablePotholeCount = probablePotholeCount;
+    }
+
+    public int getProbablePotholeCount() {
+        return probablePotholeCount;
     }
 
     public long getMinutesWasted() {
@@ -226,7 +235,8 @@ public class Trip implements Parcelable {
         dest.writeInt(this.userRating);
         dest.writeString(this.axis);
         dest.writeFloat(this.threshold);
-        dest.writeInt(this.potholeCount);
+        dest.writeInt(this.probablePotholeCount);
+        dest.writeInt(this.definitePotholeCount);
         dest.writeLong(this.minutesWasted);
         dest.writeLong(this.minutesAccuracyLow);
     }
@@ -247,7 +257,8 @@ public class Trip implements Parcelable {
         this.userRating = in.readInt();
         this.axis = in.readString();
         this.threshold = in.readFloat();
-        this.potholeCount = in.readInt();
+        this.probablePotholeCount = in.readInt();
+        this.definitePotholeCount = in.readInt();
         this.minutesWasted = in.readLong();
         this.minutesAccuracyLow = in.readLong();
     }
@@ -276,7 +287,8 @@ public class Trip implements Parcelable {
         trip.setUserRating(localTripEntity.userRating);
         trip.setEndTime(localTripEntity.endTime);
         trip.setThreshold(localTripEntity.threshold);
-        trip.setPotholeCount(localTripEntity.potholeCount);
+        trip.setProbablePotholeCount(localTripEntity.probablePotholeCount);
+        trip.setDefinitePotholeCount(localTripEntity.definitePotholeCount);
         trip.setNo_of_lines(localTripEntity.no_of_lines);
         trip.setDevice(localTripEntity.device);
         trip.setTrip_id(localTripEntity.trip_id);
@@ -298,7 +310,8 @@ public class Trip implements Parcelable {
         localTripEntity.userRating = trip.getUserRating();
         localTripEntity.endTime = trip.getEndTime();
         localTripEntity.threshold = trip.getThreshold();
-        localTripEntity.potholeCount = trip.getPotholeCount();
+        localTripEntity.probablePotholeCount = trip.getProbablePotholeCount();
+        localTripEntity.definitePotholeCount = trip.getDefinitePotholeCount();
         localTripEntity.no_of_lines = trip.getNo_of_lines();
         localTripEntity.device = trip.getDevice();
         localTripEntity.trip_id = trip.getTrip_id();

@@ -9,7 +9,6 @@ import android.support.v4.app.FragmentActivity;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.TripRepository;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import java.util.List;
 
@@ -19,7 +18,8 @@ public class TripViewModel extends AndroidViewModel {
     private LiveData<List<LocalTripEntity>> allTrips;
     private LiveData<List<LocalTripEntity>> offlineTrips;
     private String trip_id;
-    private int potholeCount;
+    private int probablePotholeCount;
+    private int definitePotholeCount;
     private String startTime;
     private long duration;
     private float distanceInKm;
@@ -32,7 +32,8 @@ public class TripViewModel extends AndroidViewModel {
         tripRepository = new TripRepository(application);
         allTrips = tripRepository.getLiveDataTrips();
         trip_id = tripRepository.getTrip_id();
-        potholeCount = tripRepository.getPotholeCount();
+        probablePotholeCount = tripRepository.getProbablePotholeCount();
+        definitePotholeCount = tripRepository.getDefinitePotholeCount();
         startTime = tripRepository.getStartTime();
         duration = tripRepository.getDuration();
         distanceInKm = tripRepository.getDistanceInKm();
@@ -58,8 +59,12 @@ public class TripViewModel extends AndroidViewModel {
         return distanceInKm;
     }
 
-    public int getPotholeCount() {
-        return potholeCount;
+    public int getProbablePotholeCount() {
+        return probablePotholeCount;
+    }
+
+    public int getDefinitePotholeCount() {
+        return definitePotholeCount;
     }
 
     public long getDuration() {

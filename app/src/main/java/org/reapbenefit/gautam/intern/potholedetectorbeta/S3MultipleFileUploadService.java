@@ -144,12 +144,12 @@ public class S3MultipleFileUploadService extends IntentService {
                         notificationBuilder.setOngoing(false);
                         notificationManager.notify(mNotificationId, notificationBuilder.build());
 
-                        //initiating DB update through TripViewModel
+                        /*//initiating DB update through TripViewModel
                         Intent dbUpdateIntent = new Intent(getString(R.string.set_uploaded_true));
                         dbUpdateIntent.putExtra("tripUploaded", tripUploaded);
                         LocalBroadcastManager.getInstance(this).sendBroadcast(dbUpdateIntent);
 
-                        dbPreferences.edit().putString("tripUploadedId", tripUploadedId).commit();
+                        dbPreferences.edit().putString("tripUploadedId", tripUploadedId).commit();*/
                     }
                 }
             }
@@ -159,8 +159,8 @@ public class S3MultipleFileUploadService extends IntentService {
             notificationBuilder.setContentText("Network connection unavailable. Please try again later.");
             notificationBuilder.setOngoing(false);
             notificationManager.notify(mNotificationId, notificationBuilder.build());
-            dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-            dbPreferences.edit().putString("tripUploadedId", null).commit();
+            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            sharedPreferences.edit().putString("tripUploadedId", null).commit();
             stopSelf();
         }
     }

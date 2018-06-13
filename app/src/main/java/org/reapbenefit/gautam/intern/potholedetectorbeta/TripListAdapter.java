@@ -143,7 +143,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             final ImageButton uploadButton, uploadedTick, mapButton;
             TextView date, time, size, distance;
             final ProgressBar uploadProgressBar;
-            countString = String.valueOf(trip.getPotholeCount()) + " potholes";
+            countString = String.valueOf(trip.getDefinitePotholeCount() + trip.getProbablePotholeCount()) + " potholes";
             Log.i("countString", countString);
             Log.i("timeString", trip.getStartTime() + "");
             timeString = trip.getStartTime();

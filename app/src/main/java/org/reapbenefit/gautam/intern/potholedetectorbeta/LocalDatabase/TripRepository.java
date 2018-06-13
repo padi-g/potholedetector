@@ -12,7 +12,8 @@ public class TripRepository {
     private LocalTripTableDao dao;
     private LiveData<List<LocalTripEntity>> liveDataTrips;
     private String trip_id;
-    private int potholeCount;
+    private int probablePotholeCount;
+    private int definitePotholeCount;
     private String startTime;
     private long duration;
     private float distanceInKm;
@@ -26,7 +27,7 @@ public class TripRepository {
         dao = localTripDatabase.localTripTableDao();
         liveDataTrips = dao.getAllTrips();
         trip_id = getTrip_id();
-        potholeCount = getPotholeCount();
+        probablePotholeCount = getProbablePotholeCount();
         startTime = getStartTime();
         duration = getDuration();
         distanceInKm = getDistanceInKm();
@@ -64,13 +65,25 @@ public class TripRepository {
         return result[0];
     }
 
-    public int getPotholeCount() {
+    public int getProbablePotholeCount() {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         final int[] result = new int[1];
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                result[0] = dao.getPotholeCount();
+                result[0] = dao.getProbablePotholeCount();
+            }
+        });
+        return result[0];
+    }
+
+    public int getDefinitePotholeCount() {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        final int[] result = new int[1];
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                result[0] = dao.getDefinitePotholeCount();
             }
         });
         return result[0];

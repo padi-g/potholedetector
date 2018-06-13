@@ -28,7 +28,8 @@ public class LocalTripEntity {
     public int userRating;
     public String axis;
     public float threshold;
-    public int potholeCount;
+    public int probablePotholeCount;
+    public int definitePotholeCount;
     public long minutesWasted;
     public long minutesAccuracyLow;
 }

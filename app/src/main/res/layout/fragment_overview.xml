@@ -126,7 +126,7 @@
                     android:id="@+id/size"
                     android:layout_row="1"
                     android:layout_column="0"
-                    android:text="Hello"
+                    android:text="No trips taken yet"
                     android:textSize="15dp"
                     android:textColor="#fff"
                     android:layout_gravity="start"
