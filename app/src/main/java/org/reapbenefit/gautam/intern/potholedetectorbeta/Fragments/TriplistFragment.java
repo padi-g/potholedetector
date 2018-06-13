@@ -21,6 +21,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.GridLayout;
 import android.widget.ImageButton;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -221,31 +222,6 @@ public class TriplistFragment extends Fragment {
         recyclerLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerLayoutManager);
         createOfflineTripsListView();
-        /*uploadAllButton = (ImageButton) v.findViewById(R.id.upload_all_button);
-        uploadAllButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d(TAG, "inside listener");
-                Log.d(TAG, offlineTrips.toString());
-                if (offlineTrips != null && !dbPreferences.getBoolean("multipleUploads", false)) {
-                    Log.d(TAG, "inside if");
-                    for (int i = 0; i < offlineTrips.size(); ++i) {
-                    if (isInternetAvailable()) {
-                        Intent uploadIntent = new Intent(getActivity(), S3UploadService.class);
-                        uploadIntent.setAction("upload_now");
-                        if (uploadFileUri == null) {
-                            String path = getActivity().getApplicationContext().getFilesDir() + "/logs" + offlineTrips.get(i).getTrip_id()
-                                    + ".csv";
-                            File file = new File(path);
-                            uploadFileUri = Uri.fromFile(file);
-                        }
-                        uploadIntent.putExtra("upload_uri", uploadFileUri);
-                        uploadIntent.putExtra("trip_object", offlineTrips.get(i));
-                        getActivity().startService(uploadIntent);
-                    }
-                }
-            }
-        }});*/
         return v;
     }
 

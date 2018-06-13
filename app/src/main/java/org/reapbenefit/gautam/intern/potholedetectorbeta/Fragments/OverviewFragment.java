@@ -1,6 +1,7 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
 import android.annotation.SuppressLint;
+import android.app.Application;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -24,8 +25,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -45,6 +48,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
@@ -107,6 +111,7 @@ public class OverviewFragment extends Fragment implements
     private TextView countTextView;
     private TextView distanceTextView;
     private TextView sizeTextView;
+    private GridLayout mostPotholesGrid;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -211,6 +216,25 @@ public class OverviewFragment extends Fragment implements
         countTextView.setText(highestPotholeTrip.getPotholeCount() + " potholes");
         distanceTextView.setText(highestPotholeTrip.getDistanceInKM() + "km");
         sizeTextView.setText(TripListAdapter.humanReadableByteCount(highestPotholeTrip.getFilesize(), true));
+
+        mostPotholesGrid = fragmentView.findViewById(R.id.highest_pothole_grid);
+        mostPotholesGrid.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                File dataFile = new File(getContext().getApplicationContext().getFilesDir(), "logs/" + highestPotholeTrip.getTrip_id() + ".csv");
+                File file = new File(getContext().getApplicationContext().getFilesDir(), "analysis/" + highestPotholeTrip.getTrip_id() + ".csv");
+                if (dataFile.exists()) {
+                    if (file.exists()) { // check if file of same name is available in the analytics folder
+                        Intent i = new Intent(getContext(), MapsActivity.class);
+                        i.putExtra("trip", highestPotholeTrip);
+                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        getContext().startActivity(i);
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Sorry, file has been deleted", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
         return fragmentView;
     }
 
