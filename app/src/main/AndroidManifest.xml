@@ -158,6 +158,9 @@
 
         <service
             android:name=".MultipleFileUploadService"
+            android:exported="false" />
+        <service
+            android:name=".S3MultipleFileUploadService"
             android:exported="false"></service>
     </application>
 
