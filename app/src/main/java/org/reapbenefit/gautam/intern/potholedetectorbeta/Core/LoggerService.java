@@ -254,7 +254,7 @@ public class LoggerService extends Service implements SensorEventListener {
                 }
                 mCurrentLocation = location;
                 String speed = location.getSpeed() + "";
-                Toast.makeText(getApplicationContext(), speed, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), speed, Toast.LENGTH_SHORT).show();
                 Log.d("Phone speed", speed);
                 mLastUpdateTime = getCurrentTime();
                 LocData = getLocData();
