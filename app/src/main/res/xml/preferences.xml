@@ -3,9 +3,9 @@
 
     <android.support.v7.preference.SwitchPreferenceCompat
         android:defaultValue="false"
-        android:key="delete_file"
+        android:key="file_delete"
         android:title="Delete files after upload"
-        android:summary="Remove on-device pothole map after logging trip"/>
+        android:summary="Remove on-device pothole map after uploading trip data"/>
     <android.support.v7.preference.SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="auto_upload"

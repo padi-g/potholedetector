@@ -63,4 +63,6 @@
     <string name="new_trip_insert">tripstatus</string>
     <string name="probable_pothole_location_set">probablePotholelatLngs</string>
     <string name="definite_pothole_location_set">definitePotholelatLngs</string>
+    <string name="file_delete_setting">file_delete</string>
+    <string name="auto_upload_setting">auto_upload</string>
 </resources>

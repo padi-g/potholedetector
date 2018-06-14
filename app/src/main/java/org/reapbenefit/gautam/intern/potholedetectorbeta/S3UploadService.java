@@ -60,9 +60,11 @@ public class S3UploadService extends IntentService {
     private String tripUploadedId;
     private SharedPreferences dbPreferences;
     private SharedPreferences.Editor dbPreferencesEditor;
+    private SharedPreferences settingsPreferences;
     private Trip tripUploaded;
     private List<Trip> tripList;
     private boolean isWifiConnected;
+    private boolean fileDelete;
 
     public S3UploadService() {
         super("S3UploadService");
@@ -81,10 +83,13 @@ public class S3UploadService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
+        settingsPreferences  = getSharedPreferences("uploads", MODE_PRIVATE);
+        fileDelete = settingsPreferences.getBoolean(getString(R.string.file_delete_setting), false);
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         dbPreferencesEditor = dbPreferences.edit();
+        settingsPreferences = getSharedPreferences("uploads", MODE_PRIVATE);
         tripList = (List<Trip>) intent.getSerializableExtra("trip_arrayList");
-        if (tripList != null) {
+        if (tripList != null && !tripList.isEmpty()) {
             tripUploaded = tripList.get(0);
             Log.d("tripUploaded", tripUploaded.getTrip_id());
             if (tripUploaded == null)
@@ -188,6 +193,13 @@ public class S3UploadService extends IntentService {
                         dbPreferencesEditor.putString("tripUploaded", new Gson().toJson(tripUploaded).toString());
                         dbPreferencesEditor.putString("tripUploadedId", tripUploadedId).commit();
                         tripList.remove(tripUploaded);
+
+                        //checking if settings contain auto delete
+                        if (fileDelete) {
+                            File fileToBeDeleted = new File(uploadUri.getPath());
+                            fileToBeDeleted.delete();
+                        }
+
                         //if batch upload was requested, there will be more files in the list
                         if (tripList.size() > 0) {
                             Intent uploadAllIntent = new Intent(this, S3UploadService.class);
