@@ -12,6 +12,7 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.SettingsFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
 
@@ -91,6 +92,11 @@ public class SettingsActivity extends AppCompatActivity {
             Log.d("Preferences", "auto_upload is not found on prefs");
             prefs.edit().putBoolean("auto_upload", true).commit();
         }
+
+        /*getSupportFragmentManager().beginTransaction()
+                .replace(android.R.id.content, new SettingsFragment())
+                .commit();*/
+
     }
 
     // TODO: add analytics events in all new activities
