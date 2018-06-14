@@ -58,7 +58,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private InputStream inputStream;
     private FirebaseAnalytics mFirebaseAnalytics;
     private DatabaseReference db;
-    private final float DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND = 8.33f;
+    private final float DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND = 5.55f;
+    private final float PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND = 1.38f;
     private ProgressBar spinner;
     private TextView date, distance, duration, probablePotholeCountTextView, textview, trafficTime;
     private SeekBar accuracySeekbar;
@@ -315,7 +316,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             // this ignores the first period of data
                             if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
                                 definitePointsOfInterest.put(lineNumber, line);
-                            else
+                            else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND)
                                 probablePointsOfInterest.put(lineNumber, line);
                             prevLineNumber = lineNumber;
                         }
