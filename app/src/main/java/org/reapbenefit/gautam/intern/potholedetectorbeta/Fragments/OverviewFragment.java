@@ -248,6 +248,7 @@ public class OverviewFragment extends Fragment implements
                 definiteLatLngList.add(new Gson().fromJson(definitePotholeLocationString, LatLng.class));
             }
         }
+        drawMarkers();
         Log.d(getClass().getSimpleName(), definiteLatLngList.toString());
         return fragmentView;
     }

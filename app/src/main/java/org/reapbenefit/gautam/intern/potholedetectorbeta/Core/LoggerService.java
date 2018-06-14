@@ -400,9 +400,9 @@ public class LoggerService extends Service implements SensorEventListener {
 
         if(gAvailable)
 
-            data = floatArraytoString(acc) + floatArraytoString(gyr) + LocationData + ", " + Marks + speed + "\n";
+            data = floatArraytoString(acc) + floatArraytoString(gyr) + LocationData + ", " + Marks + "," + speed + "\n";
         else
-            data = floatArraytoString(acc) + LocationData + ", " + Marks + speed + "\n";
+            data = floatArraytoString(acc) + LocationData + ", " + Marks + "," + speed + "\n";
 
         try {
             out.write(data.getBytes());

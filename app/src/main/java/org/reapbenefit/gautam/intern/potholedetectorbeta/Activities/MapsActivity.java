@@ -241,6 +241,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
                 tripStatsEditor.putStringSet(getString(R.string.probable_pothole_location_set), probablePotholeStringSet);
                 tripStatsEditor.putStringSet(getString(R.string.definite_pothole_location_set), definitePotholeStringSet);
+                tripStatsEditor.commit();
             }
         }else {
             textview.setText("No locations found");
@@ -256,13 +257,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         ApplicationClass.getInstance().getTrip().setProbablePotholeCount(a);
         //data required by TLF for updating TripViewModel instance
         dbPreferencesEditor.putInt("probablePotholeCount", a);
-        dbPreferencesEditor.apply();
     }
 
     private void setDefinitePotholeCount(int a) {
         ApplicationClass.getInstance().getTrip().setDefinitePotholeCount(a);
-        dbPreferencesEditor.putInt("probablePotholeCount", a);
-        dbPreferencesEditor.apply();
+        dbPreferencesEditor.putInt("definitePotholeCount", a);
+        dbPreferencesEditor.commit();
     }
 
     public void logAnalytics(String data){
@@ -303,6 +303,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                         if (tokens[i].contains("speed")) {
                             speedIndex = i;
+                            Log.d("speedIndex", String.valueOf(i));
                         }
                     }
 
@@ -324,7 +325,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 catch (Exception e){
 
                 }
-
+                Log.d("result before return", definitePointsOfInterest.size() + " " + probablePointsOfInterest.size());
                 return definitePointsOfInterest.size() + " " + probablePointsOfInterest.size();
             } catch (FileNotFoundException e) {
                 return null;
@@ -336,8 +337,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             int indexOfSpace = result.indexOf(' ');
-            int probablePotholeCount = Integer.parseInt(result.substring(0, indexOfSpace));
-            int definitePotholeCount = Integer.parseInt(result.substring(indexOfSpace + 1));
+            int definitePotholeCount = Integer.parseInt(result.substring(0, indexOfSpace));
+            int probablePotholeCount = Integer.parseInt(result.substring(indexOfSpace + 1));
+            Log.d("probableCount", probablePotholeCount + "");
+            Log.d("definiteCount", definitePotholeCount + "");
             setProbablePotholeCount(probablePotholeCount);
             setDefinitePotholeCount(definitePotholeCount);
             spinner.setVisibility(View.GONE);
