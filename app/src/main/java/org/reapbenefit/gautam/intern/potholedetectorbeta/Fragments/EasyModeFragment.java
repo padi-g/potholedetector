@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Parcelable;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -40,6 +41,10 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -338,7 +343,9 @@ public class EasyModeFragment extends Fragment {
     public void startUploadService(){
         Intent intent = new Intent(getContext(), S3UploadService.class);
         intent.setAction("upload_now");
-        intent.putExtra("trip_object", newTrip);
+        List<Trip> tripList = new ArrayList<>();
+        tripList.add(newTrip);
+        intent.putExtra("trip_arrayList", (Serializable) tripList);
         intent.putExtra("upload_uri", uploadFileUri);
         this.getContext().startService(intent);
 

@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Parcelable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,9 +24,11 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 
 import java.io.File;
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripListViewHolder> {
@@ -211,10 +214,9 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         Intent intent = new Intent(context.getApplicationContext(), S3UploadService.class);
         intent.setAction("upload_now");
         intent.putExtra("upload_uri", uploadFileUri);
-        intent.putExtra("trip_json", json);
-        intent.putExtra("trips_arraylist", trips);
-        intent.putExtra("position", positionChanged);
-        intent.putExtra("trip_object", trip);
+        List<Trip> tripList = new ArrayList<>();
+        tripList.add(trip);
+        intent.putExtra("trip_arrayList", (Serializable) tripList);
         context.getApplicationContext().startService(intent);
     }
 

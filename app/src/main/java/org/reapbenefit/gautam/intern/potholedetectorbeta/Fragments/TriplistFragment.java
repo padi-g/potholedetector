@@ -34,6 +34,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.S3MultipleFileUploadService;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
 
@@ -111,7 +112,7 @@ public class TriplistFragment extends Fragment {
                 uploadedTrip.setUploaded(true);
                 tripViewModel.insert(Trip.tripToLocalTripEntity(uploadedTrip));
                 Log.d("tripUploaded", new Gson().toJson(uploadedTrip));
-                offlineTrips.remove(uploadedTrip);
+                offlineTrips.remove(intent.getParcelableExtra("tripUploaded"));
                 createOfflineTripsListView();
             }
         }
@@ -198,7 +199,6 @@ public class TriplistFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        getActivity().registerReceiver(uploadBroadcastReceiver, new IntentFilter("SET_UPLOADED_TRUE"));
     }
 
     @Override
@@ -249,14 +249,15 @@ public class TriplistFragment extends Fragment {
         recyclerView.setLayoutManager(recyclerLayoutManager);
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         createOfflineTripsListView();
-        /*uploadAllButton = (ImageButton) v.findViewById(R.id.upload_all_button);
+        uploadAllButton = (ImageButton) v.findViewById(R.id.upload_all_button);
         uploadAllButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent uploadAllIntent = new Intent(getContext(), S3MultipleFileUploadService.class);
+                Intent uploadAllIntent = new Intent(getContext(), S3UploadService.class);
+                uploadAllIntent.putExtra("trip_arrayList", offlineTrips);
                 getContext().startService(uploadAllIntent);
             }
-        });*/
+        });
 
         return v;
     }

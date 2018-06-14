@@ -11,8 +11,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -35,6 +33,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -62,7 +61,11 @@ public class S3UploadService extends IntentService {
     private SharedPreferences dbPreferences;
     private SharedPreferences.Editor dbPreferencesEditor;
     private Trip tripUploaded;
+    private List<Trip> tripList;
     private boolean isWifiConnected;
+    private int fileIndex;
+    private SharedPreferences indexPreferences;
+    private SharedPreferences.Editor indexPreferencesEditor;
 
     public S3UploadService() {
         super("S3UploadService");
@@ -77,7 +80,9 @@ public class S3UploadService extends IntentService {
         Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         dbPreferencesEditor = dbPreferences.edit();
-        tripUploaded = intent.getParcelableExtra("trip_object");
+        tripList = (List<Trip>) intent.getSerializableExtra("trip_arrayList");
+        tripUploaded = tripList.get(0);
+        Log.d("tripUploaded", tripUploaded.getTrip_id());
         if (tripUploaded == null)
             tripUploaded = new Gson().fromJson(dbPreferences.getString("uploadedTripJson", null), Trip.class);
         tripUploadedId = tripUploaded.getTrip_id();
@@ -85,7 +90,7 @@ public class S3UploadService extends IntentService {
         uploadUri = intent.getParcelableExtra(UPLOAD_URI);
         dbPreferencesEditor.putString("uploadUriJson", new Gson().toJson(uploadUri)).commit();
         if (uploadUri == null)
-            uploadUri = new Gson().fromJson(dbPreferences.getString("uploadUriJson", null), Uri.class);
+            uploadUri = Uri.fromFile(new File(getApplicationContext().getFilesDir() + "/logs/" + tripUploadedId + ".csv"));
         initialiseNotification();
         if (isInternetAvailable()) {
 
@@ -150,7 +155,6 @@ public class S3UploadService extends IntentService {
                     partETags.add(uploadPartResult.getPartETag());
                     filePosition += partSize;
                     uploadIdList.add(initResult.getUploadId());
-                    Log.d(getClass().getSimpleName(), partETags.toString());
                     } catch (Exception e) {
                     Log.e(getClass().getSimpleName(), e.getMessage());
                     notificationBuilder.setContentText("Upload failed");
@@ -179,6 +183,13 @@ public class S3UploadService extends IntentService {
                     //in case TLF is not in memory, BroadcastReceiver won't work
                     dbPreferencesEditor.putString("tripUploaded", new Gson().toJson(tripUploaded).toString());
                     dbPreferencesEditor.putString("tripUploadedId", tripUploadedId).commit();
+                    tripList.remove(tripUploaded);
+                    //if batch upload was requested, there will be more files in the list
+                    if (tripList.size() > 0) {
+                        Intent uploadAllIntent = new Intent(this, S3UploadService.class);
+                        uploadAllIntent.putExtra("trip_arrayList", (Serializable) tripList);
+                        startService(uploadAllIntent);
+                    }
                 }
             }
         }
