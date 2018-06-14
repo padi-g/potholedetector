@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -43,8 +42,8 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     private Uri uploadFileUri;
     private TripViewModel tripViewModel;
     private final String TAG = getClass().getSimpleName();
-    private Set<String> positionChangedSet;
-    private ArrayList<Trip> databaseTrips = new ArrayList<>();
+    private SharedPreferences dbPreferences;
+    private boolean batchUpload;
 
     /*
     static ViewHolder class to reference views for each trip component item
@@ -83,6 +82,8 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
 
     @Override
     public TripListViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
 
         LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View rowView = layoutInflater.inflate(R.layout.trip_list_item, parent, false);
@@ -156,8 +157,10 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             uploadButton = holder.uploadButton;
             uploadedTick = holder.uploadedTick;
             uploadProgressBar = holder.uploadProgressBar;
+            batchUpload = dbPreferences.getBoolean("batchUpload", false);
+            Log.d("batchUpload", String.valueOf(batchUpload));
 
-            if (uploadStatus && trip.getTrip_id().equals(tripId)) {
+            if ((uploadStatus && trip.getTrip_id().equals(tripId)) || batchUpload) {
                 uploadProgressBar.setIndeterminate(true);
                 uploadProgressBar.setVisibility(View.VISIBLE);
                 uploadButton.setVisibility(View.GONE);
