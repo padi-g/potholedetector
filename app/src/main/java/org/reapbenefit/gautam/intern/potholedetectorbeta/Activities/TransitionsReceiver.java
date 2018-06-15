@@ -65,7 +65,8 @@ public class TransitionsReceiver extends IntentService {
             //committing current activity to shared prefs
             editor.putString("currentActivity", detectedActivity.toString());
             editor.commit();
-            if (detectedActivity.toString().contains("VEHICLE") && !ApplicationClass.getInstance().isTripInProgress()) {
+            if (detectedActivity.toString().contains("VEHICLE") && !ApplicationClass.getInstance().isTripInProgress()
+                    && detectedActivity.getConfidence() >= 40) {
                 //sending notification to user
                 notificationManagerCompat.notify(0, builder.build());
             }
