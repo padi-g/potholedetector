@@ -45,10 +45,10 @@ public class TransitionsReceiver extends IntentService {
     @SuppressLint("RestrictedApi")
     @Override
     public void onHandleIntent(Intent intent) {
-        timer = sharedPreferences.getInt("timer", 0);
         //setting up notification system
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         editor = sharedPreferences.edit();
+        timer = sharedPreferences.getInt("timer", 0);
         createNotificationChannel();
         mainIntent = new Intent(this, MainActivity.class);
         mainIntent.putExtra("inCar", true);

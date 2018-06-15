@@ -80,6 +80,17 @@ public class S3UploadService extends IntentService {
         super.onDestroy();
     }
 
+    private void notifyConnectionTimeout() {
+        initialiseNotification();
+        notificationBuilder.setContentText("Network connection unavailable. Please try again later.");
+        notificationBuilder.setOngoing(false);
+        notificationManager.notify(mNotificationId, notificationBuilder.build());
+        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        dbPreferencesEditor = dbPreferences.edit();
+        dbPreferencesEditor.putString("tripUploadedId", null).commit();
+        stopSelf();
+    }
+
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
@@ -132,9 +143,12 @@ public class S3UploadService extends IntentService {
                 List<String> uploadIdList = new ArrayList<>();
 
 
-                initRequest = new InitiateMultipartUploadRequest(bucketName, keyName);
-                initResult = s3Client.initiateMultipartUpload(initRequest);
-
+                try {
+                    initRequest = new InitiateMultipartUploadRequest(bucketName, keyName);
+                    initResult = s3Client.initiateMultipartUpload(initRequest);
+                } catch (Exception e) {
+                    notifyConnectionTimeout();
+                }
                 final long contentLength = file.length();
                 long partSize = MEGABYTES_PER_PART * 1024 * 1024;
 
@@ -209,14 +223,7 @@ public class S3UploadService extends IntentService {
                     }
                 }
             } else {
-                initialiseNotification();
-                notificationBuilder.setContentText("Network connection unavailable. Please try again later.");
-                notificationBuilder.setOngoing(false);
-                notificationManager.notify(mNotificationId, notificationBuilder.build());
-                dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-                dbPreferencesEditor = dbPreferences.edit();
-                dbPreferencesEditor.putString("tripUploadedId", null).commit();
-                stopSelf();
+                notifyConnectionTimeout();
             }
         }
     }
