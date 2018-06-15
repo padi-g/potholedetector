@@ -73,7 +73,7 @@ public class TransitionsReceiver extends IntentService {
             editor.putString("currentActivity", detectedActivity.toString());
             editor.commit();
             if (detectedActivity.toString().contains("VEHICLE") && !ApplicationClass.getInstance().isTripInProgress()
-                    && detectedActivity.getConfidence() >= 40 && timer >= 60) {
+                    && timer >= 60) {
                 //sending notification to user
                 notificationManagerCompat.notify(0, builder.build());
                 long currentTime = Calendar.getInstance().getTime().getTime();
