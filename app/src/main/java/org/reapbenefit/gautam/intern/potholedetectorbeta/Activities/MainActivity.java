@@ -118,14 +118,17 @@ public class MainActivity extends AppCompatActivity
     private SharedPreferences onboardingPreferences;
 
     @Override
+    public void onBackPressed() {
+        Intent goHome = new Intent(Intent.ACTION_MAIN);
+        goHome.addCategory(Intent.CATEGORY_HOME);
+        goHome.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(goHome);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = this;
-        onboardingPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-        if (!onboardingPreferences.getBoolean("onboarding", false)) {
-            Intent onboardingIntent = new Intent(this, SplashActivity.class);
-            startActivity(onboardingIntent);
-        }
         Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -154,7 +157,6 @@ public class MainActivity extends AppCompatActivity
         checkPermissions();
 
         //Appsee.start();
-        Log.d("UserID", getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null));
         //Appsee.setUserId(getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null));
 
         /*

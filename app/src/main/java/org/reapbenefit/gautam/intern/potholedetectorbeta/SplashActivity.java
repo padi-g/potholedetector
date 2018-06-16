@@ -57,12 +57,23 @@ public class SplashActivity extends AppCompatActivity {
     private GoogleApiClient googleApiClient;
     private final int RC_SIGN_IN = 531;
     private ProgressDialog dialog;
-
+    private SharedPreferences onboardingPreferences;
+    private SharedPreferences.Editor onboardingPreferencesEditor;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_splash);
 
+
+        onboardingPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        boolean startMain = onboardingPreferences.getBoolean("onboarding", true);
+        if (!startMain) {
+            Intent onboardingIntent = new Intent(this, MainActivity.class);
+            startActivity(onboardingIntent);
+        }
+
+        onboardingPreferencesEditor = onboardingPreferences.edit();
         finishButton = (Button) findViewById(R.id.finish_button);
         mViewPager = (ViewPager) findViewById(R.id.container);
         pagerIndicator = (LinearLayout) findViewById(R.id.viewPagerCountDots);
@@ -169,7 +180,7 @@ public class SplashActivity extends AppCompatActivity {
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
                                 dialog.dismiss();
-                                sharedPreferences.edit().putBoolean("onboarding", true).commit();
+                                onboardingPreferencesEditor.putBoolean("onboarding", false).commit();
                                 uploadEditor.putString("FIREBASE_USER_ID", firebaseAuth.getCurrentUser().getUid()).commit();
                                 Intent intent = new Intent(SplashActivity.this, MainActivity.class);
                                 startActivity(intent);
