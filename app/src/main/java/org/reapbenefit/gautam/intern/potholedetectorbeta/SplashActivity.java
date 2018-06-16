@@ -59,6 +59,15 @@ public class SplashActivity extends AppCompatActivity {
     private ProgressDialog dialog;
     private SharedPreferences onboardingPreferences;
     private SharedPreferences.Editor onboardingPreferencesEditor;
+
+    @Override
+    public void onBackPressed() {
+        Intent goHome = new Intent(Intent.ACTION_MAIN);
+        goHome.addCategory(Intent.CATEGORY_HOME);
+        goHome.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(goHome);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,12 +76,6 @@ public class SplashActivity extends AppCompatActivity {
 
 
         onboardingPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-        boolean startMain = onboardingPreferences.getBoolean("onboarding", true);
-        if (!startMain) {
-            Intent onboardingIntent = new Intent(this, MainActivity.class);
-            startActivity(onboardingIntent);
-        }
-
         onboardingPreferencesEditor = onboardingPreferences.edit();
         finishButton = (Button) findViewById(R.id.finish_button);
         mViewPager = (ViewPager) findViewById(R.id.container);

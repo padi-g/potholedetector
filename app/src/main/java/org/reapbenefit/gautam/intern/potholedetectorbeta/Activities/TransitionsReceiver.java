@@ -42,7 +42,7 @@ public class TransitionsReceiver extends IntentService {
     private NotificationCompat.Builder builder;
     private NotificationManagerCompat notificationManagerCompat;
     private long timer;
-    private final long NOTIFICATION_TIME_THRESHOLD = 1 * 1000 * 60;
+    private final long NOTIFICATION_TIME_THRESHOLD = 60 * 1000 * 60;
     public TransitionsReceiver() {
         super("TransitionsReceiver");
     }
@@ -53,7 +53,11 @@ public class TransitionsReceiver extends IntentService {
         //setting up notification system
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         editor = sharedPreferences.edit();
-        timer = sharedPreferences.getLong("timer", SystemClock.elapsedRealtime());
+        timer = sharedPreferences.getLong("timer", 0);
+        if (timer == 0) {
+            timer = Calendar.getInstance().getTimeInMillis();
+            editor.putLong("timer", timer).commit();
+        }
         createNotificationChannel();
         mainIntent = new Intent(this, MainActivity.class);
         mainIntent.putExtra("inCar", true);
@@ -69,11 +73,9 @@ public class TransitionsReceiver extends IntentService {
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
         notificationManagerCompat = NotificationManagerCompat.from(this);
-        long currentTime = SystemClock.elapsedRealtime();
-        timer += currentTime - timer;
+        long currentTime = Calendar.getInstance().getTimeInMillis();
+        timer = currentTime - timer;
         Log.d("timer", timer + "");
-        editor.putLong("timer", timer);
-        editor.commit();
        //check if intent contains data about an activity
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
@@ -83,9 +85,10 @@ public class TransitionsReceiver extends IntentService {
             if (detectedActivity != null)
                 editor.putString("currentActivity", new Gson().toJson(detectedActivity).toString());
             editor.commit();
-            if (detectedActivity.toString().contains("VEHICLE") && !ApplicationClass.getInstance().isTripInProgress()) {
+            if (detectedActivity.toString().contains("VEHICLE") && !ApplicationClass.getInstance().isTripInProgress() || (BuildConfig.DEBUG && timer >= NOTIFICATION_TIME_THRESHOLD)) {
                 //sending notification to user
                 notificationManagerCompat.notify(0, builder.build());
+                editor.remove("timer").commit();
             }
             else {
                 if (notificationManagerCompat != null) {
