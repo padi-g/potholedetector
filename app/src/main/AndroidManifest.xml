@@ -156,12 +156,8 @@
             </intent-filter>
         </receiver>
 
-        <service
-            android:name=".MultipleFileUploadService"
-            android:exported="false" />
-        <service
-            android:name=".S3MultipleFileUploadService"
-            android:exported="false"></service>
+        <meta-data android:name="com.appsee.ApiKey" android:value="***REMOVED***" />
+
     </application>
 
 </manifest>

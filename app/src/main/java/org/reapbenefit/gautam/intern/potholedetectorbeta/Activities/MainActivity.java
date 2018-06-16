@@ -48,6 +48,7 @@ import com.amazonaws.http.HttpResponseHandler;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.internal.Constants;
+import com.appsee.Appsee;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
@@ -142,6 +143,9 @@ public class MainActivity extends AppCompatActivity
 
         settingsRequest();
         checkPermissions();
+
+        Appsee.start();
+        Appsee.setUserId(mAuth.getCurrentUser().getUid());
 
         /*
         getting user data from AWS

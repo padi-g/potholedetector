@@ -27,6 +27,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.appsee.Appsee;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -281,6 +282,7 @@ public class OverviewFragment extends Fragment implements
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
                 currentLocation = locationResult.getLastLocation();
+                Appsee.setLocation(currentLocation.getLatitude(), currentLocation.getLongitude(), currentLocation.getAccuracy(), currentLocation.getAccuracy());
                 currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
                 googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18.0f));
             }
@@ -388,7 +390,6 @@ public class OverviewFragment extends Fragment implements
 
     @Override
     public void onLocationChanged(Location location) {
-
     }
 
     public interface OnFragmentInteractionListener {
