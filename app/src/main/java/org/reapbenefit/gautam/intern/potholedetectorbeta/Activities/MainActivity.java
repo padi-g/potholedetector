@@ -14,12 +14,14 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -29,6 +31,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.amazonaws.AmazonWebServiceClient;
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.ClientConfiguration;
@@ -37,9 +40,14 @@ import com.amazonaws.Request;
 import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.http.AmazonHttpClient;
+import com.amazonaws.http.HttpClient;
 import com.amazonaws.http.HttpMethodName;
+import com.amazonaws.http.HttpResponse;
+import com.amazonaws.http.HttpResponseHandler;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.internal.Constants;
 import com.appsee.Appsee;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
@@ -59,6 +67,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
@@ -68,6 +77,8 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.OverviewFragm
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadService;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Util;
 
 import java.net.URI;
@@ -101,20 +112,15 @@ public class MainActivity extends AppCompatActivity
     private Handler handler;
     private Context context;
     private boolean inCar;
-    private SharedPreferences onboardingPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = this;
-        onboardingPreferences = getSharedPreferences("onboarding", Context.MODE_PRIVATE);
-        if (!onboardingPreferences.getBoolean("onboarding", false)) {
-            Intent onboardingIntent = new Intent(this, TabbedOnboardingActivity.class);
-            startActivity(onboardingIntent);
-        }
         Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
         setContentView(R.layout.activity_main);
 
         inCar = getIntent().getBooleanExtra("inCar", false);
@@ -139,7 +145,7 @@ public class MainActivity extends AppCompatActivity
         checkPermissions();
 
         Appsee.start();
-        //Appsee.setUserId(mAuth.getCurrentUser().getUid());
+        Appsee.setUserId(mAuth.getCurrentUser().getUid());
 
         /*
         getting user data from AWS
