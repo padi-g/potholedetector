@@ -268,7 +268,7 @@ public class OverviewFragment extends Fragment implements
         if (googleMap != null) {
             for (LatLng potholeLocation : probableLatLngList) {
                 Log.d(getClass().getSimpleName(), "adding marker");
-                googleMap.addMarker(new MarkerOptions().position(potholeLocation).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+                googleMap.addMarker(new MarkerOptions().position(potholeLocation).icon(BitmapDescriptorFactory.fromResource(R.mipmap.grey_marker)));
             }
             for (LatLng potholeLocation : definiteLatLngList) {
                 googleMap.addMarker(new MarkerOptions().position(potholeLocation).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));

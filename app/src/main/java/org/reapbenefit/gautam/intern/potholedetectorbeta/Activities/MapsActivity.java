@@ -233,7 +233,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 for (LatLng l : probablePotholeLatLngs) {
                     mMap.addMarker(new MarkerOptions()
-                            .position(l).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+                            .position(l).icon(BitmapDescriptorFactory.fromResource(R.mipmap.grey_marker)));
                     probablePotholeStringSet.add(new Gson().toJson(l));
                 }
                 for (LatLng l: definitePotholeLatLngs) {
