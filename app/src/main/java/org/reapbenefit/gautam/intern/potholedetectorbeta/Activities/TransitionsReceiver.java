@@ -85,7 +85,8 @@ public class TransitionsReceiver extends IntentService {
             if (detectedActivity != null)
                 editor.putString("currentActivity", new Gson().toJson(detectedActivity).toString());
             editor.commit();
-            if (detectedActivity.toString().contains("VEHICLE") && !ApplicationClass.getInstance().isTripInProgress() || (BuildConfig.DEBUG && timer >= NOTIFICATION_TIME_THRESHOLD)) {
+            if (detectedActivity.toString().contains("VEHICLE") && !ApplicationClass.getInstance().isTripInProgress()
+                    && timer >= NOTIFICATION_TIME_THRESHOLD && detectedActivity.getConfidence() >= 30) {
                 //sending notification to user
                 notificationManagerCompat.notify(0, builder.build());
                 editor.remove("timer").commit();
