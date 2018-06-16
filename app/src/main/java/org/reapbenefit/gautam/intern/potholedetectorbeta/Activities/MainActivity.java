@@ -78,6 +78,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragm
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadService;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.SplashActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Util;
 
@@ -112,11 +113,17 @@ public class MainActivity extends AppCompatActivity
     private Handler handler;
     private Context context;
     private boolean inCar;
+    private SharedPreferences onboardingPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = this;
+        onboardingPreferences = getSharedPreferences("onboardingPreferences", MODE_PRIVATE);
+        if (!onboardingPreferences.getBoolean("onboarding", false)) {
+            Intent onboardingIntent = new Intent(this, SplashActivity.class);
+            startActivity(onboardingIntent);
+        }
         Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -132,20 +139,20 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setTitle("Road Quality Audit");
 
         mAuth = FirebaseAuth.getInstance();
-        if (mAuth.getCurrentUser() == null) {
+        /*if (mAuth.getCurrentUser() == null) {
             // Toast
             Toast.makeText(this, "Please login to start using the app", Toast.LENGTH_LONG).show();
             // open login activity
 
             Intent i = new Intent(this, LoginActivity.class);
             startActivity(i);
-        }
+        }*/
 
         settingsRequest();
         checkPermissions();
 
         Appsee.start();
-        Appsee.setUserId(mAuth.getCurrentUser().getUid());
+        //Appsee.setUserId(mAuth.getCurrentUser().getUid());
 
         /*
         getting user data from AWS

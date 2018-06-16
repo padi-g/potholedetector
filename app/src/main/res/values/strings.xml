@@ -65,4 +65,13 @@
     <string name="definite_pothole_location_set">definitePotholelatLngs</string>
     <string name="file_delete_setting">file_delete</string>
     <string name="auto_upload_setting">auto_upload</string>
+    <string name="title_activity_splash">SplashActivity</string>
+    <string name="action_settings">Settings</string>
+    <!--OnBoarding strings-->
+    <string name="first_section_title">Welcome.</string>
+    <string name="second_section_title">Help us grow.</string>
+    <string name="third_section_title">Sign in, start logging.</string>
+    <string name="first_section_info">Keep yourself and your vehicle safe by contributing to a countrywide database of potholes.</string>
+    <string name="second_section_info">This app is still in beta, which means that our calculations may be wrong sometimes.\nYou can help us by logging potholes continuously (preferably on a holder)</string>
+    <string name="third_section_info">We keep your data anonymous, private, and safe. Even we don\'t know who you are.</string>
 </resources>
