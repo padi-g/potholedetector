@@ -151,8 +151,9 @@ public class MainActivity extends AppCompatActivity
         settingsRequest();
         checkPermissions();
 
-        Appsee.start();
-        //Appsee.setUserId(mAuth.getCurrentUser().getUid());
+        //Appsee.start();
+        Log.d("UserID", getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null));
+        //Appsee.setUserId(getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null));
 
         /*
         getting user data from AWS
