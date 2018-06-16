@@ -24,7 +24,7 @@
         ></item>
     <item
         android:id="@+id/actions_login"
-        android:title="@string/menu_login"
+        android:title="Sign out"
         android:orderInCategory="400"
         ></item>
     <item

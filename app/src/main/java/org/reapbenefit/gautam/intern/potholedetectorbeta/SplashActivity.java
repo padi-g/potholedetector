@@ -138,16 +138,14 @@ public class SplashActivity extends AppCompatActivity {
 
                     }
                 }).addApi(Auth.GOOGLE_SIGN_IN_API, signInOptions).build();
-        if (firebaseAuth.getCurrentUser() != null) {
-
-
-        }
         finishButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View view) {
                 Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
                 startActivityForResult(signInIntent, RC_SIGN_IN);
+                dialog = ProgressDialog.show(SplashActivity.this, "Signing in", "Just a moment...", true);
+                dialog.show();
             }
         });
     }
@@ -157,7 +155,6 @@ public class SplashActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         GoogleSignInResult googleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
         if (requestCode == RC_SIGN_IN) {
-            //handleSignInResult(googleSignInResult);
             GoogleSignInAccount account = googleSignInResult.getSignInAccount();
             firebaseAuthWithGoogle(account);
         }
@@ -171,6 +168,7 @@ public class SplashActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
+                                dialog.dismiss();
                                 sharedPreferences.edit().putBoolean("onboarding", true).commit();
                                 uploadEditor.putString("FIREBASE_USER_ID", firebaseAuth.getCurrentUser().getUid()).commit();
                                 Intent intent = new Intent(SplashActivity.this, MainActivity.class);
