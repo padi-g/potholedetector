@@ -65,4 +65,11 @@
     <string name="definite_pothole_location_set">definitePotholelatLngs</string>
     <string name="file_delete_setting">file_delete</string>
     <string name="auto_upload_setting">auto_upload</string>
+    <string name="title_activity_splash">SplashActivity</string>
+    <string name="action_settings">Settings</string>
+    <string-array name="onboarding_strings">
+        <item>Ensure you and your vehicle stay safe, even on pothole-ridden roads</item>
+        <item>Help us get data on different pothole locations in your city. We keep this data private, anonymous, and secure.</item>
+        <item>Sign in and start mapping</item>
+    </string-array>
 </resources>
