@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = this;
-        onboardingPreferences = getSharedPreferences("onboardingPreferences", MODE_PRIVATE);
+        onboardingPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         if (!onboardingPreferences.getBoolean("onboarding", false)) {
             Intent onboardingIntent = new Intent(this, SplashActivity.class);
             startActivity(onboardingIntent);
