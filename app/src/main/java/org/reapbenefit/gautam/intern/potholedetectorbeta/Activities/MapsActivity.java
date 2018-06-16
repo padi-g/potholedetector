@@ -281,9 +281,39 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         int lineNumber = 0, prevLineNumber = 0;
         FileInputStream is;
+        private float[] speedArray;
+
+        private float[] rightShift(float value) {
+            float arr[] = speedArray;
+            if (arr[2] != -1.0f) {
+                float temp = arr[2];
+                float temp1 = arr[1];
+                arr[0] = temp1;
+                arr[1] = temp;
+                arr[2] = value;
+            }
+            else if (arr[1] != -1.0f) {
+                arr[2] = value;
+            }
+            else if (arr[0] != -1.0f) {
+                arr[1] = value;
+            }
+            else
+                arr[0] = value;
+            return arr;
+        }
+
+        private boolean didSpeedOscillate(float arr[]) {
+            if (speedArray[0] >= DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && speedArray[1] > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && speedArray[1] < DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND
+                    && speedArray[2] >= DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
+                return true;
+            else
+                return false;
+        }
 
         @Override
         protected String doInBackground(String... params) {
+            speedArray = new float[]{-1, -1, -1};
             File file = new File(getApplicationContext().getFilesDir(), "logs/" + tripID + ".csv");
             try {
                 is = new FileInputStream(file);

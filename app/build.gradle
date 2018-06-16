@@ -29,6 +29,9 @@ dependencies {
     implementation 'com.amazonaws:aws-android-sdk-cognito:2.6.+'
     implementation('com.amazonaws:aws-android-sdk-auth-google:2.6.+@aar') { transitive = true }
 
+    compile "com.mcxiaoke.volley:library:1.+"
+    compile project(":AppAnalyticsSDK")
+
     compile 'com.appsee:appsee-android:+'
 
     compile 'com.android.support:cardview-v7:26.1.0'

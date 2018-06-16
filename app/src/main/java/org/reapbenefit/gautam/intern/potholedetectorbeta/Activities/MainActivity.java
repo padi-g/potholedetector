@@ -84,6 +84,8 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Util;
 
 import java.net.URI;
 
+import io.appanalytics.sdk.AppAnalytics;
+
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
         TriplistFragment.OnFragmentInteractionListener,

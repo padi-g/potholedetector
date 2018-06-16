@@ -163,7 +163,7 @@
         <activity
             android:name=".SplashActivity"
             android:label="@string/title_activity_splash"
-            android:theme="@style/AppTheme">
+            android:theme="@style/AppTheme">er>
         </activity>
     </application>
 

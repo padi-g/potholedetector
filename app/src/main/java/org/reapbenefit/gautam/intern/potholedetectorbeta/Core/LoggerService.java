@@ -59,6 +59,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -136,7 +137,7 @@ public class LoggerService extends Service implements SensorEventListener {
     private Set<String> newTripSet;
     private Set<String> toBeUploadedTripSet;
     private float speed;
-    private float speedAccuracy;
+    private HashMap<Integer, SpeedWithLocation> speedWithLocationMap = new HashMap<>();
 
     public LoggerService() {
         super();
@@ -256,12 +257,10 @@ public class LoggerService extends Service implements SensorEventListener {
                 }
                 mCurrentLocation = location;
                 speed = location.getSpeed();
-                float speedAccuracy = 0;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    speedAccuracy = location.getSpeedAccuracyMetersPerSecond();
-                    Log.d("speedAccuracy", speedAccuracy + "");
-                }
-
+                SpeedWithLocation speedWithLocation = new SpeedWithLocation();
+                speedWithLocation.setLocation(location);
+                speedWithLocation.setSpeed(speed);
+                speedWithLocationMap.put(no_of_lines, speedWithLocation);
                 mLastUpdateTime = getCurrentTime();
                 LocData = getLocData();
             }
