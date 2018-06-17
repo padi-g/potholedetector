@@ -44,7 +44,7 @@ public class APIService extends IntentService {
     protected void onHandleIntent(@Nullable Intent intent) {
         requestMethod = intent.getStringExtra("request");
         table = intent.getStringExtra("table");
-        userId = intent.getStringExtra("FIREBASE_USER_ID");
+        userId = getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null);
         if (requestMethod.equalsIgnoreCase("GET") && table.equalsIgnoreCase(getString(R.string.user_data_table))) {
             int userIndex = -1;
             String allUsersJson = HTTPHandler.getAllUsers();
