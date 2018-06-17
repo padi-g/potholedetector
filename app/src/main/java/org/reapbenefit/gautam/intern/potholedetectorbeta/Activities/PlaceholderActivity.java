@@ -6,6 +6,8 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.crashlytics.android.Crashlytics;
+
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.SplashActivity;
 
@@ -16,6 +18,7 @@ public class PlaceholderActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         SharedPreferences onboardingPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         boolean onboarding = onboardingPreferences.getBoolean("onboarding", true);
+
         if (onboarding) {
             Intent intent = new Intent(this, SplashActivity.class);
             startActivity(intent);
