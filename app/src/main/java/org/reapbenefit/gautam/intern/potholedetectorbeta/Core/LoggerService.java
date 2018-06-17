@@ -553,6 +553,11 @@ public class LoggerService extends Service implements SensorEventListener {
             dbPreferences.edit().putStringSet("newTripJson", newTripSet).commit();
             dbPreferences.edit().putStringSet("toBeUploadedTripSet", toBeUploadedTripSet).commit();
             sendTripLoggingBroadcast(false, fileuri);
+            Intent apiUpdateIntent = new Intent(this, APIService.class);
+            apiUpdateIntent.putExtra("newTrip", newtrip);
+            apiUpdateIntent.putExtra("request", "POST");
+            apiUpdateIntent.putExtra("table", getString(R.string.trip_data_table));
+            startService(apiUpdateIntent);
         }else {
             logAnalytics("unsuccessful_in_starting_logging");
             sendTripLoggingBroadcast(false, null/*, null*/);

@@ -78,4 +78,5 @@
     <!--API strings-->
     <string name="user_data_table">UserData</string>
     <string name="trip_data_table">TripsData</string>
+    <string name="highest_pothole_trip_broadcast">HIGHEST_POTHOLE_TRIP</string>
 </resources>
