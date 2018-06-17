@@ -1,7 +1,12 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -15,10 +20,14 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.TripDataLambda;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.UserData;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public class APIService extends IntentService {
+
+    private SharedPreferences dbPreferences;
 
     private String requestMethod;
     private final String USER_TABLE_URL = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/users/";
@@ -87,9 +96,38 @@ public class APIService extends IntentService {
             }
         }
         else if (requestMethod.equalsIgnoreCase("POST") && table.equalsIgnoreCase(getString(R.string.trip_data_table))) {
+            dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            Set<String> tripsNotInRDS = dbPreferences.getStringSet(getString(R.string.trips_not_in_RDS),
+                    new HashSet<String>());
+            List<String> tripsNotInRDSList = new ArrayList<>(tripsNotInRDS);
             //sending a POST request to /trips API
-            HTTPHandler.insertTrip((Trip) intent.getParcelableExtra("newTrip"));
+            if (isInternetAvailable()) {
+                HTTPHandler.insertTrip((Trip) intent.getParcelableExtra("newTrip"));
+                //checking for other trips whose metadata is not online
+                for (int i = 0; i < tripsNotInRDS.size(); ++i) {
+                    Trip syncTrip = new Gson().fromJson(tripsNotInRDSList.get(i), Trip.class);
+                    HTTPHandler.insertTrip(syncTrip);
+                    tripsNotInRDS.remove(syncTrip);
+                }
+                dbPreferences.edit().putStringSet(getString(R.string.trips_not_in_RDS), tripsNotInRDS).commit();
+            }
+            else {
+                //save trip as JSON in SharedPreferences
+                tripsNotInRDS.add(new Gson().toJson(intent.getParcelableExtra("newTrip")));
+                dbPreferences.edit().putStringSet(getString(R.string.trips_not_in_RDS), tripsNotInRDS).commit();
+            }
             //TODO: need to update corresponding data in UserData table
         }
+    }
+
+    private boolean isInternetAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null && activeNetwork.isConnected();
+        if (!isConnected)
+            return false;
+        //TODO: HOW TO FIX THIS WHEN ASYNCTASK MIGHT TAKE TIME TO COMPLETE?
+        //new CheckWifiNoInternetAsyncTask().execute();
+        return true;
     }
 }
