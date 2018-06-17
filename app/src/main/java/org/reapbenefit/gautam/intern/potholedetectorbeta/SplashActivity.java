@@ -54,6 +54,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.OnboardingActivity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 
 import java.io.BufferedReader;
@@ -70,6 +71,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.reapbenefit.gautam.intern.potholedetectorbeta.HTTPHandler.getAllUsers;
 
 public class SplashActivity extends AppCompatActivity {
 
@@ -221,47 +224,12 @@ public class SplashActivity extends AppCompatActivity {
                                 onboardingPreferencesEditor.putBoolean("onboarding", false).commit();
                                 uploadEditor.putString("FIREBASE_USER_ID", firebaseAuth.getCurrentUser().getUid()).commit();
                                 userId = firebaseAuth.getCurrentUser().getUid();
-                                //sending request to update UserData table
-                                final RequestQueue requestQueue = Volley.newRequestQueue(SplashActivity.this);
-                                StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                                        new Response.Listener<String>() {
-                                            @Override
-                                            public void onResponse(String response) {
-                                                Log.d("SplashActivity", response);
-                                                responseJson = response;
-                                                if (response != null) {
-                                                    boolean userRegistered = false;
-                                                    userData = new Gson().fromJson(responseJson, UserData[].class);
-                                                    //checking for current user ID in the received array
-                                                    //TODO: MAKE THIS MORE EFFICIENT
-                                                    for (int i = 0; i < userData.length; ++i) {
-                                                        if (userData[i].getUserID().equals(userId)) {
-                                                            userRegistered = true;
-                                                            break;
-                                                        }
-                                                    }
-                                                    if (!userRegistered) {
-                                                        //sending a POST request to API for inserting user data
-                                                        sendPostRequest();
-                                                    }
-                                                }
-                                            }
-                                        }, new Response.ErrorListener() {
-                                    @Override
-                                    public void onErrorResponse(VolleyError error) {
-                                        if (error.networkResponse.statusCode == 502) {
-                                            Log.d("SplashActivity", "502");
-                                        }
-                                        else if (error.networkResponse.statusCode == 400) {
-                                            Log.d("SplashActivity", "400");
-                                            //TODO: QUEUE FOR UPDATE WHEN NETWORK IS AVAILABLE
-                                        }
-                                        else {
-                                            Log.d("SplashActivity", String.valueOf(error.networkResponse.statusCode));
-                                        }
-                                    }
-                                });
-                                requestQueue.add(stringRequest);
+                                //starting service to access API and retrieve users
+                                Intent apiServiceIntent = new Intent(SplashActivity.this, APIService.class);
+                                apiServiceIntent.putExtra("table", getString(R.string.user_data_table));
+                                apiServiceIntent.putExtra("request", "GET");
+                                apiServiceIntent.putExtra("FIREBASE_USER_ID", userId);
+                                SplashActivity.this.startService(apiServiceIntent);
                                 Intent intent = new Intent(SplashActivity.this, MainActivity.class);
                                 startActivity(intent);
                             }

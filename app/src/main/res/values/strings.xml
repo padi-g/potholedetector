@@ -74,4 +74,8 @@
     <string name="first_section_info">This app is still in beta, which means that our calculations may be wrong sometimes.\nYou can help us by logging potholes continuously (preferably on a holder)</string>
     <string name="second_section_info">Simply click the orange play button to start logging. Press the stop button to stop logging. </string>
     <string name="third_section_info">After every trip of more than half a kilometre, we\'ll show you a map.\nThe red markers represent definite potholes - watch out for them in the future.</string>
+
+    <!--API strings-->
+    <string name="user_data_table">UserData</string>
+    <string name="trip_data_table">TripsData</string>
 </resources>
