@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -157,27 +158,6 @@ public class EasyModeFragment extends Fragment {
         statusIndicatorText.setText(R.string.warnings);
         startFloatingActionButton = (FloatingActionButton) v.findViewById(R.id.start_trip_button);
         stopFloatingActionButton = (FloatingActionButton) v.findViewById(R.id.stop_trip_button);
-        /*handler = new Handler(Looper.getMainLooper());
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                arsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-                currentActivity = arsPreferences.getString("currentActivity", null);
-                if (currentActivity == null) {
-                    Log.i(getClass().getSimpleName(), "NullPointer currentActivity");
-                    Toast.makeText(getContext(), "Initialising. Try again after a few seconds.", Toast.LENGTH_SHORT);
-                }
-                else {
-                    if (currentActivity.contains("VEHICLE")) {
-                        currentlyInCar = true;
-                        Log.i(getClass().getSimpleName(), currentlyInCar + "");
-                    }
-                    else {
-                        currentlyInCar = false;
-                    }
-                }
-            }
-        });*/
 
         if(!app.isTripInProgress() && !app.isTripEnded()){
             startFloatingActionButton.setVisibility(View.VISIBLE);
@@ -365,12 +345,15 @@ public class EasyModeFragment extends Fragment {
         super.setUserVisibleHint(isVisibleToUser);
     }
 
-    public void startLogger(){
-        if (inCar || currentlyInCar || BuildConfig.DEBUG)
+    public void startLogger() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getActivity().startForegroundService(loggerIntent);
+        }
+        else
             getActivity().startService(loggerIntent);
     }
 
-    public void stopLogger(){
+    public void stopLogger() {
         getActivity().stopService(loggerIntent);
     }
 
