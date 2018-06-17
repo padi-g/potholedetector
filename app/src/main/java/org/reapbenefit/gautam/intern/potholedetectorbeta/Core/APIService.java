@@ -12,6 +12,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.HTTPHandler;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
@@ -59,7 +60,7 @@ public class APIService extends IntentService {
                 }
                 if (userIndex == -1) {
                     //user not found in existing database, must send POST request to table
-                    HTTPHandler.insertUser(userId);
+                    HTTPHandler.insertUser(userId, false);
                 } else {
                     //user exists in database, may have taken some trips that need to be stored in RoomDB
                     String allTripsJson = HTTPHandler.getAllTrips();
@@ -94,6 +95,8 @@ public class APIService extends IntentService {
             } catch (NullPointerException nullPointerException) {
                 Log.e(TAG, nullPointerException.getMessage());
             }
+            catch (IllegalStateException illegal) {}
+            catch (JsonSyntaxException json) {}
         }
         else if (requestMethod.equalsIgnoreCase("POST") && table.equalsIgnoreCase(getString(R.string.trip_data_table))) {
             dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
@@ -103,11 +106,13 @@ public class APIService extends IntentService {
             //sending a POST request to /trips API
             if (isInternetAvailable()) {
                 HTTPHandler.insertTrip((Trip) intent.getParcelableExtra("newTrip"));
+                updateCorrespondingUserData((Trip) intent.getParcelableExtra("newTrip"));
                 //checking for other trips whose metadata is not online
                 for (int i = 0; i < tripsNotInRDS.size(); ++i) {
                     Trip syncTrip = new Gson().fromJson(tripsNotInRDSList.get(i), Trip.class);
                     HTTPHandler.insertTrip(syncTrip);
                     tripsNotInRDS.remove(syncTrip);
+                    updateCorrespondingUserData(syncTrip);
                 }
                 dbPreferences.edit().putStringSet(getString(R.string.trips_not_in_RDS), tripsNotInRDS).commit();
             }
@@ -116,8 +121,19 @@ public class APIService extends IntentService {
                 tripsNotInRDS.add(new Gson().toJson(intent.getParcelableExtra("newTrip")));
                 dbPreferences.edit().putStringSet(getString(R.string.trips_not_in_RDS), tripsNotInRDS).commit();
             }
-            //TODO: need to update corresponding data in UserData table
         }
+    }
+
+    private void updateCorrespondingUserData(Trip syncTrip) {
+        UserData updatedUserData = new UserData();
+        Log.d(TAG, userId + "");
+        updatedUserData.setUserID(userId);
+        updatedUserData.setImprobable(syncTrip.getProbablePotholeCount());
+        updatedUserData.setProbable(syncTrip.getDefinitePotholeCount());
+        updatedUserData.setTotalDistance(syncTrip.getDistanceInKM());
+        updatedUserData.setTotalTime((int) syncTrip.getDuration());
+        updatedUserData.setUpdateFlag(true);
+        HTTPHandler.insertUser(updatedUserData);
     }
 
     private boolean isInternetAvailable() {

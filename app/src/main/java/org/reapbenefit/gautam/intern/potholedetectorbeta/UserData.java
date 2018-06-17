@@ -7,32 +7,61 @@ public class UserData {
     private int Improbable;
     private int TotalTrips;
     private String UserID;
+    private boolean UpdateFlag;
 
-    public String getUserID() {
-        return UserID;
+    public float getTotalDistance() {
+        return TotalDistance;
     }
 
-    public int getTotalTrips() {
-        return TotalTrips;
+    public void setTotalDistance(float totalDistance) {
+        TotalDistance = totalDistance;
     }
 
     public int getTotalTime() {
         return TotalTime;
     }
 
+    public void setTotalTime(int totalTime) {
+        TotalTime = totalTime;
+    }
+
     public int getProbable() {
         return Probable;
+    }
+
+    public void setProbable(int probable) {
+        Probable = probable;
     }
 
     public int getImprobable() {
         return Improbable;
     }
 
-    public float getTotalDistance() {
-        return TotalDistance;
+    public void setImprobable(int improbable) {
+        Improbable = improbable;
+    }
+
+    public int getTotalTrips() {
+        return TotalTrips;
+    }
+
+    public void setTotalTrips(int totalTrips) {
+        TotalTrips = totalTrips;
+    }
+
+    public String getUserID() {
+        return UserID;
     }
 
     public void setUserID(String userID) {
         UserID = userID;
+    }
+
+    public boolean isUpdateFlag() {
+        return UpdateFlag;
+    }
+
+    public void setUpdateFlag(boolean updateFlag) {
+        UpdateFlag = updateFlag;
     }
 }
