@@ -69,9 +69,9 @@
     <string name="action_settings">Settings</string>
     <!--OnBoarding strings-->
     <string name="first_section_title">Welcome.</string>
-    <string name="second_section_title">Help us grow.</string>
-    <string name="third_section_title">Sign in, start logging.</string>
-    <string name="first_section_info">Keep yourself and your vehicle safe by contributing to a countrywide database of potholes.</string>
-    <string name="second_section_info">This app is still in beta, which means that our calculations may be wrong sometimes.\nYou can help us by logging potholes continuously (preferably on a holder)</string>
-    <string name="third_section_info">We keep your data anonymous, private, and safe. Even we don\'t know who you are.</string>
+    <string name="second_section_title">Mapping potholes is simple.</string>
+    <string name="third_section_title">Understand your data.</string>
+    <string name="first_section_info">This app is still in beta, which means that our calculations may be wrong sometimes.\nYou can help us by logging potholes continuously (preferably on a holder)</string>
+    <string name="second_section_info">Simply click the orange play button to start logging. Press the stop button to stop logging. </string>
+    <string name="third_section_info">After every trip of more than half a kilometre, we\'ll show you a map.\nThe red markers represent definite potholes - watch out for them in the future.</string>
 </resources>
