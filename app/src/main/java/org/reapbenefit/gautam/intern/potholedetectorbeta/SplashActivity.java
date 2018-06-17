@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
@@ -20,7 +21,19 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -33,12 +46,30 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.OnboardingActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SplashActivity extends AppCompatActivity {
 
@@ -59,6 +90,10 @@ public class SplashActivity extends AppCompatActivity {
     private ProgressDialog dialog;
     private SharedPreferences onboardingPreferences;
     private SharedPreferences.Editor onboardingPreferencesEditor;
+    private String userId;
+    private String responseJson;
+    private UserData[] userData;
+    private final String url = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/users/";
 
     @Override
     public void onBackPressed() {
@@ -185,11 +220,103 @@ public class SplashActivity extends AppCompatActivity {
                                 dialog.dismiss();
                                 onboardingPreferencesEditor.putBoolean("onboarding", false).commit();
                                 uploadEditor.putString("FIREBASE_USER_ID", firebaseAuth.getCurrentUser().getUid()).commit();
+                                userId = firebaseAuth.getCurrentUser().getUid();
+                                //sending request to update UserData table
+                                final RequestQueue requestQueue = Volley.newRequestQueue(SplashActivity.this);
+                                StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                                        new Response.Listener<String>() {
+                                            @Override
+                                            public void onResponse(String response) {
+                                                Log.d("SplashActivity", response);
+                                                responseJson = response;
+                                                if (response != null) {
+                                                    boolean userRegistered = false;
+                                                    userData = new Gson().fromJson(responseJson, UserData[].class);
+                                                    //checking for current user ID in the received array
+                                                    //TODO: MAKE THIS MORE EFFICIENT
+                                                    for (int i = 0; i < userData.length; ++i) {
+                                                        if (userData[i].getUserID().equals(userId)) {
+                                                            userRegistered = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                    if (!userRegistered) {
+                                                        //sending a POST request to API for inserting user data
+                                                        sendPostRequest();
+                                                    }
+                                                }
+                                            }
+                                        }, new Response.ErrorListener() {
+                                    @Override
+                                    public void onErrorResponse(VolleyError error) {
+                                        if (error.networkResponse.statusCode == 502) {
+                                            Log.d("SplashActivity", "502");
+                                        }
+                                        else if (error.networkResponse.statusCode == 400) {
+                                            Log.d("SplashActivity", "400");
+                                            //TODO: QUEUE FOR UPDATE WHEN NETWORK IS AVAILABLE
+                                        }
+                                        else {
+                                            Log.d("SplashActivity", String.valueOf(error.networkResponse.statusCode));
+                                        }
+                                    }
+                                });
+                                requestQueue.add(stringRequest);
                                 Intent intent = new Intent(SplashActivity.this, MainActivity.class);
                                 startActivity(intent);
                             }
                         }
                     });
+        }
+    }
+
+    private void sendPostRequest() {
+        try {
+            UserData newUserData = new UserData();
+            newUserData.setUserID(userId);
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("body", newUserData);
+            RequestQueue postRequestQueue = Volley.newRequestQueue(SplashActivity.this);
+            final String requestBody = jsonObject.toString();
+
+            StringRequest postRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+
+                }
+            }) {
+                @Override
+                public String getBodyContentType() {
+                    return "application/json; charset=utf-8";
+                }
+
+                @Override
+                public byte[] getBody() throws AuthFailureError {
+                    try {
+                        return requestBody == null ? null : requestBody.getBytes("utf-8");
+                    } catch (UnsupportedEncodingException uee) {
+                        VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", requestBody, "utf-8");
+                        return null;
+                    }
+                }
+                @Override
+                protected Response<String> parseNetworkResponse(NetworkResponse response) {
+                    String responseString = "";
+                    if (response != null) {
+                        responseString = String.valueOf(response.statusCode);
+                        // can get more details such as response.headers
+                    }
+                    return Response.success(responseString, HttpHeaderParser.parseCacheHeaders(response));
+                }
+            };
+            postRequestQueue.add(postRequest);
+        } catch (JSONException e) {
+            Log.e("SplashActivity", e.getMessage());
         }
     }
 

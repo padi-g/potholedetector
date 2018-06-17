@@ -1,1 +1,1 @@
-include ':app', ':AppAnalyticsSDK'
+include ':app'
