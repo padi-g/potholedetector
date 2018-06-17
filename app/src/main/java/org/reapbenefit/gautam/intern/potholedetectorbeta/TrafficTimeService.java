@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.google.android.gms.location.DetectedActivity;
 import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
@@ -38,8 +39,9 @@ public class TrafficTimeService extends IntentService {
         editor = sharedPreferences.edit();
         currentActivity = sharedPreferences.getString("currentActivity", null);
         if (currentActivity != null) {
+            DetectedActivity activity = new Gson().fromJson(currentActivity, DetectedActivity.class);
             Log.i(TAG, currentActivity.toString());
-            if (currentActivity.toString().contains("STILL")) {
+            if (currentActivity.toString().contains("STILL") && activity.getConfidence() >= 70) {
                 newTime = Calendar.getInstance().getTime();
                 minutesWasted += newTime.getTime() - startTime.getTime();
                 Log.i("minutesWasted", minutesWasted + "");

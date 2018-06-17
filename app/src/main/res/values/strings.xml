@@ -10,7 +10,7 @@
     <string name="dialog_negative">No</string>
     <string name="not_detecting">Press on the toggle to start your trip</string>
     <string name="uploading">Uploading latest file ....</string>
-    <string name="detecting">Sit tight and drive safe! We are detecting potholes</string>
+    <string name="detecting">Detecting potholes. Drive safe.</string>
     <string name="menu_login">Login</string>
     <string name="menu_partners">Partners</string>
 
@@ -55,6 +55,23 @@
         <item>bgWUREt57xcWBvHSUw6rtw78EXX2</item> <!--Kanishk-->
         <item>y0xSs7IhheUuKxckviuVnOxf9Ac2</item> <!--Kanishk-->
     </string-array>
-
+    <string name="s3bucketname">***REMOVED***</string>
     <string name="notification_channel_id">PotholeNotifier</string>
+    <string name="invite_message">Hi! Check out this app to map potholes on Indian streets and help make our roads safer.</string>
+    <string name="db_update_from_maps_activity">DB_UPDATE_FROM_MAPS</string>
+    <string name="set_uploaded_true">org.reapbenefit.gautam.intern.potholedetectorbeta.SET_UPLOADED_TRUE</string>
+    <string name="new_trip_insert">tripstatus</string>
+    <string name="probable_pothole_location_set">probablePotholelatLngs</string>
+    <string name="definite_pothole_location_set">definitePotholelatLngs</string>
+    <string name="file_delete_setting">file_delete</string>
+    <string name="auto_upload_setting">auto_upload</string>
+    <string name="title_activity_splash">SplashActivity</string>
+    <string name="action_settings">Settings</string>
+    <!--OnBoarding strings-->
+    <string name="first_section_title">Welcome.</string>
+    <string name="second_section_title">Mapping potholes is simple.</string>
+    <string name="third_section_title">Understand your data.</string>
+    <string name="first_section_info">This app is still in beta, which means that our calculations may be wrong sometimes.\nYou can help us by logging potholes continuously (preferably on a holder)</string>
+    <string name="second_section_info">Simply click the orange play button to start logging. Press the stop button to stop logging. </string>
+    <string name="third_section_info">After every trip of more than half a kilometre, we\'ll show you a map.\nThe red markers represent definite potholes - watch out for them in the future.</string>
 </resources>

@@ -4,7 +4,6 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -12,15 +11,17 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -30,6 +31,24 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.amazonaws.AmazonWebServiceClient;
+import com.amazonaws.AmazonWebServiceRequest;
+import com.amazonaws.AmazonWebServiceResponse;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.DefaultRequest;
+import com.amazonaws.Request;
+import com.amazonaws.auth.AWS4Signer;
+import com.amazonaws.auth.BasicSessionCredentials;
+import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.http.AmazonHttpClient;
+import com.amazonaws.http.HttpClient;
+import com.amazonaws.http.HttpMethodName;
+import com.amazonaws.http.HttpResponse;
+import com.amazonaws.http.HttpResponseHandler;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.internal.Constants;
+import com.appsee.Appsee;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
@@ -48,20 +67,30 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TransitionAlarm;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.OverviewFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.NotifierService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadService;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.SplashActivity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Util;
+
+import java.net.URI;
+
+import io.appanalytics.sdk.AppAnalytics;
 
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
         TriplistFragment.OnFragmentInteractionListener,
         EasyModeFragment.OnFragmentInteractionListener,
+        OverviewFragment.OnFragmentInteractionListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener{
 
@@ -74,6 +103,8 @@ public class MainActivity extends AppCompatActivity
     private Intent loggerIntent;
     private FusedLocationProviderClient mFusedLocationClient;
 
+    private SharedPreferences dbPreferences;
+
     private FirebaseAuth mAuth;
     private Toolbar toolbar;
     ApplicationClass app;
@@ -84,6 +115,15 @@ public class MainActivity extends AppCompatActivity
     private Handler handler;
     private Context context;
     private boolean inCar;
+    private SharedPreferences onboardingPreferences;
+
+    @Override
+    public void onBackPressed() {
+        Intent goHome = new Intent(Intent.ACTION_MAIN);
+        goHome.addCategory(Intent.CATEGORY_HOME);
+        goHome.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(goHome);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +134,7 @@ public class MainActivity extends AppCompatActivity
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         setContentView(R.layout.activity_main);
+
         inCar = getIntent().getBooleanExtra("inCar", false);
         Log.i("inCar MainActivity old", inCar + "");
         //Adding toolbar to the activity
@@ -103,17 +144,25 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setTitle("Road Quality Audit");
 
         mAuth = FirebaseAuth.getInstance();
-        if (mAuth.getCurrentUser() == null) {
+        /*if (mAuth.getCurrentUser() == null) {
             // Toast
             Toast.makeText(this, "Please login to start using the app", Toast.LENGTH_LONG).show();
             // open login activity
 
             Intent i = new Intent(this, LoginActivity.class);
             startActivity(i);
-        }
+        }*/
 
         settingsRequest();
         checkPermissions();
+
+        //Appsee.start();
+        //Appsee.setUserId(getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null));
+
+        /*
+        getting user data from AWS
+         */
+        //new GetUserDataAsyncTask().execute();
 
         //Initializing the tablayout
         tabLayout = (TabLayout) findViewById(R.id.tabLayout);
@@ -121,6 +170,7 @@ public class MainActivity extends AppCompatActivity
         //Adding the tabs using addTab() method
         tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_action_home));
         tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_list));
+        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_map_black_24dp));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
 
@@ -151,6 +201,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void settingsRequest(){
+        @SuppressLint("RestrictedApi")
         LocationRequest mLocationRequest = new LocationRequest();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
@@ -366,21 +417,31 @@ public class MainActivity extends AppCompatActivity
         Intent intent = new Intent();
         if (id == R.id.actions_about) {
             intent = new Intent(this, AboutActivity.class);
+            startActivity(intent);
         }
         if (id == R.id.actions_credits) {
             intent = new Intent(this, CreditsActivity.class);
+            startActivity(intent);
         }
         if (id == R.id.actions_partners) {
             intent = new Intent(this, PartnersActivity.class);
+            startActivity(intent);
         }
         if (id == R.id.actions_login) {
             intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
         }
         if(id == R.id.actions_settings){
             intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
         }
-
-        startActivity(intent);
+        if (id == R.id.actions_invite) {
+            intent = new Intent();
+            //intent.setAction(Intent.ACTION_SEND);
+            intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.invite_message));
+            intent.setType("text/plain");
+            startActivity(intent.createChooser(intent, "Help your friends map potholes"));
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -421,6 +482,42 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    private class GetUserDataAsyncTask extends AsyncTask<Void, Void, Void>{
+        @Override
+        protected Void doInBackground(Void... voids) {
+            CognitoCachingCredentialsProvider cognitoCachingCredentialsProvider = Util.getsCredProvider(
+                    context);
+            String accessKey = cognitoCachingCredentialsProvider.getCredentials().getAWSAccessKeyId();
+            String secretKey = cognitoCachingCredentialsProvider.getCredentials().getAWSSecretKey();
+            String sessionKey = cognitoCachingCredentialsProvider.getCredentials().getSessionToken();
+
+            Log.d("Access Key", accessKey);
+            Log.d("Secret Key", secretKey);
+            int i = 0;
+            Log.d("Session Key", sessionKey.substring(0, sessionKey.length()/2));
+            Log.d("Session Key", sessionKey.substring(sessionKey.length()/2 + 1, sessionKey.length() - 1));
+
+            AmazonWebServiceRequest amazonWebServiceRequest = new AmazonWebServiceRequest() {};
+            ClientConfiguration clientConfiguration = new ClientConfiguration();
+            String API_GATEWAY_SERVICE_NAME = "execute-api";
+            Request request = new DefaultRequest(amazonWebServiceRequest,API_GATEWAY_SERVICE_NAME);
+            request.setEndpoint(URI.create("https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Staging/rdsCreate" +
+                    "/potholes/"));
+            request.setHttpMethod(HttpMethodName.GET);
+
+            AWS4Signer signer = new AWS4Signer();
+            signer.setServiceName(API_GATEWAY_SERVICE_NAME);
+            signer.setRegionName(Region.getRegion(Regions.US_EAST_1).getName());
+            signer.sign(request, cognitoCachingCredentialsProvider.getCredentials());
+
+            BasicSessionCredentials credentials = new BasicSessionCredentials(accessKey, secretKey, sessionKey);
+
+            AmazonWebServiceResponse response = new AmazonWebServiceResponse();
+
+            return null;
+        }
     }
 
 

@@ -2,8 +2,10 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -63,7 +65,7 @@ public class LoginActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(R.string.menu_login);
+        getSupportActionBar().setTitle("Sign out");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mAuth = FirebaseAuth.getInstance();
@@ -122,7 +124,6 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 signOut();
-
             }
         });
 
@@ -131,6 +132,9 @@ public class LoginActivity extends AppCompatActivity {
     public void signIn() {
         SignIn.setVisibility(View.GONE);
         SignOut.setVisibility(View.VISIBLE);
+        //must prevent deletion of old user data
+        SharedPreferences logoutPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        logoutPreferences.edit().putBoolean("loggedOut", false).commit();
         Log.i("Sign in", "Trying");
         signedIn = true;
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
@@ -183,6 +187,11 @@ public class LoginActivity extends AppCompatActivity {
 
         SignOut.setVisibility(View.GONE);
         SignIn.setVisibility(View.VISIBLE);
+
+
+        //must delete data of previous user from storage on signing out
+        SharedPreferences logoutPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        logoutPreferences.edit().putBoolean("loggedOut", true).commit();
 
         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
                 new ResultCallback<Status>() {

@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <uses-feature android:name="android.hardware.sensor.gyroscope" />
     <uses-feature android:name="android.hardware.screen.portrait" />
 
@@ -22,17 +23,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".Activities.MainActivity"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".Activities.SplashActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/SplashTheme">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:screenOrientation="portrait"></activity>
 
         <meta-data
             android:name="com.google.android.gms.version"
@@ -81,7 +72,7 @@
         -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAeQtuHIrj9DdQoTGAfMavIwrnQqYYRllE" />
+            android:value="***REMOVED***" />
 
         <activity
             android:name=".Activities.MapsActivity"
@@ -130,7 +121,7 @@
         </activity>
 
         <service
-            android:name=".S3UploadSevice"
+            android:name=".S3UploadService"
             android:enabled="true"
             android:exported="true" />
         <service
@@ -140,10 +131,11 @@
         <service
             android:name=".TrafficTimeService"
             android:enabled="true"
-            android:exported="false"></service>
+            android:exported="false" />
 
         <receiver android:name=".Core.TransitionAlarm">
-            <!--android:permission="android.permission.RECEIVE_BOOT_COMPLETED"-->
+
+            <!-- android:permission="android.permission.RECEIVE_BOOT_COMPLETED" -->
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -153,6 +145,24 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
+
+        <meta-data
+            android:name="com.appsee.ApiKey"
+            android:value="***REMOVED***" />
+
+        <activity
+            android:name=".SplashActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme">
+        </activity>
+        <activity android:name=".Activities.PlaceholderActivity"
+            android:theme="@style/SplashTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

@@ -1,5 +1,6 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -13,6 +14,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,6 +28,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -55,6 +59,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -113,8 +121,6 @@ public class LoggerService extends Service implements SensorEventListener {
     private Trip newtrip;
     private FirebaseAuth mAuth;
     private FirebaseAnalytics mFirebaseAnalytics;
-    private FirebaseDatabase mDatabase;
-    private DatabaseReference ref;
 
     private ArrayList<MyLocation> gpsPolls;
     private float distance_travelled = 0;
@@ -127,6 +133,11 @@ public class LoggerService extends Service implements SensorEventListener {
     private Date accuracyLostTime;
     private long minutesAccuracyLow;
     private Date startAccuracyTime;
+    private TripViewModel tripViewModel;
+    private Set<String> newTripSet;
+    private Set<String> toBeUploadedTripSet;
+    private float speed;
+    private HashMap<Integer, SpeedWithLocation> speedWithLocationMap = new HashMap<>();
 
     public LoggerService() {
         super();
@@ -137,7 +148,6 @@ public class LoggerService extends Service implements SensorEventListener {
 
         app = ApplicationClass.getInstance();
 
-
         mCurrentLocation = app.getCurrentLocation();
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -146,15 +156,19 @@ public class LoggerService extends Service implements SensorEventListener {
         fileid = UUID.randomUUID();
         newtrip.setTrip_id(fileid.toString());
         mAuth = FirebaseAuth.getInstance();
-
-        mDatabase = FirebaseDatabase.getInstance();
-
-        ref = mDatabase.getReference();
         gpsPolls = new ArrayList<>();
 
         newtrip.setDevice(Build.MANUFACTURER + " " + Build.MODEL + " " + Build.PRODUCT);
         newtrip.setUser_id(mAuth.getCurrentUser().getUid());
 
+        //getting previously logged trips in HashSet<>()
+        SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        newTripSet = dbPreferences.getStringSet("newTripJson", null);
+        if (newTripSet == null)
+            newTripSet = new HashSet<>();
+        toBeUploadedTripSet = dbPreferences.getStringSet("toBeUploadedTripSet", null);
+        if (toBeUploadedTripSet == null)
+            toBeUploadedTripSet = new HashSet<>();
 
         if (mCurrentLocation != null) {
                 mLastUpdateTime = getCurrentTime();
@@ -206,6 +220,7 @@ public class LoggerService extends Service implements SensorEventListener {
 
     }
 
+    @SuppressLint("RestrictedApi")
     private void createLocationRequest() {
         mLocationRequest = new LocationRequest();
 
@@ -241,6 +256,11 @@ public class LoggerService extends Service implements SensorEventListener {
                     }
                 }
                 mCurrentLocation = location;
+                speed = location.getSpeed();
+                SpeedWithLocation speedWithLocation = new SpeedWithLocation();
+                speedWithLocation.setLocation(location);
+                speedWithLocation.setSpeed(speed);
+                speedWithLocationMap.put(no_of_lines, speedWithLocation);
                 mLastUpdateTime = getCurrentTime();
                 LocData = getLocData();
             }
@@ -385,9 +405,9 @@ public class LoggerService extends Service implements SensorEventListener {
 
         if(gAvailable)
 
-            data = floatArraytoString(acc) + floatArraytoString(gyr) + LocationData + ", " + Marks + "\n";
+            data = floatArraytoString(acc) + floatArraytoString(gyr) + LocationData + ", " + Marks + "," + speed + "\n";
         else
-            data = floatArraytoString(acc) + LocationData + ", " + Marks + "\n";
+            data = floatArraytoString(acc) + LocationData + ", " + Marks + "," + speed + "\n";
 
         try {
             out.write(data.getBytes());
@@ -431,11 +451,11 @@ public class LoggerService extends Service implements SensorEventListener {
         String data;
 
         if (gAvailable){
-            // Accx, Acc y, Axxz, Gyrx, gyry, gyrz, lat, long, timestamp, accuracy
-            data = "AccX, AccY, AccZ, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy, proximity\n";
+            // Accx, Acc y, Axxz, Gyrx, gyry, gyrz, lat, long, timestamp, accuracy, speed
+            data = "AccX, AccY, AccZ, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy, proximity, speed\n";
         }else{
             // Accx, Acc y, Axxz, lat, long, timestamp, accuracy
-            data = "AccX, AccY, AccZ, latitude, longitude, timestamp, accuracy, proximity\n";
+            data = "AccX, AccY, AccZ, latitude, longitude, timestamp, accuracy, proximity, speed\n";
         }
 
         try {
@@ -452,6 +472,7 @@ public class LoggerService extends Service implements SensorEventListener {
         Intent iTemp = new Intent("tripstatus");
         iTemp.putExtra("LoggingStatus", status);
         iTemp.putExtra("filename", uploadFileId);
+        iTemp.putExtra("trip_object", newtrip);
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
         l.sendBroadcast(iTemp);
     }
@@ -512,7 +533,7 @@ public class LoggerService extends Service implements SensorEventListener {
 
         if (minutesWasted != -1) {
             Log.i("minutesWasted", minutesWasted + " milliseconds");
-            minutesWasted = Math.round((minutesWasted/1000.0)/60.0);
+            minutesWasted = TimeUnit.MILLISECONDS.toMinutes(minutesWasted);
             newtrip.setMinutesWasted(minutesWasted);
         }
         else
@@ -523,13 +544,33 @@ public class LoggerService extends Service implements SensorEventListener {
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {
             logGPSpollstoFile(gpsPolls);
-            ref.child(newtrip.getUser_id()).child(newtrip.getTrip_id()).setValue(newtrip);
+            SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            newTripSet.add(new Gson().toJson(newtrip));
+            if (internetAvailable())
+                toBeUploadedTripSet.add(new Gson().toJson(newtrip));
+            Log.d("newTripSet", newTripSet.toString());
+            Log.d("toBeUploadedTripSet", newTripSet.toString());
+            dbPreferences.edit().putStringSet("newTripJson", newTripSet).commit();
+            dbPreferences.edit().putStringSet("toBeUploadedTripSet", toBeUploadedTripSet).commit();
             sendTripLoggingBroadcast(false, fileuri);
         }else {
             logAnalytics("unsuccessful_in_starting_logging");
             sendTripLoggingBroadcast(false, null/*, null*/);
         }
 
+    }
+
+    private boolean internetAvailable() {
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        boolean isWifiConn = networkInfo.isConnected();
+        networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        boolean isMobileConn = networkInfo.isConnected();
+        if(isMobileConn || isWifiConn)
+            return true;
+        else
+            return false;
     }
 
     private void stopLocationUpdates() {

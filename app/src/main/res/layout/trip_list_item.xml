@@ -4,14 +4,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_marginBottom="5dp"
+    android:layout_height="wrap_content"
     android:background="@color/colorPrimary">
 
     <GridLayout
         android:orientation="vertical"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:columnCount="2"
         android:rowCount="2"
         android:layout_gravity="top"
@@ -80,12 +79,22 @@
         android:layout_weight="1"
         android:focusable="true"/>
 
+    <ProgressBar
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/upload_progress_bar"
+        android:visibility="gone"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="15dp"
+        android:layout_marginTop="15dp"
+        android:layout_weight="1" />
+
     <ImageButton
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:id="@+id/upload_tick"
         android:textSize="15dp"
-        android:background="@color/colorPrimary"
+        android:background="@drawable/button_border"
         android:src="@drawable/ic_done_all"
         android:textColor="@color/colorAccent"
         android:layout_marginRight="5dp"
@@ -99,8 +108,8 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:id="@+id/map_button"
-        android:background="@drawable/button_border"
         android:textSize="15dp"
+        android:background="@drawable/button_border"
         android:src="@drawable/ic_action_map"
         android:textColor="@color/colorAccent"
         android:layout_marginRight="5dp"

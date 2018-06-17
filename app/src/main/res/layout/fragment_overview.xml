@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".Fragments.OverviewFragment">
+
+    <com.google.android.gms.maps.MapView
+        android:id="@+id/map_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/group_scores"
+        android:src="@drawable/ic_group_white_24dp"
+        android:layout_gravity="right|bottom"
+        android:layout_marginBottom="32dp"
+        android:layout_marginRight="24dp"
+        android:visibility="invisible"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/personal_scores"
+        app:layout_anchorGravity="top|end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|bottom"
+        app:layout_anchor="@id/bottom_sheet"
+        android:layout_marginBottom="60dp"
+        android:layout_marginRight="24dp"
+        android:src="@drawable/ic_star_white_24dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:behavior_peekHeight="80dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="5dp"
+        android:orientation="vertical"
+        android:id="@+id/bottom_sheet"
+        app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:paddingTop="13dp"
+            android:textSize="16dp"
+            android:id="@+id/overview_sheet_text"
+            android:background="?attr/colorPrimary"
+            android:textColor="@android:color/white"
+            android:textAlignment="center"
+            android:layout_gravity="center|top"
+            android:gravity="center|top"
+            android:paddingBottom="20dp"
+            android:fontFamily="sans-serif-condensed"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:paddingTop="15dp"
+            android:paddingBottom="15dp"
+            android:layout_height="wrap_content"
+            android:text="Trip with most potholes"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textSize="20dp"
+            android:fontFamily="sans-serif-condensed"
+            android:background="?attr/colorPrimaryDark"/>
+
+        <android.support.v7.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/overview_card">
+
+            <GridLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/highest_pothole_grid"
+                android:columnCount="2"
+                android:rowCount="2"
+                android:background="@color/colorPrimary"
+                android:layout_gravity="top"
+                android:layout_weight="6"
+                android:layout_marginBottom="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/start_time"
+                    android:textSize="20dp"
+                    android:layout_row="0"
+                    android:layout_column="0"
+                    android:textColor="#fff"
+                    android:fontFamily="sans-serif-condensed"
+                    android:layout_gravity="start"
+                    android:layout_margin="5dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/count"
+                    android:textSize="15dp"
+                    android:layout_row="1"
+                    android:layout_column="1"
+                    android:layout_gravity="end"
+                    android:textColor="#fff"
+                    android:layout_margin="5dp"/>
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="0"
+                    android:layout_column="1"
+                    android:layout_gravity="end"
+                    android:textSize="15dp"
+                    android:textColor="#fff"
+                    android:id="@+id/distance_view"
+                    android:layout_margin="5dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/size"
+                    android:layout_row="1"
+                    android:layout_column="0"
+                    android:text="No trips taken yet"
+                    android:textSize="15dp"
+                    android:textColor="#fff"
+                    android:layout_gravity="start"
+                    android:layout_margin="5dp"/>
+
+            </GridLayout>
+
+        </android.support.v7.widget.CardView>
+
+    </LinearLayout>
+
+
+
+</android.support.design.widget.CoordinatorLayout>

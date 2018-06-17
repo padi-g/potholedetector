@@ -3,6 +3,9 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.MyLocationConverter;
+
 /**
  * Created by gautam on 29/06/17.
  */
@@ -29,7 +32,8 @@ public class Trip implements Parcelable {
     private int userRating;
     private String axis;
     private float threshold;
-    private int potholeCount;
+    private int probablePotholeCount;
+    private int definitePotholeCount;
 
     private long minutesWasted;
     private long minutesAccuracyLow;
@@ -177,12 +181,20 @@ public class Trip implements Parcelable {
         this.threshold = threshold;
     }
 
-    public int getPotholeCount() {
-        return potholeCount;
+    public int getDefinitePotholeCount() {
+        return definitePotholeCount;
     }
 
-    public void setPotholeCount(int potholeCount) {
-        this.potholeCount = potholeCount;
+    public void setDefinitePotholeCount(int definitePotholeCount) {
+        this.definitePotholeCount = definitePotholeCount;
+    }
+
+    public void setProbablePotholeCount(int probablePotholeCount) {
+        this.probablePotholeCount = probablePotholeCount;
+    }
+
+    public int getProbablePotholeCount() {
+        return probablePotholeCount;
     }
 
     public long getMinutesWasted() {
@@ -223,7 +235,8 @@ public class Trip implements Parcelable {
         dest.writeInt(this.userRating);
         dest.writeString(this.axis);
         dest.writeFloat(this.threshold);
-        dest.writeInt(this.potholeCount);
+        dest.writeInt(this.probablePotholeCount);
+        dest.writeInt(this.definitePotholeCount);
         dest.writeLong(this.minutesWasted);
         dest.writeLong(this.minutesAccuracyLow);
     }
@@ -244,7 +257,8 @@ public class Trip implements Parcelable {
         this.userRating = in.readInt();
         this.axis = in.readString();
         this.threshold = in.readFloat();
-        this.potholeCount = in.readInt();
+        this.probablePotholeCount = in.readInt();
+        this.definitePotholeCount = in.readInt();
         this.minutesWasted = in.readLong();
         this.minutesAccuracyLow = in.readLong();
     }
@@ -260,4 +274,50 @@ public class Trip implements Parcelable {
             return new Trip[size];
         }
     };
+
+    public static Trip localTripEntityToTrip(LocalTripEntity localTripEntity) {
+        Trip trip = new Trip();
+        trip.setAxis(localTripEntity.axis);
+        trip.setUploaded(localTripEntity.uploaded);
+        trip.setFilesize(localTripEntity.filesize);
+        trip.setMinutesAccuracyLow(localTripEntity.minutesAccuracyLow);
+        trip.setDistanceInKM(localTripEntity.distanceInKM);
+        trip.setDuration(localTripEntity.duration);
+        trip.setStartTime(localTripEntity.startTime);
+        trip.setUserRating(localTripEntity.userRating);
+        trip.setEndTime(localTripEntity.endTime);
+        trip.setThreshold(localTripEntity.threshold);
+        trip.setProbablePotholeCount(localTripEntity.probablePotholeCount);
+        trip.setDefinitePotholeCount(localTripEntity.definitePotholeCount);
+        trip.setNo_of_lines(localTripEntity.no_of_lines);
+        trip.setDevice(localTripEntity.device);
+        trip.setTrip_id(localTripEntity.trip_id);
+        trip.setUser_id(localTripEntity.user_id);
+        trip.setEndLoc(MyLocationConverter.StringToMyLocation(localTripEntity.endLoc));
+        trip.setStartLoc(MyLocationConverter.StringToMyLocation(localTripEntity.startLoc));
+        return trip;
+    }
+
+    public static LocalTripEntity tripToLocalTripEntity(Trip trip) {
+        LocalTripEntity localTripEntity = new LocalTripEntity();
+        localTripEntity.axis = trip.getAxis();
+        localTripEntity.uploaded = trip.isUploaded();
+        localTripEntity.filesize = trip.getFilesize();
+        localTripEntity.minutesAccuracyLow = trip.getMinutesAccuracyLow();
+        localTripEntity.distanceInKM = trip.getDistanceInKM();
+        localTripEntity.duration = trip.getDuration();
+        localTripEntity.startTime = trip.getStartTime();
+        localTripEntity.userRating = trip.getUserRating();
+        localTripEntity.endTime = trip.getEndTime();
+        localTripEntity.threshold = trip.getThreshold();
+        localTripEntity.probablePotholeCount = trip.getProbablePotholeCount();
+        localTripEntity.definitePotholeCount = trip.getDefinitePotholeCount();
+        localTripEntity.no_of_lines = trip.getNo_of_lines();
+        localTripEntity.device = trip.getDevice();
+        localTripEntity.trip_id = trip.getTrip_id();
+        localTripEntity.user_id = trip.getUser_id();
+        localTripEntity.endLoc = (MyLocationConverter.myLocationToString(trip.getEndLoc()));
+        localTripEntity.startLoc = MyLocationConverter.myLocationToString(trip.getStartLoc());
+        return localTripEntity;
+    }
 }

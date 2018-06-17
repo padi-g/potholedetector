@@ -1,9 +1,12 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -12,26 +15,24 @@ import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
-import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -42,33 +43,45 @@ import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     MapFragment mapFragment;
     private ArrayList<LatLng> latLngs = new ArrayList<>();
-    private ArrayList<LatLng> potholelatLngs = new ArrayList<>();
+    private ArrayList<LatLng> probablePotholeLatLngs = new ArrayList<>();
+    private ArrayList<LatLng> definitePotholeLatLngs = new ArrayList<>();
     private InputStream inputStream;
     private FirebaseAnalytics mFirebaseAnalytics;
     private DatabaseReference db;
-
+    private final float DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND = 5.55f;
+    private final float PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND = 1.38f;
     private ProgressBar spinner;
-    private TextView date, distance, duration, potholecount, textview, trafficTime;
+    private TextView date, distance, duration, probablePotholeCountTextView, textview, trafficTime;
     private SeekBar accuracySeekbar;
     private Button submitButton;
     private String tripID;
     private int linesPerPeriod;
     private float threshold;
     private String axisOfInterest;
-    private int axisIndex, locIndex;
+    private int axisIndex, locIndex, speedIndex;
     private Trip finishedTrip;
-    private HashMap<Integer, String> pointsOfInterest = new HashMap<>();
+    private HashMap<Integer, String> probablePointsOfInterest = new HashMap<>();
+    private HashMap<Integer, String> definitePointsOfInterest = new HashMap<>();
     private int accuracy_result = 0;
     private GridLayout resultGrid;
     private TextView accuracyLowTime;
+    private SharedPreferences tripStatsPreferences;
+    private SharedPreferences.Editor tripStatsEditor;
+    private Set<String> tripIdSet;
+
+    private SharedPreferences dbPreferences;
+    private SharedPreferences.Editor dbPreferencesEditor;
+    private TextView definitePotholeCountTextView;
 
     @Override
     protected void onDestroy() {
@@ -80,6 +93,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        tripStatsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        tripStatsEditor = tripStatsPreferences.edit();
+
+        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        dbPreferencesEditor = dbPreferences.edit();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -105,7 +124,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         date = (TextView) findViewById(R.id.tripdate);
         duration = (TextView) findViewById(R.id.duration);
         distance = (TextView) findViewById(R.id.distance);
-        potholecount = (TextView) findViewById(R.id.potholecount);
+        probablePotholeCountTextView = (TextView) findViewById(R.id.probablepotholecount);
+        definitePotholeCountTextView = (TextView) findViewById(R.id.definitepotholecount);
         textview = (TextView) findViewById(R.id.how_accurate_text);
         trafficTime = (TextView) findViewById(R.id.traffic_time);
         accuracyLowTime = (TextView) findViewById(R.id.accuracy_low_time);
@@ -163,11 +183,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void populatePotholeMarkerPoints(){
 
-        Iterator it = pointsOfInterest.entrySet().iterator();
+        Iterator it = probablePointsOfInterest.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
-            potholelatLngs.add(extractLatLng((String) pair.getValue()));
+            probablePotholeLatLngs.add(extractLatLng((String) pair.getValue()));
             it.remove(); // avoids a ConcurrentModificationException
+        }
+
+        it = definitePointsOfInterest.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            definitePotholeLatLngs.add(extractLatLng((String) pair.getValue()));
+            it.remove();
         }
 
     }
@@ -200,12 +227,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 polyline.add(l);
             }
             mMap.addPolyline(polyline);
+            Set<String> probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.probable_pothole_location_set), new HashSet<String>());
+            Set<String> definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
+            if (!probablePotholeLatLngs.isEmpty()) {
 
-            if (!potholelatLngs.isEmpty()) {
-                for (LatLng l : potholelatLngs) {
-                    mMap.addMarker(new MarkerOptions()
-                            .position(l));
+                for (LatLng l : probablePotholeLatLngs) {
+                    probablePotholeStringSet.add(new Gson().toJson(l));
                 }
+                for (LatLng l: definitePotholeLatLngs) {
+                    mMap.addMarker(new MarkerOptions().position(l).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+                    definitePotholeStringSet.add(new Gson().toJson(l));
+                }
+                tripStatsEditor.putStringSet(getString(R.string.probable_pothole_location_set), probablePotholeStringSet);
+                tripStatsEditor.putStringSet(getString(R.string.definite_pothole_location_set), definitePotholeStringSet);
+                tripStatsEditor.commit();
             }
         }else {
             textview.setText("No locations found");
@@ -213,17 +248,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void setUserPercievedAccuracy(int a){
-        db = FirebaseDatabase.getInstance().getReference();
-        db = db.child(finishedTrip.getUser_id()).child(finishedTrip.getTrip_id()).child("userRating");
         ApplicationClass.getInstance().getTrip().setUserRating(a);
-        db.setValue(a);
+        dbPreferencesEditor.putInt("userPerceivedAccuracy", a);
     }
 
-    private void setPotholeCount(int a){
-        db = FirebaseDatabase.getInstance().getReference();
-        db = db.child(finishedTrip.getUser_id()).child(finishedTrip.getTrip_id()).child("potholeCount");
-        ApplicationClass.getInstance().getTrip().setPotholeCount(a);
-        db.setValue(a);
+    private void setProbablePotholeCount(int a){
+        ApplicationClass.getInstance().getTrip().setProbablePotholeCount(a);
+        //data required by TLF for updating TripViewModel instance
+        dbPreferencesEditor.putInt("probablePotholeCount", a);
+    }
+
+    private void setDefinitePotholeCount(int a) {
+        ApplicationClass.getInstance().getTrip().setDefinitePotholeCount(a);
+        dbPreferencesEditor.putInt("definitePotholeCount", a);
+        dbPreferencesEditor.commit();
     }
 
     public void logAnalytics(String data){
@@ -237,13 +275,43 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return Float.valueOf(twoDForm.format(f));
     }
 
-    private class ProcessFileTask extends AsyncTask<String, Void, Integer>{
+    private class ProcessFileTask extends AsyncTask<String, Void, String>{
 
         int lineNumber = 0, prevLineNumber = 0;
         FileInputStream is;
+        private float[] speedArray;
+
+        private float[] rightShift(float value) {
+            float arr[] = speedArray;
+            if (arr[2] != -1.0f) {
+                float temp = arr[2];
+                float temp1 = arr[1];
+                arr[0] = temp1;
+                arr[1] = temp;
+                arr[2] = value;
+            }
+            else if (arr[1] != -1.0f) {
+                arr[2] = value;
+            }
+            else if (arr[0] != -1.0f) {
+                arr[1] = value;
+            }
+            else
+                arr[0] = value;
+            return arr;
+        }
+
+        private boolean didSpeedOscillate(float arr[]) {
+            if (speedArray[0] >= DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && speedArray[1] > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && speedArray[1] < DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND
+                    && speedArray[2] >= DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
+                return true;
+            else
+                return false;
+        }
 
         @Override
-        protected Integer doInBackground(String... params) {
+        protected String doInBackground(String... params) {
+            speedArray = new float[]{-1, -1, -1};
             File file = new File(getApplicationContext().getFilesDir(), "logs/" + tripID + ".csv");
             try {
                 is = new FileInputStream(file);
@@ -262,6 +330,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         if(tokens[i].contains("latitude")){
                             locIndex = i;
                         }
+                        if (tokens[i].contains("speed")) {
+                            speedIndex = i;
+                            Log.d("speedIndex", String.valueOf(i));
+                        }
                     }
 
                     // populating our set of the points we are interested in
@@ -270,7 +342,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         lineNumber++;
                         if(Float.valueOf(values[axisIndex]) > threshold && lineNumber>prevLineNumber+ linesPerPeriod){
                             // this ignores the first period of data
-                            pointsOfInterest.put(lineNumber, line);
+                            if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
+                                definitePointsOfInterest.put(lineNumber, line);
+                            else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND)
+                                probablePointsOfInterest.put(lineNumber, line);
                             prevLineNumber = lineNumber;
                         }
                     }
@@ -279,33 +354,59 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 catch (Exception e){
 
                 }
-
-                return pointsOfInterest.size();
+                Log.d("result before return", definitePointsOfInterest.size() + " " + probablePointsOfInterest.size());
+                return definitePointsOfInterest.size() + " " + probablePointsOfInterest.size();
             } catch (FileNotFoundException e) {
-                return 0;
+                return null;
             }
 
         }
 
         @Override
-        protected void onPostExecute(Integer result) {
+        protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            setPotholeCount(result);
+            int indexOfSpace = result.indexOf(' ');
+            int definitePotholeCount = Integer.parseInt(result.substring(0, indexOfSpace));
+            int probablePotholeCount = Integer.parseInt(result.substring(indexOfSpace + 1));
+            Log.d("probableCount", probablePotholeCount + "");
+            Log.d("definiteCount", definitePotholeCount + "");
+            setProbablePotholeCount(probablePotholeCount);
+            setDefinitePotholeCount(definitePotholeCount);
             spinner.setVisibility(View.GONE);
-            duration.setText(finishedTrip.getDuration() + " mins");
+            duration.setText(finishedTrip.getDuration() + " minutes");
             date.setText(finishedTrip.getStartTime().substring(0,11));
             trafficTime.setText(finishedTrip.getMinutesWasted() + " minutes");
             accuracyLowTime.setText(finishedTrip.getMinutesAccuracyLow() + " minutes");
             resultGrid.setVisibility(View.VISIBLE);
             accuracySeekbar.setVisibility(View.VISIBLE);
             submitButton.setVisibility(View.VISIBLE);
-            if(finishedTrip.getDistanceInKM() < 0.5){
-                distance.setText(" < 0.5km");
-                potholecount.setText("sorry, you must travel at least 0.5km");
-            }else {
-                distance.setText(roundTwoDecimals(finishedTrip.getDistanceInKM()) + "km");
-                potholecount.setText(Integer.toString(result));
+            if(finishedTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG){
+                distance.setText(" < 0.5 km");
+                probablePotholeCountTextView.setText("Sorry, you must travel at least 0.5 km");
+                definitePotholeCountTextView.setText("Sorry, you must travel at least 0.5 km");
+            }else{
+                distance.setText(roundTwoDecimals(finishedTrip.getDistanceInKM()) + " km");
+                probablePotholeCountTextView.setText(Integer.toString(probablePotholeCount));
+                definitePotholeCountTextView.setText(Integer.toString(definitePotholeCount));
                 populatePotholeMarkerPoints();
+                tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
+                if (!tripIdSet.contains(finishedTrip.getTrip_id())) {
+                    Log.d("MapsActivity", tripID + "");
+                    int validTrips = tripStatsPreferences.getInt("validTrips", 0);
+                    tripStatsEditor.putInt("validTrips", validTrips + 1);
+                    int sharedPrefsProbablePotholes = tripStatsPreferences.getInt("probablePotholes", 0);
+                    tripStatsEditor.putInt("probablePotholes", sharedPrefsProbablePotholes + probablePotholeCount);
+                    int sharedPrefsDefinitePotholes = tripStatsPreferences.getInt("definitePotholes", 0);
+                    tripStatsEditor.putInt("definitePotholes", sharedPrefsDefinitePotholes + definitePotholeCount);
+                }
+                tripIdSet.add(finishedTrip.getTrip_id());
+                tripStatsEditor.putStringSet("tripIdSet", tripIdSet);
+                tripStatsEditor.commit();
+                //only registering trip in database if it is useful to us
+                Intent newTripIntent = new Intent(getString(R.string.new_trip_insert));
+                newTripIntent.putExtra("trip_object", finishedTrip);
+                LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(MapsActivity.this);
+                localBroadcastManager.sendBroadcast(newTripIntent);
                 mapFragment.getMapAsync(MapsActivity.this);
             }
         }
