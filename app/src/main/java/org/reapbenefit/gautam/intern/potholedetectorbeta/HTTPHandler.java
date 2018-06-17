@@ -36,7 +36,7 @@ public class HTTPHandler {
             UserData userData = new UserData();
             userData.setUserID(userID);
             String jsonInput = new Gson().toJson(userData);
-            System.out.println("Sending data: " + jsonInput);
+            Log.d(TAG, "Sending user data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();

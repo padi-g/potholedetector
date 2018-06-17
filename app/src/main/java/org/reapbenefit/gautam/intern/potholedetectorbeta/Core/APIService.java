@@ -2,7 +2,6 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -17,8 +16,6 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.UserData;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.reapbenefit.gautam.intern.potholedetectorbeta.HTTPHandler.getAllTrips;
 
 
 public class APIService extends IntentService {
@@ -41,7 +38,7 @@ public class APIService extends IntentService {
         if (requestMethod.equalsIgnoreCase("GET") && table.equalsIgnoreCase(getString(R.string.user_data_table))) {
             int userIndex = -1;
             String allUsersJson = HTTPHandler.getAllUsers();
-            Log.d(TAG, allUsersJson + "");
+            Log.d("allUsersJson", allUsersJson + "");
             try {
                 UserData[] allUsers = new Gson().fromJson(allUsersJson, UserData[].class);
                 //searching through array for desired UserID
