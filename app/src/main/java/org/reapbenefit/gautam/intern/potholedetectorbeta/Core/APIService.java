@@ -49,6 +49,9 @@ public class APIService extends IntentService {
             int userIndex = -1;
             String allUsersJson = HTTPHandler.getAllUsers();
             Log.d("allUsersJson", allUsersJson + "");
+            if (allUsersJson == null) {
+                startService(intent);
+            }
             try {
                 UserData[] allUsers = new Gson().fromJson(allUsersJson, UserData[].class);
                 //searching through array for desired UserID
@@ -64,6 +67,9 @@ public class APIService extends IntentService {
                 } else {
                     //user exists in database, may have taken some trips that need to be stored in RoomDB
                     String allTripsJson = HTTPHandler.getAllTrips();
+                    if (allTripsJson == null) {
+                        startService(intent);
+                    }
                     TripDataLambda[] tripDataLambdas = new Gson().fromJson(allTripsJson, TripDataLambda[].class);
                     boolean foundUserId = false;
                     List<TripDataLambda> tripDataLambdaList = new ArrayList<>();
