@@ -24,6 +24,7 @@ public class TripDataLambda {
     private long MinutesAccuracyLow;
     private int DefinitePotholeCount;
     private int ProbablePotholeCount;
+    private boolean UpdateUploadedFlag;
 
     public String getTripID() {
         return TripID;
@@ -207,5 +208,13 @@ public class TripDataLambda {
 
     public void setProbablePotholeCount(int probablePotholeCount) {
         ProbablePotholeCount = probablePotholeCount;
+    }
+
+    public boolean getUpdateUploadedFlag() {
+        return UpdateUploadedFlag;
+    }
+
+    public void setUpdateUploadedFlag(boolean updateUploadedFlag) {
+        UpdateUploadedFlag = updateUploadedFlag;
     }
 }

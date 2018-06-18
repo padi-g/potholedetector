@@ -105,6 +105,14 @@ public class APIService extends IntentService {
             catch (JsonSyntaxException json) {}
         }
         else if (requestMethod.equalsIgnoreCase("POST") && table.equalsIgnoreCase(getString(R.string.trip_data_table))) {
+            Trip tripUploaded = (Trip) intent.getParcelableExtra("tripUploaded");
+            if (tripUploaded != null) {
+                //trip was uploaded, must update rather than insert into TripsData table
+                TripDataLambda tripDataLambda = HTTPHandler.convertToTripDataLambda(tripUploaded);
+                tripDataLambda.setUpdateUploadedFlag(true);
+                HTTPHandler.updateUploadedStatus(tripDataLambda);
+                return;
+            }
             dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             Set<String> tripsNotInRDS = dbPreferences.getStringSet(getString(R.string.trips_not_in_RDS),
                     new HashSet<String>());

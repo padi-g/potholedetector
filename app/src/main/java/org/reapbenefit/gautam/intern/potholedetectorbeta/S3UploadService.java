@@ -29,6 +29,7 @@ import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
 import com.google.gson.Gson;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 
 import java.io.File;
@@ -213,6 +214,13 @@ public class S3UploadService extends IntentService {
                             File fileToBeDeleted = new File(uploadUri.getPath());
                             fileToBeDeleted.delete();
                         }
+
+                        //updating RDS
+                        Intent apiIntent = new Intent(this, APIService.class);
+                        apiIntent.putExtra("request", "POST");
+                        apiIntent.putExtra("table", getString(R.string.trip_data_table));
+                        apiIntent.putExtra("tripUploaded", tripUploaded);
+                        startService(apiIntent);
 
                         //if batch upload was requested, there will be more files in the list
                         if (tripList.size() > 0) {
