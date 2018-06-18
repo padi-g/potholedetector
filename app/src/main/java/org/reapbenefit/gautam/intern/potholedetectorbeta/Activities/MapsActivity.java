@@ -31,6 +31,7 @@ import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.SpeedWithLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
@@ -78,6 +79,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private SharedPreferences tripStatsPreferences;
     private SharedPreferences.Editor tripStatsEditor;
     private Set<String> tripIdSet;
+    private HashMap<Integer, SpeedWithLocation> speedWithLocationHashMap;
+    private final String TAG = getClass().getSimpleName();
 
     private SharedPreferences dbPreferences;
     private SharedPreferences.Editor dbPreferencesEditor;
@@ -302,8 +305,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         private boolean didSpeedOscillate(float arr[]) {
-            if (speedArray[0] >= DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && speedArray[1] > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && speedArray[1] < DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND
-                    && speedArray[2] >= DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
+            if (arr[0] > arr[1] && arr[1] < arr[2])
+                return true;
+            else if (arr[1] > arr[2] && arr[2] > arr[3])
                 return true;
             else
                 return false;
@@ -336,6 +340,31 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
 
+                    if (MapsActivity.this.getIntent().getParcelableExtra(getString(R.string.speed_with_location_hashmap)) != null) {
+                        speedWithLocationHashMap = new HashMap<>();
+                        //populating the set of the points we are interested in
+                        while ((line = bufferedReader.readLine()) != null) {
+                            String values[] = line.split(",");
+                            lineNumber++;
+                            if(Float.valueOf(values[axisIndex]) > threshold && lineNumber>prevLineNumber+ linesPerPeriod){
+                                // this ignores the first period of data
+                                int closestDecreasedKeyValue = findClosestKeyValue(lineNumber, true);
+                                int closestIncreasedKeyValue = findClosestKeyValue(lineNumber, false);
+                                int closestDecreasedKeyValue1 = findClosestKeyValue(closestDecreasedKeyValue, true);
+                                int closestIncreasedKeyValue1 = findClosestKeyValue(closestIncreasedKeyValue, false);
+                                float speedValues[] = new float[]{speedWithLocationHashMap.get(closestDecreasedKeyValue1).getSpeed(),
+                                speedWithLocationHashMap.get(closestDecreasedKeyValue).getSpeed(),
+                                speedWithLocationHashMap.get(closestIncreasedKeyValue).getSpeed(),
+                                speedWithLocationHashMap.get(closestIncreasedKeyValue1).getSpeed()};
+                                if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
+                                    definitePointsOfInterest.put(lineNumber, line);
+                                else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
+                                    probablePointsOfInterest.put(lineNumber, line);
+                                prevLineNumber = lineNumber;
+                            }
+                        }
+                    }
+
                     // populating our set of the points we are interested in
                     while ((line = bufferedReader.readLine()) != null) {
                         String values[] = line.split(",");
@@ -360,6 +389,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return null;
             }
 
+        }
+
+        private int findClosestKeyValue(int lineNumber, boolean decreaseFlag) {
+            try {
+                Iterator iterator = speedWithLocationHashMap.entrySet().iterator();
+                int tempNumber = lineNumber;
+                while (iterator.hasNext()) {
+                    Map.Entry pair = (Map.Entry) iterator.next();
+                    if (pair.getKey().equals(tempNumber)) {
+                        break;
+                    } else {
+                        tempNumber = decreaseFlag?lineNumber - 1:lineNumber + 1;
+                    }
+                }
+                return tempNumber;
+            } catch (Exception exception) {
+                Log.e(TAG, exception.getMessage());
+            }
+            return -1;
         }
 
         @Override

@@ -39,12 +39,14 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.SpeedWithLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -90,6 +92,8 @@ public class EasyModeFragment extends Fragment {
     private boolean isChronometerRunning;
     private SharedPreferences animatorPreferences;
     private SharedPreferences.Editor animatorPreferencesEditor;
+
+    private HashMap<Integer, SpeedWithLocation> speedWithLocationHashMap;
 
     ApplicationClass app;
     private int stoppedMilliseconds;
@@ -279,6 +283,7 @@ public class EasyModeFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             newTrip = intent.getParcelableExtra("trip_object");
             tripStatus = intent.getBooleanExtra("LoggingStatus", false);
+            speedWithLocationHashMap = (HashMap<Integer, SpeedWithLocation>) intent.getSerializableExtra(getString(R.string.speed_with_location_hashmap));
             if(!tripStatus){
                 uploadFileUri = intent.getParcelableExtra("filename");
                 if(uploadFileUri == null){
@@ -333,6 +338,7 @@ public class EasyModeFragment extends Fragment {
 
     private void openMap(){
         Intent i = new Intent(this.getActivity(), MapsActivity.class);
+        i.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationHashMap);
         startActivity(i);
     }
 

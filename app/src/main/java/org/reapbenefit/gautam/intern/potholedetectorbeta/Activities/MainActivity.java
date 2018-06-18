@@ -126,11 +126,12 @@ public class MainActivity extends AppCompatActivity
         settingsRequest();
         checkPermissions();
 
-        Appsee.start();
-        String userId = getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null);
-        if (userId != null)
-            Appsee.setUserId(userId);
-
+        if (!BuildConfig.DEBUG) {
+            Appsee.start();
+            String userId = getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null);
+            if (userId != null)
+                Appsee.setUserId(userId);
+        }
         //Initializing the tablayout
         tabLayout = (TabLayout) findViewById(R.id.tabLayout);
 
