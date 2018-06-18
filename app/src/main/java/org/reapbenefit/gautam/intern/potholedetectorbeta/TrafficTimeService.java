@@ -41,7 +41,7 @@ public class TrafficTimeService extends IntentService {
         if (currentActivity != null) {
             DetectedActivity activity = new Gson().fromJson(currentActivity, DetectedActivity.class);
             Log.i(TAG, currentActivity.toString());
-            if (currentActivity.toString().contains("STILL") && activity.getConfidence() >= 70) {
+            if (currentActivity.toString().contains("STILL") && activity.getConfidence() >= 60) {
                 newTime = Calendar.getInstance().getTime();
                 minutesWasted += newTime.getTime() - startTime.getTime();
                 Log.i("minutesWasted", minutesWasted + "");
