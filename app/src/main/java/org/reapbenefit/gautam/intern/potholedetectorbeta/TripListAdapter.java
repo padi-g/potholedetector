@@ -8,7 +8,6 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +27,6 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripListViewHolder> {
 
@@ -44,6 +42,14 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     private final String TAG = getClass().getSimpleName();
     private SharedPreferences dbPreferences;
     private boolean batchUpload;
+
+    String countString, timeString, durationString, distanceString;
+    ImageButton uploadButton;
+    ImageButton uploadedTick;
+    ImageButton mapButton;
+    TextView date, time, size, distance;
+    ProgressBar uploadProgressBar;
+
 
     /*
     static ViewHolder class to reference views for each trip component item
@@ -139,14 +145,6 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             // Log.i(getClass().getSimpleName(), "holder is not null");
             View rowView = holder.itemView;
             final Trip trip = trips.get(position);
-
-            if (tripViewModel == null)
-                // Log.e(getClass().getSimpleName(), "TripViewModel is null");
-
-            String countString, timeString, durationString, distanceString;
-            final ImageButton uploadButton, uploadedTick, mapButton;
-            TextView date, time, size, distance;
-            final ProgressBar uploadProgressBar;
             countString = String.valueOf(trip.getDefinitePotholeCount() + trip.getProbablePotholeCount()) + " potholes";
             // Log.i("countString", countString);
             // Log.i("timeString", trip.getStartTime() + "");

@@ -238,56 +238,6 @@ public class SplashActivity extends AppCompatActivity {
         }
     }
 
-    private void sendPostRequest() {
-        try {
-            UserData newUserData = new UserData();
-            newUserData.setUserID(userId);
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("body", newUserData);
-            RequestQueue postRequestQueue = Volley.newRequestQueue(SplashActivity.this);
-            final String requestBody = jsonObject.toString();
-
-            StringRequest postRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-
-                }
-            }) {
-                @Override
-                public String getBodyContentType() {
-                    return "application/json; charset=utf-8";
-                }
-
-                @Override
-                public byte[] getBody() throws AuthFailureError {
-                    try {
-                        return requestBody == null ? null : requestBody.getBytes("utf-8");
-                    } catch (UnsupportedEncodingException uee) {
-                        Volley// Log.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", requestBody, "utf-8");
-                        return null;
-                    }
-                }
-                @Override
-                protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                    String responseString = "";
-                    if (response != null) {
-                        responseString = String.valueOf(response.statusCode);
-                        // can get more details such as response.headers
-                    }
-                    return Response.success(responseString, HttpHeaderParser.parseCacheHeaders(response));
-                }
-            };
-            postRequestQueue.add(postRequest);
-        } catch (JSONException e) {
-            // Log.e("SplashActivity", e.getMessage());
-        }
-    }
-
     private void show_animation() {
         ObjectAnimator animator = ObjectAnimator.ofFloat(finishButton, "translationY", -77.0f);
         animator.addListener(new Animator.AnimatorListener() {

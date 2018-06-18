@@ -27,26 +27,20 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MyLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.TrafficTimeService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import java.io.File;
@@ -62,7 +56,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -395,8 +388,6 @@ public class LoggerService extends Service implements SensorEventListener {
                 startTrafficTime = newTime;
             }
         }
-        else
-            // Log.i(TAG, "currentActivity is null");
 
     }
 

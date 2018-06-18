@@ -4,7 +4,6 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.google.android.gms.location.DetectedActivity;
 import com.google.gson.Gson;
@@ -13,7 +12,6 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 public class TrafficTimeService extends IntentService {
     private Date startTime;
@@ -50,7 +48,5 @@ public class TrafficTimeService extends IntentService {
                 editor.commit();
             }
         }
-        else
-            // Log.i(TAG, "currentActivity is null");
     }
 }

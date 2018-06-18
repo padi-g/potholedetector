@@ -6,9 +6,9 @@ android {
     defaultConfig {
         applicationId "org.reapbenefit.gautam.intern.potholedetectorbeta"
         minSdkVersion 23
-        targetSdkVersion 25
-        versionCode 25
-        versionName "1.25"
+        targetSdkVersion 26
+        versionCode 28
+        versionName "1.26"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

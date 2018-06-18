@@ -10,7 +10,6 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.os.Build;
-import android.util.Log;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 
@@ -41,8 +40,6 @@ public class NotificationHelper extends ContextWrapper {
         if (notificationManager != null) {
             notificationManager.notify(id, builder.build());
         }
-        else
-            // Log.i(getClass().getSimpleName(), "Notification error");
     }
     public Notification.Builder getNotification(String title, String body) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
