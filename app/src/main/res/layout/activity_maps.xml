@@ -31,7 +31,7 @@
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:layout_marginTop="@dimen/activity_vertical_margin"
             android:fontFamily="sans-serif-condensed"
-            android:text="Date"
+            android:text="Definite potholes detected"
             android:layout_row="0"
             android:layout_column="0"/>
 
@@ -40,31 +40,55 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:layout_marginTop="@dimen/activity_vertical_margin"
-            android:id="@+id/tripdate"
+            android:id="@+id/definitepotholecount"
             android:fontFamily="sans-serif-condensed"
             android:textStyle="bold"
             android:layout_row="0"
             android:layout_column="1"/>
 
 
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:fontFamily="sans-serif-condensed"
-            android:text="Definite potholes detected"
+            android:text="Time wasted in traffic"
             android:layout_row="1"
             android:layout_column="0"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:id="@+id/definitepotholecount"
+            android:id="@+id/traffic_time"
             android:fontFamily="sans-serif-condensed"
             android:textStyle="bold"
             android:layout_row="1"
             android:layout_column="1"/>
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:fontFamily="sans-serif-condensed"
+            android:text="Date"
+            android:layout_row="2"
+            android:layout_column="0"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:id="@+id/tripdate"
+            android:fontFamily="sans-serif-condensed"
+            android:textStyle="bold"
+            android:layout_row="2"
+            android:layout_column="1"/>
+
 
 
         <TextView
@@ -73,7 +97,7 @@
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:fontFamily="sans-serif-condensed"
             android:text="Probable potholes detected"
-            android:layout_row="2"
+            android:layout_row="3"
             android:layout_column="0"/>
 
         <TextView
@@ -83,7 +107,7 @@
             android:id="@+id/probablepotholecount"
             android:fontFamily="sans-serif-condensed"
             android:textStyle="bold"
-            android:layout_row="2"
+            android:layout_row="3"
             android:layout_column="1"/>
 
 
@@ -93,7 +117,7 @@
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:fontFamily="sans-serif-condensed"
             android:text="Duration"
-            android:layout_row="3"
+            android:layout_row="4"
             android:layout_column="0"/>
 
         <TextView
@@ -103,7 +127,7 @@
             android:id="@+id/duration"
             android:fontFamily="sans-serif-condensed"
             android:textStyle="bold"
-            android:layout_row="3"
+            android:layout_row="4"
             android:layout_column="1"/>
 
         <TextView
@@ -112,7 +136,7 @@
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:fontFamily="sans-serif-condensed"
             android:text="Distance"
-            android:layout_row="4"
+            android:layout_row="5"
             android:layout_column="0"/>
 
         <TextView
@@ -122,27 +146,9 @@
             android:id="@+id/distance"
             android:fontFamily="sans-serif-condensed"
             android:textStyle="bold"
-            android:layout_row="4"
-            android:layout_column="1"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:fontFamily="sans-serif-condensed"
-            android:text="Time wasted in traffic"
-            android:layout_row="5"
-            android:layout_column="0"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:id="@+id/traffic_time"
-            android:fontFamily="sans-serif-condensed"
-            android:textStyle="bold"
             android:layout_row="5"
             android:layout_column="1"/>
+
 
         <TextView
             android:layout_width="wrap_content"
