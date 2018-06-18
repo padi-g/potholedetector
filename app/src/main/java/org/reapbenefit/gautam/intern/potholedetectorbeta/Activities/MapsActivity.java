@@ -364,21 +364,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         }
                     }
-
-                    // populating our set of the points we are interested in
-                    while ((line = bufferedReader.readLine()) != null) {
-                        String values[] = line.split(",");
-                        lineNumber++;
-                        if(Float.valueOf(values[axisIndex]) > threshold && lineNumber>prevLineNumber+ linesPerPeriod){
-                            // this ignores the first period of data
-                            if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
-                                definitePointsOfInterest.put(lineNumber, line);
-                            else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND)
-                                probablePointsOfInterest.put(lineNumber, line);
-                            prevLineNumber = lineNumber;
+                    else {
+                        // populating our set of the points we are interested in
+                        while ((line = bufferedReader.readLine()) != null) {
+                            String values[] = line.split(",");
+                            lineNumber++;
+                            if (Float.valueOf(values[axisIndex]) > threshold && lineNumber > prevLineNumber + linesPerPeriod) {
+                                // this ignores the first period of data
+                                if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
+                                    definitePointsOfInterest.put(lineNumber, line);
+                                else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND)
+                                    probablePointsOfInterest.put(lineNumber, line);
+                                prevLineNumber = lineNumber;
+                            }
                         }
                     }
-
                 }
                 catch (Exception e){
 
