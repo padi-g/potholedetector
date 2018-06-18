@@ -94,7 +94,7 @@ public class S3UploadService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
+        // Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
         settingsPreferences  = getSharedPreferences("uploads", MODE_PRIVATE);
         fileDelete = settingsPreferences.getBoolean(getString(R.string.file_delete_setting), false);
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
@@ -103,7 +103,7 @@ public class S3UploadService extends IntentService {
         tripList = (List<Trip>) intent.getSerializableExtra("trip_arrayList");
         if (tripList != null && !tripList.isEmpty()) {
             tripUploaded = tripList.get(0);
-            Log.d("tripUploaded", tripUploaded.getTrip_id());
+            // Log.d("tripUploaded", tripUploaded.getTrip_id());
             if (tripUploaded == null)
                 tripUploaded = new Gson().fromJson(dbPreferences.getString("uploadedTripJson", null), Trip.class);
             tripUploadedId = tripUploaded.getTrip_id();
@@ -122,16 +122,16 @@ public class S3UploadService extends IntentService {
                 filepath = uploadUri.toString().substring(uploadUri.toString().lastIndexOf('/'));
 
                 dbPreferencesEditor.putString("tripUploadedJson", tripUploadedId).commit();
-                Log.d(TAG, "tripUploaded " + tripUploadedId);
+                // Log.d(TAG, "tripUploaded " + tripUploadedId);
 
                 if (BuildConfig.DEBUG)
                     keyName = "debug/" + userId + filepath;
                 else
                     keyName = "logs/" + userId + filepath;
 
-                Log.d(getClass().getSimpleName(), keyName);
-                Log.d(getClass().getSimpleName(), filepath);
-                Log.d(getClass().getSimpleName(), bucketName);
+                // Log.d(getClass().getSimpleName(), keyName);
+                // Log.d(getClass().getSimpleName(), filepath);
+                // Log.d(getClass().getSimpleName(), bucketName);
 
                 s3Client = new AmazonS3Client(Util.getsCredProvider(this));
 
@@ -156,7 +156,7 @@ public class S3UploadService extends IntentService {
                 long filePosition = 0;
                 for (int i = 1; filePosition < contentLength; ++i) {
                     try {
-                        Log.d(getClass().getSimpleName(), "part " + i);
+                        // Log.d(getClass().getSimpleName(), "part " + i);
                         partSize = Math.min(partSize, (contentLength - filePosition));
                         UploadPartRequest uploadPartRequest = new UploadPartRequest()
                                 .withBucketName(bucketName)
@@ -169,9 +169,9 @@ public class S3UploadService extends IntentService {
 
                         long megabytesUploaded = (i - 1) * partSize;
                         int progress = (int) (((double) filePosition / (double) contentLength) * 100.0);
-                        Log.d("progress fp", String.valueOf(filePosition));
-                        Log.d("progress contentLength", String.valueOf(contentLength));
-                        Log.d("progress int", String.valueOf(progress));
+                        // Log.d("progress fp", String.valueOf(filePosition));
+                        // Log.d("progress contentLength", String.valueOf(contentLength));
+                        // Log.d("progress int", String.valueOf(progress));
                         notificationBuilder.setContentText(progress + "% uploaded");
                         notificationManager.notify(mNotificationId, notificationBuilder.build());
 
@@ -180,7 +180,7 @@ public class S3UploadService extends IntentService {
                         filePosition += partSize;
                         uploadIdList.add(initResult.getUploadId());
                     } catch (Exception e) {
-                        Log.e(getClass().getSimpleName(), e.getMessage());
+                        // Log.e(getClass().getSimpleName(), e.getMessage());
                         notificationBuilder.setContentText("Upload failed");
                         notificationBuilder.setOngoing(false);
                         notificationManager.notify(mNotificationId, notificationBuilder.build());
@@ -192,9 +192,9 @@ public class S3UploadService extends IntentService {
                         completeMultipartUploadRequest = new CompleteMultipartUploadRequest(
                                 bucketName, keyName, uploadIdList.get(i), partETags
                         );
-                        Log.d(TAG + " " + i, uploadIdList.get(i));
+                        // Log.d(TAG + " " + i, uploadIdList.get(i));
                         s3Client.completeMultipartUpload(completeMultipartUploadRequest);
-                        Log.d("progress int", "100");
+                        // Log.d("progress int", "100");
                         notificationBuilder.setContentText("100% uploaded");
                         notificationBuilder.setOngoing(false);
                         notificationManager.notify(mNotificationId, notificationBuilder.build());
@@ -300,7 +300,7 @@ public class S3UploadService extends IntentService {
             }
             catch (IOException ioException) {
                 isWifiConnected = false;
-                Log.e(TAG, "WifiConnectionTest threw Exception");
+                // Log.e(TAG, "WifiConnectionTest threw Exception");
             }
             return null;
         }

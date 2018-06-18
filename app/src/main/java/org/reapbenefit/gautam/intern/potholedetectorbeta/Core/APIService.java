@@ -48,7 +48,7 @@ public class APIService extends IntentService {
         if (requestMethod.equalsIgnoreCase("GET") && table.equalsIgnoreCase(getString(R.string.user_data_table))) {
             int userIndex = -1;
             String allUsersJson = HTTPHandler.getAllUsers();
-            Log.d("allUsersJson", allUsersJson + "");
+            // Log.d("allUsersJson", allUsersJson + "");
             if (allUsersJson == null) {
                 startService(intent);
             }
@@ -99,7 +99,7 @@ public class APIService extends IntentService {
                     LocalBroadcastManager.getInstance(this).sendBroadcast(highestPotholeIntent);
                 }
             } catch (NullPointerException nullPointerException) {
-                Log.e(TAG, nullPointerException.getMessage());
+                // Log.e(TAG, nullPointerException.getMessage());
             }
             catch (IllegalStateException illegal) {}
             catch (JsonSyntaxException json) {}
@@ -140,7 +140,7 @@ public class APIService extends IntentService {
 
     private void updateCorrespondingUserData(Trip syncTrip) {
         UserData updatedUserData = new UserData();
-        Log.d(TAG, userId + "");
+        // Log.d(TAG, userId + "");
         updatedUserData.setUserID(userId);
         updatedUserData.setImprobable(syncTrip.getProbablePotholeCount());
         updatedUserData.setProbable(syncTrip.getDefinitePotholeCount());

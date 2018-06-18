@@ -25,7 +25,7 @@ public class ApplicationClass extends MultiDexApplication {
         super.onCreate();
         singleton = this;
 
-        Log.i(TAG, "App started");
+        // Log.i(TAG, "App started");
 
         // Get permissions
 

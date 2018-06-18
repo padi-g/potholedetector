@@ -83,11 +83,11 @@ public class TriplistFragment extends Fragment {
                 if (newTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG)
                     return;
                 tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
-                Log.d(TAG, "Trip inserted " + newTrip.getTrip_id());
+                // Log.d(TAG, "Trip inserted " + newTrip.getTrip_id());
                 offlineTrips.add(newTrip);
                 maxPotholeCount = dbPreferences.getInt("maxPotholeCount", 0);
                 if (newTrip.getProbablePotholeCount() + newTrip.getDefinitePotholeCount() >= maxPotholeCount) {
-                    Log.d(TAG, "inside if probablePotholeCount");
+                    // Log.d(TAG, "inside if probablePotholeCount");
                     highestPotholeTrip = newTrip;
                     dbPreferences.edit().putString("highestPotholeTrip", new Gson().toJson(highestPotholeTrip)).apply();
                     maxPotholeCount = newTrip.getProbablePotholeCount() + newTrip.getDefinitePotholeCount();
@@ -101,12 +101,12 @@ public class TriplistFragment extends Fragment {
     private BroadcastReceiver uploadBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("uploadBroadcast", "broadcast received");
+            // Log.d("uploadBroadcast", "broadcast received");
             if (tripViewModel != null) {
                 Trip uploadedTrip = intent.getParcelableExtra("tripUploaded");
                 uploadedTrip.setUploaded(true);
                 tripViewModel.insert(Trip.tripToLocalTripEntity(uploadedTrip));
-                Log.d("tripUploaded", new Gson().toJson(uploadedTrip));
+                // Log.d("tripUploaded", new Gson().toJson(uploadedTrip));
                 offlineTrips.remove(intent.getParcelableExtra("tripUploaded"));
                 createOfflineTripsListView();
             }
@@ -136,7 +136,7 @@ public class TriplistFragment extends Fragment {
             uploadStatus = true;
             createOfflineTripsListView();
         }
-        Log.d(TAG, "tripUploaded " + tripUploadedId);
+        // Log.d(TAG, "tripUploaded " + tripUploadedId);
     }
 
     @Override
@@ -155,7 +155,7 @@ public class TriplistFragment extends Fragment {
     private long getTime(String date) throws ParseException{
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
         Date d = sdf.parse(date);
-        Log.d("Times", String.valueOf(d.getTime())+d.toString());
+        // Log.d("Times", String.valueOf(d.getTime())+d.toString());
         return d.getTime();
     }
 
@@ -173,17 +173,17 @@ public class TriplistFragment extends Fragment {
     }
 
     private void createOfflineTripsListView(){
-        Log.d(TAG, offlineTrips.toString());
+        // Log.d(TAG, offlineTrips.toString());
         if(!offlineTrips.isEmpty() && getActivity()!=null) {
-            Log.d(TAG, "inside OfflineTLV");
+            // Log.d(TAG, "inside OfflineTLV");
             Collections.sort(offlineTrips, comparator);
-            Log.d("OfflineTLV", new Gson().toJson(offlineTrips));
+            // Log.d("OfflineTLV", new Gson().toJson(offlineTrips));
             recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripViewModel, getActivity().getBaseContext());
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
         }
         else if (offlineTrips.isEmpty() && getActivity() != null) {
-            Log.d(TAG, "inside OfflineTLV empty");
+            // Log.d(TAG, "inside OfflineTLV empty");
             Collections.sort(offlineTrips, comparator);
             recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripViewModel, getActivity().getBaseContext());
             recyclerView.setAdapter(recyclerAdapter);
@@ -201,18 +201,18 @@ public class TriplistFragment extends Fragment {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
             String tripUploadedJson = dbPreferences.getString("tripUploaded", null);
-            Log.d(getClass().getSimpleName(), tripUploadedJson + "");
+            // Log.d(getClass().getSimpleName(), tripUploadedJson + "");
             if (tripUploadedJson != null) {
                 //initiating DB update through TripViewModel
-                Log.d("uploadBroadcast", "broadcast received");
+                // Log.d("uploadBroadcast", "broadcast received");
                 Trip uploadedTrip = new Gson().fromJson(tripUploadedJson, Trip.class);
                 if (tripViewModel != null) {
                     try {
-                        Log.d("uploadBroadcast", "inside try");
+                        // Log.d("uploadBroadcast", "inside try");
                         Trip tempTrip = uploadedTrip;
                         tempTrip.setUploaded(true);
                         tripViewModel.insert(Trip.tripToLocalTripEntity(tempTrip));
-                        Log.d("tripUploaded", new Gson().toJson(uploadedTrip));
+                        // Log.d("tripUploaded", new Gson().toJson(uploadedTrip));
                         offlineTrips.remove(uploadedTrip);
                     } catch (Exception e) {}
                 }
@@ -222,7 +222,7 @@ public class TriplistFragment extends Fragment {
             //reading SharedPreferences to check if user has logged out
             SharedPreferences logoutPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             boolean loggedOut = logoutPreferences.getBoolean("loggedOut", false);
-            Log.i(TAG, loggedOut + "");
+            // Log.i(TAG, loggedOut + "");
             if (loggedOut) {
                 if (tripViewModel == null) {
                     tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
@@ -293,7 +293,7 @@ public class TriplistFragment extends Fragment {
             try{
                 return Long.valueOf(getTime(o1.getEndTime())).compareTo(Long.valueOf(getTime(o2.getEndTime())));
             }catch (ParseException e){
-                Log.d("Times", e.getMessage());
+                // Log.d("Times", e.getMessage());
                 return 0;
             }
         }

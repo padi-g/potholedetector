@@ -310,13 +310,13 @@ public class LoggerService extends Service implements SensorEventListener {
             gAvailable = false;
         }
 
-        Log.i(TAG, "Sensors setup");
+        // Log.i(TAG, "Sensors setup");
 
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
         mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
         mSensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_FASTEST);
 
-        Log.i(TAG, "Sensors listeners setup");
+        // Log.i(TAG, "Sensors listeners setup");
 
     }
 
@@ -333,7 +333,7 @@ public class LoggerService extends Service implements SensorEventListener {
         calcTrafficTime();
 
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
-            Log.w("Prox", String.valueOf(sensorEvent.values[0]));
+            // Log.w("Prox", String.valueOf(sensorEvent.values[0]));
 
             if (sensorEvent.values[0] < 5) {
                 mp.start();
@@ -355,7 +355,7 @@ public class LoggerService extends Service implements SensorEventListener {
             if (mCurrentLocation.getAccuracy() < ACCURACY_REQUIRED) {
                 if (!locAccHit && locUpdating) {
                     locAccHit = true;
-                    Log.i(TAG, "Location accuracy hit");
+                    // Log.i(TAG, "Location accuracy hit");
                     logAnalytics("location_accuracy_hit_started_logging");
                     prevLoc[0] = mCurrentLocation.getLatitude();
                     prevLoc[1] = mCurrentLocation.getLongitude();
@@ -371,7 +371,7 @@ public class LoggerService extends Service implements SensorEventListener {
                 no_of_lines++;
                 writeToFile(accVals, gyrVals, LocData);
             } else {
-                Log.i(TAG, "Location accuracy not hit " + mCurrentLocation.getAccuracy());
+                // Log.i(TAG, "Location accuracy not hit " + mCurrentLocation.getAccuracy());
                 calcAccuracyLowTime();
             }
         }
@@ -396,7 +396,7 @@ public class LoggerService extends Service implements SensorEventListener {
             }
         }
         else
-            Log.i(TAG, "currentActivity is null");
+            // Log.i(TAG, "currentActivity is null");
 
     }
 
@@ -411,9 +411,9 @@ public class LoggerService extends Service implements SensorEventListener {
 
         try {
             out.write(data.getBytes());
-            Log.i(TAG, "Writing " + data);
+            // Log.i(TAG, "Writing " + data);
         } catch (IOException e) {
-            Log.d(TAG, "File write failed: " + e.toString());
+            // Log.d(TAG, "File write failed: " + e.toString());
         }
         Marks = null;
 
@@ -439,14 +439,14 @@ public class LoggerService extends Service implements SensorEventListener {
 
     private void setupLogFile() {
 
-        Log.i(TAG, "start" + String.valueOf(newtrip.getStartTime()));
+        // Log.i(TAG, "start" + String.valueOf(newtrip.getStartTime()));
 
         String path = "/logs/";
         File temp = new File(getApplicationContext().getFilesDir() + "/logs/");
         temp.mkdir();
         file = new File(temp.getPath(), fileid.toString()+ ".csv");
 
-        Log.i(TAG, file.toString());
+        // Log.i(TAG, file.toString());
 
         String data;
 
@@ -463,7 +463,7 @@ public class LoggerService extends Service implements SensorEventListener {
             out.write(data.getBytes());
 
         } catch (IOException e) {
-            Log.d(TAG, "File setup failed: " + e.toString());
+            // Log.d(TAG, "File setup failed: " + e.toString());
         }
     }
 
@@ -482,9 +482,9 @@ public class LoggerService extends Service implements SensorEventListener {
     public void onDestroy() {
         calcMeans();
 
-        Log.i(TAG+"Means", "x = " + String.valueOf(meanx));
-        Log.i(TAG+"Means", "y = " + String.valueOf(meany));
-        Log.i(TAG+"Means", "z = " + String.valueOf(meanz));
+        // Log.i(TAG+"Means", "x = " + String.valueOf(meanx));
+        // Log.i(TAG+"Means", "y = " + String.valueOf(meany));
+        // Log.i(TAG+"Means", "z = " + String.valueOf(meanz));
 
         try {
             out.close();
@@ -492,7 +492,7 @@ public class LoggerService extends Service implements SensorEventListener {
                 file.delete();
             }
         } catch (IOException e) {
-            Log.d(TAG, "File closing failed: " + e.toString());
+            // Log.d(TAG, "File closing failed: " + e.toString());
         }
 
         if(mCurrentLocation!=null) {
@@ -514,30 +514,30 @@ public class LoggerService extends Service implements SensorEventListener {
         }catch (ArithmeticException ae){
             newtrip.setNo_of_lines(0);
         }
-        Log.i(TAG+" endtime", String.valueOf(newtrip.getEndTime()));
+        // Log.i(TAG+" endtime", String.valueOf(newtrip.getEndTime()));
         mp.stop();
         mSensorManager.unregisterListener(this);
 
         newtrip.setFilesize(file.length());
         newtrip.setUploaded(false);
         newtrip.setDistanceInKM(distance_travelled/1000);
-        Log.d(TAG, String.valueOf(distance_travelled));
+        // Log.d(TAG, String.valueOf(distance_travelled));
         Uri fileuri = Uri.fromFile(new File(file.getPath()));
 
         newtrip.setDuration(calcTimeTravelledMins());
-        Log.i(TAG+" Duration", String.valueOf(calcTimeTravelledMins()) + " minutes");
+        // Log.i(TAG+" Duration", String.valueOf(calcTimeTravelledMins()) + " minutes");
 
         app.setTrip(newtrip);
-        Log.i(TAG, "logged newtrip");
+        // Log.i(TAG, "logged newtrip");
 
 
         if (minutesWasted != -1) {
-            Log.i("minutesWasted", minutesWasted + " milliseconds");
+            // Log.i("minutesWasted", minutesWasted + " milliseconds");
             minutesWasted = TimeUnit.MILLISECONDS.toMinutes(minutesWasted);
             newtrip.setMinutesWasted(minutesWasted);
         }
         else
-            Log.i(TAG, "minutesWasted was -1");
+            // Log.i(TAG, "minutesWasted was -1");
 
         minutesAccuracyLow = Math.round((minutesWasted/1000.0)/60.0);
 
@@ -548,8 +548,8 @@ public class LoggerService extends Service implements SensorEventListener {
             newTripSet.add(new Gson().toJson(newtrip));
             if (internetAvailable())
                 toBeUploadedTripSet.add(new Gson().toJson(newtrip));
-            Log.d("newTripSet", newTripSet.toString());
-            Log.d("toBeUploadedTripSet", newTripSet.toString());
+            // Log.d("newTripSet", newTripSet.toString());
+            // Log.d("toBeUploadedTripSet", newTripSet.toString());
             dbPreferences.edit().putStringSet("newTripJson", newTripSet).commit();
             dbPreferences.edit().putStringSet("toBeUploadedTripSet", toBeUploadedTripSet).commit();
             sendTripLoggingBroadcast(false, fileuri);
@@ -580,7 +580,7 @@ public class LoggerService extends Service implements SensorEventListener {
 
     private void stopLocationUpdates() {
         if (!mRequestingLocationUpdates) {
-            Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
+            // Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
             return;
         }
 
@@ -657,7 +657,7 @@ public class LoggerService extends Service implements SensorEventListener {
         Bundle b = new Bundle();
         b.putString("LoggerService", data);
         mFirebaseAnalytics.logEvent(data, b);
-        Log.i("LoggerService", data);
+        // Log.i("LoggerService", data);
     }
 
     private void logGPSpollstoFile(ArrayList<MyLocation> polls) {
@@ -676,9 +676,9 @@ public class LoggerService extends Service implements SensorEventListener {
                 out.write(data.getBytes());
             }
         } catch (FileNotFoundException e) {
-            Log.d(TAG, "File_setup_failed: " + e.toString());
+            // Log.d(TAG, "File_setup_failed: " + e.toString());
         } catch (IOException e) {
-            Log.d(TAG, "File_setup_failed: " + e.toString());
+            // Log.d(TAG, "File_setup_failed: " + e.toString());
         }
 
     }

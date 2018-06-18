@@ -75,12 +75,12 @@ public class TransitionsReceiver extends IntentService {
         notificationManagerCompat = NotificationManagerCompat.from(this);
         long currentTime = Calendar.getInstance().getTimeInMillis();
         timer = currentTime - timer;
-        Log.d("timer", timer + "");
+        // Log.d("timer", timer + "");
        //check if intent contains data about an activity
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             DetectedActivity detectedActivity = result.getMostProbableActivity();
-            Log.i(getClass().getSimpleName(), detectedActivity.toString());
+            // Log.i(getClass().getSimpleName(), detectedActivity.toString());
             //committing current activity to shared prefs
             if (detectedActivity != null)
                 editor.putString("currentActivity", new Gson().toJson(detectedActivity).toString());

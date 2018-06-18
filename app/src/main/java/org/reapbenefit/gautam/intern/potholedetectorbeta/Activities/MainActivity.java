@@ -99,14 +99,14 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = this;
-        Log.d(TAG, "Inside onCreate");
+        // Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         setContentView(R.layout.activity_main);
 
         inCar = getIntent().getBooleanExtra("inCar", false);
-        Log.i("inCar MainActivity old", inCar + "");
+        // Log.i("inCar MainActivity old", inCar + "");
         //Adding toolbar to the activity
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -242,10 +242,10 @@ public class MainActivity extends AppCompatActivity
                             app.setCurrentLocation(task.getResult());
                             if(task.getResult().getAccuracy() < 25 && app.isTripEnded()) {
                                 //showSnackbar("Location detected");
-                                Log.d(TAG, "Location Detected");
+                                // Log.d(TAG, "Location Detected");
                             }
                         } else {
-                            Log.w(TAG, "getLastLocation:exception", task.getException());
+                            // Log.w(TAG, "getLastLocation:exception", task.getException());
 
                             showSnackbar(getString(R.string.no_location_detected));
                         }
@@ -303,7 +303,7 @@ public class MainActivity extends AppCompatActivity
         // Provide an additional rationale to the user. This would happen if the user denied the
         // request previously, but didn't check the "Don't ask again" checkbox.
         if (shouldProvideRationale) {
-            Log.i(TAG, "Displaying permission rationale to provide additional context.");
+            // Log.i(TAG, "Displaying permission rationale to provide additional context.");
 
             showSnackbar(R.string.permission_rationale, android.R.string.ok,
                     new View.OnClickListener() {
@@ -315,7 +315,7 @@ public class MainActivity extends AppCompatActivity
                     });
 
         } else {
-            Log.i(TAG, "Requesting permission");
+            // Log.i(TAG, "Requesting permission");
             // Request permission. It's possible this can be auto answered if device policy
             // sets the permission in a given state or the user denied the permission
             // previously and checked "Never ask again".
@@ -329,12 +329,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        Log.i(TAG, "onRequestPermissionResult");
+        // Log.i(TAG, "onRequestPermissionResult");
         if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
             if (grantResults.length <= 0) {
                 // If user interaction was interrupted, the permission request is cancelled and you
                 // receive empty arrays.
-                Log.i(TAG, "User interaction was cancelled.");
+                // Log.i(TAG, "User interaction was cancelled.");
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted.
                 getLastLocation();

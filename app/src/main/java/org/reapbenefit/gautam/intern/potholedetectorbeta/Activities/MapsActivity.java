@@ -148,7 +148,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         task.execute(tripID);
         File file = new File(getApplicationContext().getFilesDir(), "analysis/" + tripID + ".csv");
 
-        Log.d("maps", file.toString());
+        // Log.d("maps", file.toString());
 
         //File file = new File(getApplicationContext().getFilesDir(), "locs/"+trip.getTrip_id()+".txt");
 
@@ -332,7 +332,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                         if (tokens[i].contains("speed")) {
                             speedIndex = i;
-                            Log.d("speedIndex", String.valueOf(i));
+                            // Log.d("speedIndex", String.valueOf(i));
                         }
                     }
 
@@ -354,7 +354,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 catch (Exception e){
 
                 }
-                Log.d("result before return", definitePointsOfInterest.size() + " " + probablePointsOfInterest.size());
+                // Log.d("result before return", definitePointsOfInterest.size() + " " + probablePointsOfInterest.size());
                 return definitePointsOfInterest.size() + " " + probablePointsOfInterest.size();
             } catch (FileNotFoundException e) {
                 return null;
@@ -368,8 +368,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             int indexOfSpace = result.indexOf(' ');
             int definitePotholeCount = Integer.parseInt(result.substring(0, indexOfSpace));
             int probablePotholeCount = Integer.parseInt(result.substring(indexOfSpace + 1));
-            Log.d("probableCount", probablePotholeCount + "");
-            Log.d("definiteCount", definitePotholeCount + "");
+            // Log.d("probableCount", probablePotholeCount + "");
+            // Log.d("definiteCount", definitePotholeCount + "");
             setProbablePotholeCount(probablePotholeCount);
             setDefinitePotholeCount(definitePotholeCount);
             spinner.setVisibility(View.GONE);
@@ -391,7 +391,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 populatePotholeMarkerPoints();
                 tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
                 if (!tripIdSet.contains(finishedTrip.getTrip_id())) {
-                    Log.d("MapsActivity", tripID + "");
+                    // Log.d("MapsActivity", tripID + "");
                     int validTrips = tripStatsPreferences.getInt("validTrips", 0);
                     tripStatsEditor.putInt("validTrips", validTrips + 1);
                     int sharedPrefsProbablePotholes = tripStatsPreferences.getInt("probablePotholes", 0);

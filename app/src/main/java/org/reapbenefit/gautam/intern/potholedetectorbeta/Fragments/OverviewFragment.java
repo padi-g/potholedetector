@@ -127,7 +127,7 @@ public class OverviewFragment extends Fragment implements
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getContext());
         tripStatsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         String highestPotholeTripJson = tripStatsPreferences.getString("highestPotholeTrip", null);
-        Log.d(getClass().getSimpleName(), highestPotholeTripJson + "");
+        // Log.d(getClass().getSimpleName(), highestPotholeTripJson + "");
         if (highestPotholeTripJson != null) {
             highestPotholeTrip = new Gson().fromJson(highestPotholeTripJson, Trip.class);
         }
@@ -242,7 +242,7 @@ public class OverviewFragment extends Fragment implements
                 probableLatLngList.add(new Gson().fromJson(potholeLocationString, LatLng.class));
             }
         }
-        Log.d(getClass().getSimpleName(), probableLatLngList.toString());
+        // Log.d(getClass().getSimpleName(), probableLatLngList.toString());
         if (definitePotholeLocationSet != null) {
             List<String> definitePotholeLocationArrayList = new ArrayList<>(definitePotholeLocationSet);
             for (String definitePotholeLocationString: definitePotholeLocationArrayList) {
@@ -250,7 +250,7 @@ public class OverviewFragment extends Fragment implements
             }
         }
         drawMarkers();
-        Log.d(getClass().getSimpleName(), definiteLatLngList.toString());
+        // Log.d(getClass().getSimpleName(), definiteLatLngList.toString());
         return fragmentView;
     }
 

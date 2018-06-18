@@ -33,24 +33,24 @@ public class TrafficTimeService extends IntentService {
         if (start != null)
             startTime = new Gson().fromJson(start, Date.class);
         else
-            Log.i(TAG, "startTime is null");
+            // Log.i(TAG, "startTime is null");
         //getting current activity from TransitionReceiver
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         editor = sharedPreferences.edit();
         currentActivity = sharedPreferences.getString("currentActivity", null);
         if (currentActivity != null) {
             DetectedActivity activity = new Gson().fromJson(currentActivity, DetectedActivity.class);
-            Log.i(TAG, currentActivity.toString());
+            // Log.i(TAG, currentActivity.toString());
             if (currentActivity.toString().contains("STILL") && activity.getConfidence() >= 60) {
                 newTime = Calendar.getInstance().getTime();
                 minutesWasted += newTime.getTime() - startTime.getTime();
-                Log.i("minutesWasted", minutesWasted + "");
+                // Log.i("minutesWasted", minutesWasted + "");
                 startTime = newTime;
                 editor.putLong("minutesWasted", minutesWasted);
                 editor.commit();
             }
         }
         else
-            Log.i(TAG, "currentActivity is null");
+            // Log.i(TAG, "currentActivity is null");
     }
 }

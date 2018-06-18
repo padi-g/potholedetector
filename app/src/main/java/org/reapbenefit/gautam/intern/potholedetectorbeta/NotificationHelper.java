@@ -42,7 +42,7 @@ public class NotificationHelper extends ContextWrapper {
             notificationManager.notify(id, builder.build());
         }
         else
-            Log.i(getClass().getSimpleName(), "Notification error");
+            // Log.i(getClass().getSimpleName(), "Notification error");
     }
     public Notification.Builder getNotification(String title, String body) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

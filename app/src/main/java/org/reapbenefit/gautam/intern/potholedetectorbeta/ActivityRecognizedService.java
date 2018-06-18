@@ -33,7 +33,7 @@ public class ActivityRecognizedService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.i("ARS", "Connected to IntentService");
+        // Log.i("ARS", "Connected to IntentService");
 
         if(ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
@@ -48,7 +48,7 @@ public class ActivityRecognizedService extends IntentService {
         for( DetectedActivity activity : probableActivities ) {
             switch( activity.getType() ) {
                 case DetectedActivity.IN_VEHICLE: {
-                    Log.i( "ActivityRecogition", "In Vehicle: " + activity.getConfidence() );
+                    // Log.i( "ActivityRecogition", "In Vehicle: " + activity.getConfidence() );
                     if( activity.getConfidence() >= 90 ) {
 
                         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
@@ -82,33 +82,33 @@ public class ActivityRecognizedService extends IntentService {
                     break;
                 }
                 case DetectedActivity.ON_BICYCLE: {
-                    Log.i( "ActivityRecogition", "On Bicycle: " + activity.getConfidence() );
+                    // Log.i( "ActivityRecogition", "On Bicycle: " + activity.getConfidence() );
                     break;
                 }
                 case DetectedActivity.ON_FOOT: {
-                    Log.i( "ActivityRecogition", "On Foot: " + activity.getConfidence() );
+                    // Log.i( "ActivityRecogition", "On Foot: " + activity.getConfidence() );
                     break;
                 }
                 case DetectedActivity.RUNNING: {
-                    Log.i( "ActivityRecogition", "Running: " + activity.getConfidence() );
+                    // Log.i( "ActivityRecogition", "Running: " + activity.getConfidence() );
                     break;
 
                 }
                 case DetectedActivity.STILL: {
-                    Log.i( "ActivityRecogition", "Still: " + activity.getConfidence() );
+                    // Log.i( "ActivityRecogition", "Still: " + activity.getConfidence() );
 
                     break;
                 }
                 case DetectedActivity.TILTING: {
-                    Log.i( "ActivityRecogition", "Tilting: " + activity.getConfidence() );
+                    // Log.i( "ActivityRecogition", "Tilting: " + activity.getConfidence() );
                     break;
                 }
                 case DetectedActivity.WALKING: {
-                    Log.i( "ActivityRecogition", "Walking: " + activity.getConfidence() );
+                    // Log.i( "ActivityRecogition", "Walking: " + activity.getConfidence() );
 
                 }
                 case DetectedActivity.UNKNOWN: {
-                    Log.i( "ActivityRecogition", "Unknown: " + activity.getConfidence() );
+                    // Log.i( "ActivityRecogition", "Unknown: " + activity.getConfidence() );
                     break;
                 }
             }

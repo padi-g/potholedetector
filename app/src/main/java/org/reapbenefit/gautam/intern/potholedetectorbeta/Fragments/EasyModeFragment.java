@@ -151,7 +151,7 @@ public class EasyModeFragment extends Fragment {
         chronometer = v.findViewById(R.id.chronometer);
 
         inCar = getArguments().getBoolean("inCar", false);
-        Log.i(getClass().getSimpleName(), inCar + "");
+        // Log.i(getClass().getSimpleName(), inCar + "");
         bgframe = (CoordinatorLayout) v.findViewById(R.id.easyframe);
         bgframe.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
@@ -284,7 +284,7 @@ public class EasyModeFragment extends Fragment {
                 if(uploadFileUri == null){
                     statusIndicatorText.setText("Sorry, we could not detect your location accurately");
                 }else {
-                    Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
+                    // Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
                     statusIndicatorText.setText("Thanks for your contribution!");
                     if(internetAvailable() && autoUploadOn()) {
                         startUploadService();
@@ -367,7 +367,7 @@ public class EasyModeFragment extends Fragment {
         // Provide an additional rationale to the user. This would happen if the user denied the
         // request previously, but didn't check the "Don't ask again" checkbox.
         if (shouldProvideRationale) {
-            Log.i("EasyModeFragment", "Displaying permission rationale to provide additional context.");
+            // Log.i("EasyModeFragment", "Displaying permission rationale to provide additional context.");
 
             showSnackbar(R.string.permission_rationale, android.R.string.ok,
                     new View.OnClickListener() {
@@ -379,7 +379,7 @@ public class EasyModeFragment extends Fragment {
                     });
 
         } else {
-            Log.i("EasyModeFragment", "Requesting permission");
+            // Log.i("EasyModeFragment", "Requesting permission");
             // Request permission. It's possible this can be auto answered if device policy
             // sets the permission in a given state or the user denied the permission
             // previously and checked "Never ask again".
@@ -408,7 +408,7 @@ public class EasyModeFragment extends Fragment {
             isChronometerRunning = timePreferences.getBoolean("isChronometerRunning", false);
             if (isChronometerRunning && chronometer != null) {
                 long startTime = timePreferences.getLong("startTime", SystemClock.elapsedRealtime());
-                Log.d("Chronometer new Base", String.valueOf(startTime));
+                // Log.d("Chronometer new Base", String.valueOf(startTime));
                 chronometer.setBase(startTime);
                 chronometer.start();
             }
@@ -418,7 +418,7 @@ public class EasyModeFragment extends Fragment {
     @Override
         public void onPause() {
         super.onPause();
-        Log.d("Chronometer", "Pausing EMF");
+        // Log.d("Chronometer", "Pausing EMF");
         //getting current time of chronometer
         String currentTime = chronometer.getText().toString();
         String currentTimeArray[] = currentTime.split(":");
@@ -433,7 +433,7 @@ public class EasyModeFragment extends Fragment {
         long startTime = SystemClock.elapsedRealtime() - stoppedMilliseconds;
         timePreferencesEditor.putLong("startTime", startTime)
                 .apply();
-        Log.d("Chronometer set base", SystemClock.elapsedRealtime() - chronometer.getBase() + "");
+        // Log.d("Chronometer set base", SystemClock.elapsedRealtime() - chronometer.getBase() + "");
     }
 
     private boolean checkPermissions() {

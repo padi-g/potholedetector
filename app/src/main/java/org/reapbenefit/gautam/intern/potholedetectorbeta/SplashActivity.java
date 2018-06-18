@@ -268,7 +268,7 @@ public class SplashActivity extends AppCompatActivity {
                     try {
                         return requestBody == null ? null : requestBody.getBytes("utf-8");
                     } catch (UnsupportedEncodingException uee) {
-                        VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", requestBody, "utf-8");
+                        Volley// Log.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", requestBody, "utf-8");
                         return null;
                     }
                 }
@@ -284,7 +284,7 @@ public class SplashActivity extends AppCompatActivity {
             };
             postRequestQueue.add(postRequest);
         } catch (JSONException e) {
-            Log.e("SplashActivity", e.getMessage());
+            // Log.e("SplashActivity", e.getMessage());
         }
     }
 
@@ -293,7 +293,7 @@ public class SplashActivity extends AppCompatActivity {
         animator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animator) {
-                Log.d("Splash", "setting visible");
+                // Log.d("Splash", "setting visible");
                 finishButton.setVisibility(View.VISIBLE);
             }
 

@@ -30,7 +30,7 @@ public class HTTPHandler {
             userData.setUserID(userID);
             userData.setUpdateFlag(updateFlag);
             String jsonInput = new Gson().toJson(userData);
-            Log.d(TAG, "Sending user data: " + jsonInput);
+            // Log.d(TAG, "Sending user data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
@@ -46,11 +46,11 @@ public class HTTPHandler {
                 }
                 in.close();
                 // print result
-                Log.d(TAG, response.toString());
+                // Log.d(TAG, response.toString());
             } else
                 System.out.println("POST request failed " + responseCode);
         } catch (IOException ioException) {
-            Log.e(TAG, ioException.getMessage());
+            // Log.e(TAG, ioException.getMessage());
         }
     }
 
@@ -62,7 +62,7 @@ public class HTTPHandler {
             httpURLConnection.setRequestMethod("POST");
             httpURLConnection.setDoOutput(true);
             String jsonInput = new Gson().toJson(userData);
-            Log.d(TAG, "Sending user data: " + jsonInput);
+            // Log.d(TAG, "Sending user data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
@@ -78,11 +78,11 @@ public class HTTPHandler {
                 }
                 in.close();
                 // print result
-                Log.d(TAG, response.toString());
+                // Log.d(TAG, response.toString());
             } else
                 System.out.println("POST request failed " + responseCode);
         } catch (IOException ioException) {
-            Log.e(TAG, ioException.getMessage());
+            // Log.e(TAG, ioException.getMessage());
         }
     }
 
@@ -103,12 +103,12 @@ public class HTTPHandler {
                     response.append(inputLine);
                 }
                 in.close();
-                Log.d(TAG, response.toString());
+                // Log.d(TAG, response.toString());
                 return response.toString();
             } else
                 System.out.println("POST request failed " + responseCode);
         } catch (IOException ioException) {
-            Log.e(TAG, ioException.getMessage());
+            // Log.e(TAG, ioException.getMessage());
         }
         return null;
     }
@@ -130,12 +130,12 @@ public class HTTPHandler {
                     response.append(inputLine);
                 }
                 in.close();
-                Log.d(TAG, response.toString());
+                // Log.d(TAG, response.toString());
                 return response.toString();
             } else
                 System.out.println("POST request failed " + responseCode);
         } catch (IOException ioException) {
-            Log.e(TAG, ioException.getMessage());
+            // Log.e(TAG, ioException.getMessage());
         }
         return null;
     }
@@ -149,7 +149,7 @@ public class HTTPHandler {
             httpURLConnection.setDoOutput(true);
             TripDataLambda tripDataLambda = convertToTripDataLambda(newTrip);
             String jsonInput = new Gson().toJson(tripDataLambda);
-            Log.d(TAG, "Sending data: " + jsonInput);
+            // Log.d(TAG, "Sending data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
@@ -165,11 +165,11 @@ public class HTTPHandler {
                 }
                 in.close();
                 // print result
-                Log.d(TAG, response.toString());
+                // Log.d(TAG, response.toString());
             } else
                 System.out.println("POST request failed " + responseCode);
         } catch (IOException ioException) {
-            Log.e(TAG, ioException.getMessage());
+            // Log.e(TAG, ioException.getMessage());
         }
     }
 
@@ -231,7 +231,7 @@ public class HTTPHandler {
             httpURLConnection.setRequestMethod("POST");
             httpURLConnection.setDoOutput(true);
             String jsonInput = new Gson().toJson(tripDataLambda);
-            Log.d(TAG, "Sending data: " + jsonInput);
+            // Log.d(TAG, "Sending data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
@@ -247,11 +247,11 @@ public class HTTPHandler {
                 }
                 in.close();
                 // print result
-                Log.d(TAG, response.toString());
+                // Log.d(TAG, response.toString());
             } else
                 System.out.println("POST request failed " + responseCode);
         } catch (IOException ioException) {
-            Log.e(TAG, ioException.getMessage());
+            // Log.e(TAG, ioException.getMessage());
         }
     }
 }

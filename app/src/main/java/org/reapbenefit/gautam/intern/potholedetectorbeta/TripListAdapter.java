@@ -71,7 +71,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     }
 
     public TripListAdapter(Context context, ArrayList<Trip> trips, boolean uploadStatus, String tripId, TripViewModel tripViewModel, Context baseContext) {
-        Log.d("Constructor", "Hello");
+        // Log.d("Constructor", "Hello");
         this.context = context;
         this.trips = trips;
         this.uploadStatus = uploadStatus;
@@ -133,23 +133,23 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     public void onBindViewHolder(TripListViewHolder holder, final int position) {
         holder.setIsRecyclable(false);
         //this method is called for every item in the list
-        Log.i(getClass().getSimpleName(), "inside onBindViewHolder");
-        Log.d(TAG, "position = " + position);
+        // Log.i(getClass().getSimpleName(), "inside onBindViewHolder");
+        // Log.d(TAG, "position = " + position);
         if (holder != null) {
-            Log.i(getClass().getSimpleName(), "holder is not null");
+            // Log.i(getClass().getSimpleName(), "holder is not null");
             View rowView = holder.itemView;
             final Trip trip = trips.get(position);
 
             if (tripViewModel == null)
-                Log.e(getClass().getSimpleName(), "TripViewModel is null");
+                // Log.e(getClass().getSimpleName(), "TripViewModel is null");
 
             String countString, timeString, durationString, distanceString;
             final ImageButton uploadButton, uploadedTick, mapButton;
             TextView date, time, size, distance;
             final ProgressBar uploadProgressBar;
             countString = String.valueOf(trip.getDefinitePotholeCount() + trip.getProbablePotholeCount()) + " potholes";
-            Log.i("countString", countString);
-            Log.i("timeString", trip.getStartTime() + "");
+            // Log.i("countString", countString);
+            // Log.i("timeString", trip.getStartTime() + "");
             timeString = trip.getStartTime();
             timeString = timeString.substring(4, timeString.indexOf("GMT") - 4);
             durationString = String.valueOf(trip.getDuration()) + " mins, " + humanReadableByteCount(trip.getFilesize(), true);
@@ -158,7 +158,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             uploadedTick = holder.uploadedTick;
             uploadProgressBar = holder.uploadProgressBar;
             batchUpload = dbPreferences.getBoolean("batchUpload", false);
-            Log.d("batchUpload", String.valueOf(batchUpload));
+            // Log.d("batchUpload", String.valueOf(batchUpload));
 
             if ((uploadStatus && trip.getTrip_id().equals(tripId)) || batchUpload) {
                 uploadProgressBar.setIndeterminate(true);
