@@ -34,6 +34,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
@@ -55,6 +56,8 @@ public class LoginActivity extends AppCompatActivity {
     private ProgressDialog dialog;
 
     ApplicationClass app;
+
+    private SharedPreferences uploadPreferences;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -222,7 +225,13 @@ public class LoginActivity extends AppCompatActivity {
                                 // Sign in success, update UI with the signed-in user's information
                                 Log.d("firebase auth", "signInWithCredential:success");
                                 FirebaseUser user = mAuth.getCurrentUser();
-                                //update UI
+                                //updating RDS
+                                uploadPreferences = getSharedPreferences("uploads", MODE_PRIVATE);
+                                uploadPreferences.edit().putString("FIREBASE_USER_ID", user.getUid().toString()).commit();
+                                Intent apiIntent = new Intent(LoginActivity.this, APIService.class);
+                                apiIntent.putExtra("request", "GET");
+                                apiIntent.putExtra("table", getString(R.string.user_data_table));
+                                startService(apiIntent);
                             } else {
                                 // If sign in fails, display a message to the user.
                                 Log.w("firebase auth", "signInWithCredential:failure", task.getException());
