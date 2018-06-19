@@ -282,10 +282,10 @@ public class EasyModeFragment extends Fragment {
             if(!tripStatus){
                 uploadFileUri = intent.getParcelableExtra("filename");
                 if(uploadFileUri == null){
-                    statusIndicatorText.setText("Sorry, we could not detect your location accurately");
+                    Toast.makeText(getActivity().getApplicationContext(), "Sorry, we could not detect your location accurately", Toast.LENGTH_SHORT).show();
                 }else {
                     // Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
-                    statusIndicatorText.setText("Thanks for your contribution!");
+                    Toast.makeText(getActivity().getApplicationContext(), "Thanks for your contribution!", Toast.LENGTH_SHORT).show();
                     if(internetAvailable() && autoUploadOn()) {
                         startUploadService();
                     }else if(!internetAvailable()){
