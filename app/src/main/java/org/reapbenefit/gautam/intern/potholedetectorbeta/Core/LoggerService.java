@@ -55,6 +55,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -130,7 +131,7 @@ public class LoggerService extends Service implements SensorEventListener {
     private Set<String> newTripSet;
     private Set<String> toBeUploadedTripSet;
     private float speed;
-    private HashMap<Integer, SpeedWithLocation> speedWithLocationMap = new HashMap<>();
+    private LinkedHashMap<Integer, SpeedWithLocation> speedWithLocationMap = new LinkedHashMap<>();
 
     public LoggerService() {
         super();
