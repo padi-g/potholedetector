@@ -16,6 +16,7 @@ import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -284,26 +285,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         FileInputStream is;
         private float[] speedArray;
 
-        private float[] rightShift(float value) {
-            float arr[] = speedArray;
-            if (arr[2] != -1.0f) {
-                float temp = arr[2];
-                float temp1 = arr[1];
-                arr[0] = temp1;
-                arr[1] = temp;
-                arr[2] = value;
-            }
-            else if (arr[1] != -1.0f) {
-                arr[2] = value;
-            }
-            else if (arr[0] != -1.0f) {
-                arr[1] = value;
-            }
-            else
-                arr[0] = value;
-            return arr;
-        }
-
         private boolean didSpeedOscillate(float arr[]) {
             if (arr[0] > arr[1] && arr[1] < arr[2])
                 return true;
@@ -356,6 +337,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 speedWithLocationHashMap.get(closestDecreasedKeyValue).getSpeed(),
                                 speedWithLocationHashMap.get(closestIncreasedKeyValue).getSpeed(),
                                 speedWithLocationHashMap.get(closestIncreasedKeyValue1).getSpeed()};
+                                Log.d("CDKV-true", String.valueOf(closestDecreasedKeyValue));
+                                Log.d("CDKV-false", String.valueOf(closestDecreasedKeyValue1));
+                                Log.d("CDKV-true1", String.valueOf(closestIncreasedKeyValue));
+                                Log.d("CDKV-false1", String.valueOf(closestIncreasedKeyValue1));
                                 if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
                                     definitePointsOfInterest.put(lineNumber, line);
                                 else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
