@@ -131,7 +131,7 @@ public class OverviewFragment extends Fragment implements
         if (highestPotholeTripJson != null) {
             highestPotholeTrip = new Gson().fromJson(highestPotholeTripJson, Trip.class);
         }
-        
+        zoomFlag = true;
     }
 
     @Override
@@ -140,7 +140,7 @@ public class OverviewFragment extends Fragment implements
         if (googleMap != null) {
             outState.putParcelable(CAMERA_POSITION, googleMap.getCameraPosition());
             outState.putParcelable(KEY_LOCATION, lastLocation);
-            zoomFlag = true;
+            // zoomFlag = true;
             super.onSaveInstanceState(outState);
         }
         if (mapView != null)
@@ -157,7 +157,7 @@ public class OverviewFragment extends Fragment implements
         if (savedInstanceState != null) {
             lastLocation = savedInstanceState.getParcelable(KEY_LOCATION);
             cameraPosition = savedInstanceState.getParcelable(CAMERA_POSITION);
-            zoomFlag = true;
+            // zoomFlag = true;
         }
 
         bottomSheet = fragmentView.findViewById(R.id.bottom_sheet);
@@ -280,7 +280,17 @@ public class OverviewFragment extends Fragment implements
                 currentLocation = locationResult.getLastLocation();
                 Appsee.setLocation(currentLocation.getLatitude(), currentLocation.getLongitude(), currentLocation.getAccuracy(), currentLocation.getAccuracy());
                 currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18.0f));
+                googleMap.setOnCameraMoveStartedListener(new GoogleMap.OnCameraMoveStartedListener() {
+                    @Override
+                    public void onCameraMoveStarted(int i) {
+                        if (i == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE) {
+                            //executed when the user changes map camera position
+                            zoomFlag = false;
+                        }
+                    }
+                });
+                if (zoomFlag)
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18.0f));
             }
         };
     }

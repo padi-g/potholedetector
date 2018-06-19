@@ -365,7 +365,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         populateDataPoints(line, bufferedReader);
                     }
                     else {
-                        Toast.makeText(getApplicationContext(), "Device speed could not be measured.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Device speed could not be measured. Inaccurate results are possible.", Toast.LENGTH_SHORT).show();
                         populateDataPoints(line, bufferedReader);
                     }
                 }
