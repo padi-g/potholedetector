@@ -8,6 +8,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -156,7 +157,8 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             uploadedTick = holder.uploadedTick;
             uploadProgressBar = holder.uploadProgressBar;
             batchUpload = dbPreferences.getBoolean("batchUpload", false);
-            // Log.d("batchUpload", String.valueOf(batchUpload));
+            Log.d(TAG, trip.getTrip_id());
+            Log.d(TAG, tripId);
 
             if ((uploadStatus && trip.getTrip_id().equals(tripId)) || batchUpload) {
                 uploadProgressBar.setIndeterminate(true);

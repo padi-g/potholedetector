@@ -23,6 +23,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.ScaleAnimation;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -88,6 +92,7 @@ public class OverviewFragment extends Fragment implements
     private static final String KEY_LOCATION = "keyLocation";
     private static final String CAMERA_POSITION = "cameraPosition";
     private FloatingActionButton starButton;
+    private FloatingActionButton groupButton;
     private TripViewModel tripViewModel;
     private List<LatLng> potholeLocations = new ArrayList<>();
     private List<String> tripIds = new ArrayList<>();
@@ -108,6 +113,7 @@ public class OverviewFragment extends Fragment implements
     private TextView distanceTextView;
     private TextView sizeTextView;
     private GridLayout mostPotholesGrid;
+    private FloatingActionButton floatingButton;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -155,11 +161,36 @@ public class OverviewFragment extends Fragment implements
         View fragmentView = inflater.inflate(R.layout.fragment_overview, container, false);
         
         starButton = fragmentView.findViewById(R.id.personal_scores);
+        groupButton = fragmentView.findViewById(R.id.group_scores);
+        if (starButton.getVisibility() == View.VISIBLE)
+            floatingButton = starButton;
+        else
+            floatingButton = groupButton;
+
         if (savedInstanceState != null) {
             lastLocation = savedInstanceState.getParcelable(KEY_LOCATION);
             cameraPosition = savedInstanceState.getParcelable(CAMERA_POSITION);
             // zoomFlag = true;
         }
+
+        starButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                groupButton.setVisibility(View.VISIBLE);
+                starButton.setVisibility(View.INVISIBLE);
+                floatingButton = groupButton;
+            }
+        });
+
+        groupButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                groupButton.setVisibility(View.INVISIBLE);
+                starButton.setVisibility(View.VISIBLE);
+                floatingButton = starButton;
+            }
+        });
+
 
         bottomSheet = fragmentView.findViewById(R.id.bottom_sheet);
         final BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
@@ -179,7 +210,8 @@ public class OverviewFragment extends Fragment implements
 
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                starButton.animate().scaleX(1 - slideOffset).scaleY(1 - slideOffset).setDuration(0).start();
+                if (floatingButton != null)
+                    floatingButton.animate().scaleX(1 - slideOffset).scaleY(1 - slideOffset).setDuration(0).start();
             }
         });
 
@@ -218,18 +250,6 @@ public class OverviewFragment extends Fragment implements
             mostPotholesGrid.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    /*File dataFile = new File(getContext().getApplicationContext().getFilesDir(), "logs/" + highestPotholeTrip.getTrip_id() + ".csv");
-                    File file = new File(getContext().getApplicationContext().getFilesDir(), "analysis/" + highestPotholeTrip.getTrip_id() + ".csv");
-                    if (dataFile.exists()) {
-                        if (file.exists()) { // check if file of same name is available in the analytics folder
-                            Intent i = new Intent(getContext(), MapsActivity.class);
-                            i.putExtra("trip", highestPotholeTrip);
-                            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            getContext().startActivity(i);
-                        }
-                    } else {
-                        Toast.makeText(getContext(), "Sorry, file has been deleted", Toast.LENGTH_SHORT).show();
-                    }*/
                     Intent i = new Intent(getContext(), MapsActivity.class);
                     i.putExtra("trip", highestPotholeTrip);
                     i.putExtra(getString(R.string.is_viewing_highest_pothole_trip), true);
@@ -259,7 +279,6 @@ public class OverviewFragment extends Fragment implements
         // Log.d(getClass().getSimpleName(), definiteLatLngList.toString());
         return fragmentView;
     }
-
 
     @SuppressLint("MissingPermission")
     private void startLocationUpdates() {

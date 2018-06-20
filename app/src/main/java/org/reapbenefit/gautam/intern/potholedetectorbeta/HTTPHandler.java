@@ -17,6 +17,7 @@ import static com.amazonaws.http.HttpHeader.USER_AGENT;
 public class HTTPHandler {
     private static final String userDataUrl = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/users/";
     private static final String tripsDataUrl = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/trips/";
+    private static final String potholesDataUrl = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/potholes/";
     private static final String TAG = "HTTPHandler";
 
     public static void insertUser(String userID, boolean updateFlag) {
@@ -253,5 +254,32 @@ public class HTTPHandler {
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }
+    }
+
+    public static String getAllPotholes() {
+        try {
+            URL urlObject = new URL(tripsDataUrl);
+            HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
+            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
+            httpURLConnection.setRequestMethod("GET");
+            InputStream inputStream = httpURLConnection.getInputStream();
+            int responseCode = httpURLConnection.getResponseCode();
+            if (responseCode == 200) { //success
+                BufferedReader in = new BufferedReader(new InputStreamReader(
+                        httpURLConnection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                // Log.d(TAG, response.toString());
+                return response.toString();
+            } else
+                System.out.println("POST request failed " + responseCode);
+        } catch (IOException ioException) {
+            // Log.e(TAG, ioException.getMessage());
+        }
+        return null;
     }
 }
