@@ -3,7 +3,9 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -25,6 +27,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -55,6 +58,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+
+import static org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter.roundTwoDecimals;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -88,32 +93,33 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Set<String> tripIdSet;
     private LinkedHashMap<Integer, SpeedWithLocation> speedWithLocationHashMap;
     private final String TAG = getClass().getSimpleName();
-
+    private Trip highestPotholeTrip;
     private SharedPreferences dbPreferences;
     private SharedPreferences.Editor dbPreferencesEditor;
     private TextView definitePotholeCountTextView;
+    private boolean isViewingHighestPotholeTrip;
+
 
     private BroadcastReceiver displayHighestPotholeTripReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            //reading SharedPreferences to get highestPotholeTrip data
-            String highestPotholeTripJson = dbPreferences.getString("highestPotholeTrip", null);
-            if (highestPotholeTripJson != null) {
-                Trip highestPotholeTrip = new Gson().fromJson(highestPotholeTripJson, Trip.class);
-            }
+            isViewingHighestPotholeTrip = true;
         }
     };
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(displayHighestPotholeTripReceiver);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(displayHighestPotholeTripReceiver,
+                new IntentFilter("highestPotholeTrip"));
 
         tripStatsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         tripStatsEditor = tripStatsPreferences.edit();
@@ -164,42 +170,76 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-
-        ProcessFileTask task = new ProcessFileTask();
-        task.execute(tripID);
-        File file = new File(getApplicationContext().getFilesDir(), "analysis/" + tripID + ".csv");
-
-        // Log.d("maps", file.toString());
-
-        //File file = new File(getApplicationContext().getFilesDir(), "locs/"+trip.getTrip_id()+".txt");
-
-        try {
-            inputStream = new FileInputStream(file);
-        } catch (Exception e) {
-            System.out.println("Exception_raised " + e.toString());
-        }
-
-        InputStreamReader isr = new InputStreamReader(inputStream);
-        BufferedReader bufferedReader = new BufferedReader(isr);
-        String line;
-        try {
-            while ((line = bufferedReader.readLine()) != null) {
-                String tokens[] = line.split(",");
-                latLngs.add(new LatLng(Double.valueOf(tokens[0]), Double.valueOf(tokens[1])));
-            }
-        } catch (Exception e) {
-
-        }
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         mapFragment = (MapFragment) getFragmentManager()
                 .findFragmentById(R.id.trip_map);
 
         mapFragment.getMapAsync(this);
 
+        if (!isViewingHighestPotholeTrip) {
+            ProcessFileTask task = new ProcessFileTask();
+            task.execute(tripID);
+            File file = new File(getApplicationContext().getFilesDir(), "analysis/" + tripID + ".csv");
+
+            // Log.d("maps", file.toString());
+
+            //File file = new File(getApplicationContext().getFilesDir(), "locs/"+trip.getTrip_id()+".txt");
+
+            try {
+                inputStream = new FileInputStream(file);
+            } catch (Exception e) {
+                System.out.println("Exception_raised " + e.toString());
+            }
+
+            InputStreamReader isr = new InputStreamReader(inputStream);
+            BufferedReader bufferedReader = new BufferedReader(isr);
+            String line;
+            try {
+                while ((line = bufferedReader.readLine()) != null) {
+                    String tokens[] = line.split(",");
+                    latLngs.add(new LatLng(Double.valueOf(tokens[0]), Double.valueOf(tokens[1])));
+                }
+            } catch (Exception e) {
+
+            }
+        }
+
+        else {
+            //reading highestPotholeTrip data from SharedPreferences
+            String highestPotholeTripJson = dbPreferences.getString("highestPotholeTrip", null);
+            if (highestPotholeTripJson != null) {
+                highestPotholeTrip = new Gson().fromJson(highestPotholeTripJson, Trip.class);
+                drawInformationalUI(highestPotholeTrip);
+                //populating marker locations on map
+                Set<String> definitePotholeLocationSet = dbPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
+                Iterator iterator = definitePotholeLocationSet.iterator();
+                while (iterator.hasNext()) {
+                    LatLng definitePotholeLocation = new Gson().fromJson(iterator.next().toString(), LatLng.class);
+                    mMap.addMarker(new MarkerOptions().position(definitePotholeLocation).icon(BitmapDescriptorFactory.defaultMarker()));
+                }
+            }
+        }
         // setup action bar
         }
 
+    private void drawInformationalUI(Trip trip) {
+        duration.setText(trip.getDuration() + " minutes");
+        date.setText(trip.getStartTime().substring(0, 11));
+        trafficTime.setText(trip.getMinutesWasted() + " minutes");
+        accuracyLowTime.setText(trip.getMinutesAccuracyLow() + " minutes");
+        resultGrid.setVisibility(View.VISIBLE);
+        accuracySeekbar.setVisibility(View.VISIBLE);
+        submitButton.setVisibility(View.VISIBLE);
+        if (finishedTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG) {
+            distance.setText(" < 0.5 km");
+            probablePotholeCountTextView.setText("Sorry, you must travel at least 0.5 km");
+            definitePotholeCountTextView.setText("Sorry, you must travel at least 0.5 km");
+        } else {
+            distance.setText(roundTwoDecimals(trip.getDistanceInKM()) + " km");
+            probablePotholeCountTextView.setText(trip.getProbablePotholeCount() + "");
+            definitePotholeCountTextView.setText(trip.getDefinitePotholeCount() + "");
+        }
+    }
 
 
     public void populatePotholeMarkerPoints(){
@@ -430,7 +470,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             setProbablePotholeCount(probablePotholeCount);
             setDefinitePotholeCount(definitePotholeCount);
             spinner.setVisibility(View.GONE);
-            duration.setText(finishedTrip.getDuration() + " minutes");
+            drawInformationalUI(finishedTrip);
+            /*duration.setText(finishedTrip.getDuration() + " minutes");
             date.setText(finishedTrip.getStartTime().substring(0,11));
             trafficTime.setText(finishedTrip.getMinutesWasted() + " minutes");
             accuracyLowTime.setText(finishedTrip.getMinutesAccuracyLow() + " minutes");
@@ -444,7 +485,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }else{
                 distance.setText(roundTwoDecimals(finishedTrip.getDistanceInKM()) + " km");
                 probablePotholeCountTextView.setText(Integer.toString(probablePotholeCount));
-                definitePotholeCountTextView.setText(Integer.toString(definitePotholeCount));
+                definitePotholeCountTextView.setText(Integer.toString(definitePotholeCount));*/
                 populatePotholeMarkerPoints();
                 tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
                 if (!tripIdSet.contains(finishedTrip.getTrip_id())) {
@@ -468,7 +509,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
-}
+//}
 
 /**
 *

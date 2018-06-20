@@ -164,6 +164,7 @@ public class TriplistFragment extends Fragment {
         editor = sharedPreferences.edit();
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(uploadBroadcastReceiver, new IntentFilter(getString(R.string.set_uploaded_true)));
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(newTripReceiver, new IntentFilter(getString(R.string.new_trip_insert)));
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(definitePotholeLocationReceiver, new IntentFilter(getString(R.string.highest_pothole_latlngs_check)));
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         maxPotholeCount = dbPreferences.getInt("maxPotholeCount", 0);
     }
@@ -279,6 +280,7 @@ public class TriplistFragment extends Fragment {
         super.onDestroy();
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(uploadBroadcastReceiver);
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(newTripReceiver);
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(definitePotholeLocationReceiver);
     }
 
 
