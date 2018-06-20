@@ -165,7 +165,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mapFragment.getMapAsync(this);
 
-        isViewingHighestPotholeTrip = tripStatsPreferences.getBoolean(getString(R.string.is_viewing_highest_pothole_trip), false);
+        isViewingHighestPotholeTrip = getIntent().getBooleanExtra(getString(R.string.is_viewing_highest_pothole_trip), false);
 
         if (!isViewingHighestPotholeTrip) {
             ProcessFileTask task = new ProcessFileTask();

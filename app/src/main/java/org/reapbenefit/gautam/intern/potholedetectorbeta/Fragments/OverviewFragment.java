@@ -218,8 +218,7 @@ public class OverviewFragment extends Fragment implements
             mostPotholesGrid.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    tripStatsPreferences.edit().putBoolean(getString(R.string.is_viewing_highest_pothole_trip),  true).apply();
-                    File dataFile = new File(getContext().getApplicationContext().getFilesDir(), "logs/" + highestPotholeTrip.getTrip_id() + ".csv");
+                    /*File dataFile = new File(getContext().getApplicationContext().getFilesDir(), "logs/" + highestPotholeTrip.getTrip_id() + ".csv");
                     File file = new File(getContext().getApplicationContext().getFilesDir(), "analysis/" + highestPotholeTrip.getTrip_id() + ".csv");
                     if (dataFile.exists()) {
                         if (file.exists()) { // check if file of same name is available in the analytics folder
@@ -230,7 +229,12 @@ public class OverviewFragment extends Fragment implements
                         }
                     } else {
                         Toast.makeText(getContext(), "Sorry, file has been deleted", Toast.LENGTH_SHORT).show();
-                    }
+                    }*/
+                    Intent i = new Intent(getContext(), MapsActivity.class);
+                    i.putExtra("trip", highestPotholeTrip);
+                    i.putExtra(getString(R.string.is_viewing_highest_pothole_trip), true);
+                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    getContext().startActivity(i);
                 }
             });
         }

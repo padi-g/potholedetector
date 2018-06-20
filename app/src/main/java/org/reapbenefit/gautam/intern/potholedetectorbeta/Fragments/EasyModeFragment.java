@@ -338,6 +338,7 @@ public class EasyModeFragment extends Fragment {
 
     private void openMap(){
         Intent i = new Intent(this.getActivity(), MapsActivity.class);
+        i.putExtra(getString(R.string.is_viewing_highest_pothole_trip), false);
         i.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationHashMap);
         startActivity(i);
     }
