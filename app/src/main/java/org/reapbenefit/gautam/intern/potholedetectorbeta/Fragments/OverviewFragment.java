@@ -17,6 +17,7 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -217,6 +218,8 @@ public class OverviewFragment extends Fragment implements
             mostPotholesGrid.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    Intent getHighestPotholeTripIntent = new Intent("highestPotholeTrip");
+                    LocalBroadcastManager.getInstance(OverviewFragment.this.getContext()).sendBroadcast(getHighestPotholeTripIntent);
                     File dataFile = new File(getContext().getApplicationContext().getFilesDir(), "logs/" + highestPotholeTrip.getTrip_id() + ".csv");
                     File file = new File(getContext().getApplicationContext().getFilesDir(), "analysis/" + highestPotholeTrip.getTrip_id() + ".csv");
                     if (dataFile.exists()) {

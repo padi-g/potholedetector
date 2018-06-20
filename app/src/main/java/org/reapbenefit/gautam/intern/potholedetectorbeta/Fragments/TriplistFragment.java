@@ -75,6 +75,22 @@ public class TriplistFragment extends Fragment {
     private String TAG = getClass().getSimpleName();
     private int maxPotholeCount;
 
+    private BroadcastReceiver definitePotholeLocationReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Set<String> definitePotholeSet = new HashSet<>();
+            definitePotholeSet = intent.getParcelableExtra(getString(R.string.definite_pothole_location_set));
+            if (definitePotholeSet != null && !definitePotholeSet.isEmpty()) {
+                if (definitePotholeSet.size() >= dbPreferences.getStringSet(getString(R.string.definite_pothole_location_set),
+                        new HashSet<String>()).size()) {
+                    //definitePotholeSet represents location set of highestPotholeTrip
+                    dbPreferences.edit().putStringSet(getString(R.string.definite_pothole_location_set),
+                            definitePotholeSet).apply();
+                }
+            }
+        }
+    };
+
     private BroadcastReceiver newTripReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {

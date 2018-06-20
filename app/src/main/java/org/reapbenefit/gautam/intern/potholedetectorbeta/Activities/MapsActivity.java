@@ -1,10 +1,13 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -89,6 +92,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private SharedPreferences dbPreferences;
     private SharedPreferences.Editor dbPreferencesEditor;
     private TextView definitePotholeCountTextView;
+
+    private BroadcastReceiver displayHighestPotholeTripReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //reading SharedPreferences to get highestPotholeTrip data
+            String highestPotholeTripJson = dbPreferences.getString("highestPotholeTrip", null);
+            if (highestPotholeTripJson != null) {
+                Trip highestPotholeTrip = new Gson().fromJson(highestPotholeTripJson, Trip.class);
+            }
+        }
+    };
 
     @Override
     protected void onDestroy() {
@@ -244,10 +258,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 for (LatLng l: definitePotholeLatLngs) {
                     mMap.addMarker(new MarkerOptions().position(l).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
                     definitePotholeStringSet.add(new Gson().toJson(l));
+
                 }
                 tripStatsEditor.putStringSet(getString(R.string.probable_pothole_location_set), probablePotholeStringSet);
                 tripStatsEditor.putStringSet(getString(R.string.definite_pothole_location_set), definitePotholeStringSet);
                 tripStatsEditor.commit();
+                //sending broadcast to TriplistFragment to confirm if location set belongs to highestPotholeTrip
+                Intent highestPotholeCheckIntent = new Intent(getString(R.string.highest_pothole_latlngs_check));
+                highestPotholeCheckIntent.putExtra(getString(R.string.definite_pothole_location_set), (Parcelable) definitePotholeStringSet);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(highestPotholeCheckIntent);
             }
         }else {
             textview.setText("No locations found");
@@ -365,7 +384,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         populateDataPoints(line, bufferedReader);
                     }
                     else {
-                        Toast.makeText(getApplicationContext(), "Device speed could not be measured. Inaccurate results are possible.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Device speed could not be measured.", Toast.LENGTH_SHORT).show();
                         populateDataPoints(line, bufferedReader);
                     }
                 }

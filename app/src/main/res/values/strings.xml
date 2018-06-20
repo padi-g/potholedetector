@@ -81,4 +81,6 @@
     <string name="highest_pothole_trip_broadcast">HIGHEST_POTHOLE_TRIP</string>
     <string name="trips_not_in_RDS">tripsNotInRDS</string>
     <string name="speed_with_location_hashmap">SPEED_WITH_LOCATION_HASHMAP</string>
+
+    <string name="highest_pothole_latlngs_check">HIGHEST_POTHOLE_LATLONG_CHECK</string>
 </resources>
