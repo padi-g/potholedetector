@@ -2,8 +2,10 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
 import android.annotation.SuppressLint;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -53,6 +55,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
@@ -114,6 +117,15 @@ public class OverviewFragment extends Fragment implements
     private TextView sizeTextView;
     private GridLayout mostPotholesGrid;
     private FloatingActionButton floatingButton;
+    private LatLng[] uniquePotholeLatLng;
+
+    private BroadcastReceiver uniquePotholesLatLngReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d("OverviewFragment", "Broadcast received");
+            uniquePotholeLatLng = (LatLng[]) intent.getParcelableArrayExtra(getString(R.string.global_unique_pothole_locations));
+        }
+    };
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -131,6 +143,10 @@ public class OverviewFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent fetchGlobalPotholeIntent = new Intent(getContext(), APIService.class);
+        fetchGlobalPotholeIntent.putExtra("request", "GET");
+        fetchGlobalPotholeIntent.putExtra("table", "UniquePotholes");
+        getContext().startService(fetchGlobalPotholeIntent);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getContext());
         tripStatsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         String highestPotholeTripJson = tripStatsPreferences.getString("highestPotholeTrip", null);
@@ -159,7 +175,7 @@ public class OverviewFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View fragmentView = inflater.inflate(R.layout.fragment_overview, container, false);
-        
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(uniquePotholesLatLngReceiver, new IntentFilter(getString(R.string.global_unique_pothole_locations)));
         starButton = fragmentView.findViewById(R.id.personal_scores);
         groupButton = fragmentView.findViewById(R.id.group_scores);
         if (starButton.getVisibility() == View.VISIBLE)
@@ -179,6 +195,8 @@ public class OverviewFragment extends Fragment implements
                 groupButton.setVisibility(View.VISIBLE);
                 starButton.setVisibility(View.INVISIBLE);
                 floatingButton = groupButton;
+                googleMap.clear();
+                //TODO: WRITE METHOD TO INSERT PERSONAL MARKERS
             }
         });
 
@@ -188,6 +206,10 @@ public class OverviewFragment extends Fragment implements
                 groupButton.setVisibility(View.INVISIBLE);
                 starButton.setVisibility(View.VISIBLE);
                 floatingButton = starButton;
+                if (googleMap != null) {
+                    googleMap.clear();
+                    populateGlobalMap();
+                }
             }
         });
 
@@ -278,6 +300,15 @@ public class OverviewFragment extends Fragment implements
         drawMarkers();
         // Log.d(getClass().getSimpleName(), definiteLatLngList.toString());
         return fragmentView;
+    }
+
+    private void populateGlobalMap() {
+        if (googleMap != null && uniquePotholeLatLng != null) {
+            for (int i = 0; i < uniquePotholeLatLng.length; ++i) {
+                googleMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker())
+                .position(uniquePotholeLatLng[i]));
+            }
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -391,6 +422,12 @@ public class OverviewFragment extends Fragment implements
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(uniquePotholesLatLngReceiver);
     }
 
     @Override

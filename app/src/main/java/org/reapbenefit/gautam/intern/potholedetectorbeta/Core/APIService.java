@@ -11,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
@@ -18,6 +19,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.HTTPHandler;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripDataLambda;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.UniquePotholeDataLambda;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.UserData;
 
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ public class APIService extends IntentService {
     private String requestMethod;
     private final String USER_TABLE_URL = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/users/";
     private final String TRIPS_TABLE_URL = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/trips/";
+    private final String POTHOLE_TABLE_URL = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/potholes/";
     private String table;
     private String userId;
     private final String TAG = getClass().getSimpleName();
@@ -135,6 +138,21 @@ public class APIService extends IntentService {
                 tripsNotInRDS.add(new Gson().toJson(intent.getParcelableExtra("newTrip")));
                 dbPreferences.edit().putStringSet(getString(R.string.trips_not_in_RDS), tripsNotInRDS).commit();
             }
+        }
+        else if (requestMethod.equalsIgnoreCase("GET") && table.equalsIgnoreCase("UniquePotholes")) {
+            String uniquePotholesJson = HTTPHandler.getAllPotholes();
+            Log.d(TAG, uniquePotholesJson + "");
+            UniquePotholeDataLambda[] uniquePotholeDataLambdas = new Gson().fromJson(uniquePotholesJson, UniquePotholeDataLambda[].class);
+            LatLng[] potholeLatLngs = new LatLng[uniquePotholeDataLambdas.length];
+            if (uniquePotholeDataLambdas != null) {
+                for (int i = 0; i < uniquePotholeDataLambdas.length; ++i) {
+                    potholeLatLngs[i] = new LatLng(uniquePotholeDataLambdas[i].getLat(),
+                            uniquePotholeDataLambdas[i].getLng());
+                }
+            }
+            Intent potholeLatLngsIntent = new Intent(getString(R.string.global_unique_pothole_locations));
+            potholeLatLngsIntent.putExtra(getString(R.string.global_unique_pothole_locations), potholeLatLngs);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(potholeLatLngsIntent);
         }
     }
 

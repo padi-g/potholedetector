@@ -258,7 +258,7 @@ public class HTTPHandler {
 
     public static String getAllPotholes() {
         try {
-            URL urlObject = new URL(tripsDataUrl);
+            URL urlObject = new URL(potholesDataUrl);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
             httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
             httpURLConnection.setRequestMethod("GET");
@@ -273,7 +273,7 @@ public class HTTPHandler {
                     response.append(inputLine);
                 }
                 in.close();
-                // Log.d(TAG, response.toString());
+                Log.d(TAG, response.toString());
                 return response.toString();
             } else
                 System.out.println("POST request failed " + responseCode);
