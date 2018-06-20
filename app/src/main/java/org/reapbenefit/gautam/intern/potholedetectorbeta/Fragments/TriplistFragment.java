@@ -79,12 +79,15 @@ public class TriplistFragment extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             Set<String> definitePotholeSet = new HashSet<>();
-            definitePotholeSet = intent.getParcelableExtra(getString(R.string.definite_pothole_location_set));
-            if (definitePotholeSet != null && !definitePotholeSet.isEmpty()) {
-                if (definitePotholeSet.size() >= dbPreferences.getStringSet(getString(R.string.definite_pothole_location_set),
-                        new HashSet<String>()).size()) {
+            Set<String> probablePotholeSet = new HashSet<>();
+            definitePotholeSet = intent.getParcelableExtra(getString(R.string.highest_pothole_trip_definite_potholes));
+            probablePotholeSet = intent.getParcelableExtra(getString(R.string.highest_pothole_trip_probable_potholes));
+            if (((definitePotholeSet != null && !definitePotholeSet.isEmpty())) || (probablePotholeSet != null &&
+                    !probablePotholeSet.isEmpty())) {
+                if (definitePotholeSet.size() + probablePotholeSet.size() >= dbPreferences.getStringSet(getString(R.string.definite_pothole_location_set),
+                        new HashSet<String>()).size() + dbPreferences.getStringSet(getString(R.string.probable_pothole_location_set), new HashSet<String>()).size()) {
                     //definitePotholeSet represents location set of highestPotholeTrip
-                    dbPreferences.edit().putStringSet(getString(R.string.definite_pothole_location_set),
+                    dbPreferences.edit().putStringSet(getString(R.string.highest_pothole_trip_definite_potholes),
                             definitePotholeSet).apply();
                 }
             }

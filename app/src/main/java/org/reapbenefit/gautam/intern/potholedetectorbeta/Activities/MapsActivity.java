@@ -270,7 +270,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
         if(!latLngs.isEmpty()) {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngs.get(0), 15));
 
@@ -280,27 +279,37 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 polyline.add(l);
             }
             mMap.addPolyline(polyline);
-            Set<String> probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.probable_pothole_location_set), new HashSet<String>());
-            Set<String> definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
+            Set<String> probablePotholeStringSet = new HashSet<>();
+            Set<String> definitePotholeStringSet = new HashSet<>();
+            if (!isViewingHighestPotholeTrip) {
+                probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.probable_pothole_location_set), new HashSet<String>());
+                definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
+            }
+            else {
+                //changing sets to read values of highest pothole trips
+                probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.highest_pothole_trip_probable_potholes), new HashSet<String>());
+                definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.highest_pothole_trip_definite_potholes), new HashSet<String>());
+            }
             if (!probablePotholeLatLngs.isEmpty()) {
-
                 for (LatLng l : probablePotholeLatLngs) {
                     probablePotholeStringSet.add(new Gson().toJson(l));
                 }
+            }
+            if (!definitePotholeLatLngs.isEmpty()) {
                 for (LatLng l: definitePotholeLatLngs) {
                     mMap.addMarker(new MarkerOptions().position(l).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
                     definitePotholeStringSet.add(new Gson().toJson(l));
-
                 }
                 tripStatsEditor.putStringSet(getString(R.string.probable_pothole_location_set), probablePotholeStringSet);
                 tripStatsEditor.putStringSet(getString(R.string.definite_pothole_location_set), definitePotholeStringSet);
                 tripStatsEditor.commit();
                 //sending broadcast to TriplistFragment to confirm if location set belongs to highestPotholeTrip
                 Intent highestPotholeCheckIntent = new Intent(getString(R.string.highest_pothole_latlngs_check));
-                highestPotholeCheckIntent.putExtra(getString(R.string.definite_pothole_location_set), (Parcelable) definitePotholeStringSet);
+                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_definite_potholes), (Parcelable) definitePotholeStringSet);
+                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_probable_potholes), (Parcelable) probablePotholeStringSet);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(highestPotholeCheckIntent);
             }
-        }else {
+        }else if (!isViewingHighestPotholeTrip){
             textview.setText("No locations found");
         }
     }
@@ -312,12 +321,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void setProbablePotholeCount(int a){
         ApplicationClass.getInstance().getTrip().setProbablePotholeCount(a);
+        finishedTrip.setDefinitePotholeCount(a);
         //data required by TLF for updating TripViewModel instance
         dbPreferencesEditor.putInt("probablePotholeCount", a);
     }
 
     private void setDefinitePotholeCount(int a) {
         ApplicationClass.getInstance().getTrip().setDefinitePotholeCount(a);
+        finishedTrip.setProbablePotholeCount(a);
         dbPreferencesEditor.putInt("definitePotholeCount", a);
         dbPreferencesEditor.commit();
     }
@@ -462,45 +473,29 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             setProbablePotholeCount(probablePotholeCount);
             setDefinitePotholeCount(definitePotholeCount);
             drawInformationalUI(finishedTrip);
-            /*duration.setText(finishedTrip.getDuration() + " minutes");
-            date.setText(finishedTrip.getStartTime().substring(0,11));
-            trafficTime.setText(finishedTrip.getMinutesWasted() + " minutes");
-            accuracyLowTime.setText(finishedTrip.getMinutesAccuracyLow() + " minutes");
-            resultGrid.setVisibility(View.VISIBLE);
-            accuracySeekbar.setVisibility(View.VISIBLE);
-            submitButton.setVisibility(View.VISIBLE);
-            if(finishedTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG){
-                distance.setText(" < 0.5 km");
-                probablePotholeCountTextView.setText("Sorry, you must travel at least 0.5 km");
-                definitePotholeCountTextView.setText("Sorry, you must travel at least 0.5 km");
-            }else{
-                distance.setText(roundTwoDecimals(finishedTrip.getDistanceInKM()) + " km");
-                probablePotholeCountTextView.setText(Integer.toString(probablePotholeCount));
-                definitePotholeCountTextView.setText(Integer.toString(definitePotholeCount));*/
-                populatePotholeMarkerPoints();
-                tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
-                if (!tripIdSet.contains(finishedTrip.getTrip_id())) {
-                    // Log.d("MapsActivity", tripID + "");
-                    int validTrips = tripStatsPreferences.getInt("validTrips", 0);
-                    tripStatsEditor.putInt("validTrips", validTrips + 1);
-                    int sharedPrefsProbablePotholes = tripStatsPreferences.getInt("probablePotholes", 0);
-                    tripStatsEditor.putInt("probablePotholes", sharedPrefsProbablePotholes + probablePotholeCount);
-                    int sharedPrefsDefinitePotholes = tripStatsPreferences.getInt("definitePotholes", 0);
-                    tripStatsEditor.putInt("definitePotholes", sharedPrefsDefinitePotholes + definitePotholeCount);
-                }
-                tripIdSet.add(finishedTrip.getTrip_id());
-                tripStatsEditor.putStringSet("tripIdSet", tripIdSet);
-                tripStatsEditor.commit();
-                //only registering trip in database if it is useful to us
-                Intent newTripIntent = new Intent(getString(R.string.new_trip_insert));
-                newTripIntent.putExtra("trip_object", finishedTrip);
-                LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(MapsActivity.this);
-                localBroadcastManager.sendBroadcast(newTripIntent);
-                mapFragment.getMapAsync(MapsActivity.this);
+            populatePotholeMarkerPoints();
+            tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
+            if (!tripIdSet.contains(finishedTrip.getTrip_id())) {
+                // Log.d("MapsActivity", tripID + "");
+                int validTrips = tripStatsPreferences.getInt("validTrips", 0);
+                tripStatsEditor.putInt("validTrips", validTrips + 1);
+                int sharedPrefsProbablePotholes = tripStatsPreferences.getInt("probablePotholes", 0);
+                tripStatsEditor.putInt("probablePotholes", sharedPrefsProbablePotholes + probablePotholeCount);
+                int sharedPrefsDefinitePotholes = tripStatsPreferences.getInt("definitePotholes", 0);
+                tripStatsEditor.putInt("definitePotholes", sharedPrefsDefinitePotholes + definitePotholeCount);
             }
+            tripIdSet.add(finishedTrip.getTrip_id());
+            tripStatsEditor.putStringSet("tripIdSet", tripIdSet);
+            tripStatsEditor.commit();
+            //only registering trip in database if it is useful to us
+            Intent newTripIntent = new Intent(getString(R.string.new_trip_insert));
+            newTripIntent.putExtra("trip_object", finishedTrip);
+            LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(MapsActivity.this);
+            localBroadcastManager.sendBroadcast(newTripIntent);
+            mapFragment.getMapAsync(MapsActivity.this);
         }
     }
-//}
+}
 
 /**
 *

@@ -84,4 +84,6 @@
 
     <string name="highest_pothole_latlngs_check">HIGHEST_POTHOLE_LATLONG_CHECK</string>
     <string name="is_viewing_highest_pothole_trip">IS_VIEWING_HIGHEST_POTHOLE_TRIP</string>
+    <string name="highest_pothole_trip_definite_potholes">HIGHEST_POTHOLE_TRIP_DEFINITE_POTHOLES</string>
+    <string name="highest_pothole_trip_probable_potholes">HIGHEST_POTHOLE_TRIP_PROBABLE_POTHOLES</string>
 </resources>

@@ -153,7 +153,7 @@
         <activity
             android:name=".SplashActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme"></activity>
+            android:theme="@style/AppTheme" />
         <activity
             android:name=".Activities.PlaceholderActivity"
             android:theme="@style/SplashTheme">
@@ -166,7 +166,7 @@
 
         <service
             android:name=".Core.APIService"
-            android:exported="false"></service>
+            android:exported="false" />
     </application>
 
 </manifest>
