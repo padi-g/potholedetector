@@ -83,4 +83,5 @@
     <string name="speed_with_location_hashmap">SPEED_WITH_LOCATION_HASHMAP</string>
 
     <string name="highest_pothole_latlngs_check">HIGHEST_POTHOLE_LATLONG_CHECK</string>
+    <string name="is_viewing_highest_pothole_trip">IS_VIEWING_HIGHEST_POTHOLE_TRIP</string>
 </resources>

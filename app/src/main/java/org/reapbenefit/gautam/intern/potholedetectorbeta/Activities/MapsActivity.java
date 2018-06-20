@@ -100,26 +100,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean isViewingHighestPotholeTrip;
 
 
-    private BroadcastReceiver displayHighestPotholeTripReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            isViewingHighestPotholeTrip = true;
-        }
-    };
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(displayHighestPotholeTripReceiver);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(displayHighestPotholeTripReceiver,
-                new IntentFilter("highestPotholeTrip"));
 
         tripStatsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         tripStatsEditor = tripStatsPreferences.edit();
@@ -176,6 +165,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mapFragment.getMapAsync(this);
 
+        isViewingHighestPotholeTrip = tripStatsPreferences.getBoolean(getString(R.string.is_viewing_highest_pothole_trip), false);
+
         if (!isViewingHighestPotholeTrip) {
             ProcessFileTask task = new ProcessFileTask();
             task.execute(tripID);
@@ -223,6 +214,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
     private void drawInformationalUI(Trip trip) {
+        spinner.setVisibility(View.GONE);
         duration.setText(trip.getDuration() + " minutes");
         date.setText(trip.getStartTime().substring(0, 11));
         trafficTime.setText(trip.getMinutesWasted() + " minutes");
@@ -469,7 +461,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Log.d("definiteCount", definitePotholeCount + "");
             setProbablePotholeCount(probablePotholeCount);
             setDefinitePotholeCount(definitePotholeCount);
-            spinner.setVisibility(View.GONE);
             drawInformationalUI(finishedTrip);
             /*duration.setText(finishedTrip.getDuration() + " minutes");
             date.setText(finishedTrip.getStartTime().substring(0,11));
