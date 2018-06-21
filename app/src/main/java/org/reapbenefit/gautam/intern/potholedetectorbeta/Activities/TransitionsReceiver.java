@@ -44,6 +44,7 @@ public class TransitionsReceiver extends IntentService {
     private long timer;
     private long minutesWasted;
     private final long NOTIFICATION_TIME_THRESHOLD = 60 * 1000 * 60;
+
     public TransitionsReceiver() {
         super("TransitionsReceiver");
     }
@@ -55,12 +56,8 @@ public class TransitionsReceiver extends IntentService {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         editor = sharedPreferences.edit();
         minutesWasted = sharedPreferences.getLong("minutesWasted", 0);
-        long startTime = Calendar.getInstance().getTime().getTime();
-        timer = sharedPreferences.getLong("timer", 0);
-        if (timer == 0) {
-            timer = Calendar.getInstance().getTimeInMillis();
-            editor.putLong("timer", timer).commit();
-        }
+        timer = sharedPreferences.getLong("timer", Calendar.getInstance().getTimeInMillis());
+        editor.putLong("timer", timer).commit();
         createNotificationChannel();
         mainIntent = new Intent(this, MainActivity.class);
         mainIntent.putExtra("inCar", true);
@@ -79,26 +76,32 @@ public class TransitionsReceiver extends IntentService {
         long currentTime = Calendar.getInstance().getTimeInMillis();
         timer = currentTime - timer;
         // Log.d("timer", timer + "");
-       //check if intent contains data about an activity
+        //check if intent contains data about an activity
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             DetectedActivity detectedActivity = result.getMostProbableActivity();
             Log.d(getClass().getSimpleName(), detectedActivity.toString());
             //committing current activity to shared prefs
-            if (detectedActivity != null)
-                editor.putString("currentActivity", new Gson().toJson(detectedActivity).toString());
-            editor.commit();
+            if (detectedActivity != null) {
+                editor.putString("currentActivity", new Gson().toJson(detectedActivity).toString()).commit();
+            }
             if (detectedActivity.toString().contains("VEHICLE") && !ApplicationClass.getInstance().isTripInProgress()
                     && timer >= NOTIFICATION_TIME_THRESHOLD && detectedActivity.getConfidence() >= 30) {
                 //sending notification to user
                 notificationManagerCompat.notify(0, builder.build());
                 editor.remove("timer").commit();
-            }
-            else {
-                if (detectedActivity.toString().contains("STILL") && ApplicationClass.getInstance().isTripInProgress()) {
-                    minutesWasted += Calendar.getInstance().getTime().getTime() - startTime;
+            } else {
+                boolean tripInProgress = ApplicationClass.getInstance().isTripInProgress();
+                if (detectedActivity.toString().contains("STILL") && tripInProgress) {
+                    long startTrafficTime = sharedPreferences
+                            .getLong(getString(R.string.traffic_time_start), Calendar.getInstance().getTimeInMillis());
+                    minutesWasted += Calendar.getInstance().getTimeInMillis() - startTrafficTime;
+                    startTrafficTime = Calendar.getInstance().getTimeInMillis();
+                    editor.putLong(getString(R.string.traffic_time_start), startTrafficTime);
                     editor.putLong("minutesWasted", minutesWasted);
                     editor.commit();
+                } else {
+                    editor.remove(getString(R.string.traffic_time_start)).commit();
                 }
                 if (notificationManagerCompat != null) {
                     notificationManagerCompat.cancel(0);

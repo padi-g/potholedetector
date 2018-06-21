@@ -107,10 +107,14 @@ public class TriplistFragment extends Fragment {
                 maxPotholeCount = dbPreferences.getInt("maxPotholeCount", 0);
                 if (newTrip.getProbablePotholeCount() + newTrip.getDefinitePotholeCount() >= maxPotholeCount) {
                     // Log.d(TAG, "inside if probablePotholeCount");
-                    highestPotholeTrip = newTrip;
-                    dbPreferences.edit().putString("highestPotholeTrip", new Gson().toJson(highestPotholeTrip)).apply();
-                    maxPotholeCount = newTrip.getProbablePotholeCount() + newTrip.getDefinitePotholeCount();
-                    dbPreferences.edit().putInt("maxPotholeCount", maxPotholeCount).apply();
+                    try {
+                        highestPotholeTrip = newTrip;
+                        dbPreferences.edit().putString("highestPotholeTrip", new Gson().toJson(highestPotholeTrip)).apply();
+                        maxPotholeCount = newTrip.getProbablePotholeCount() + newTrip.getDefinitePotholeCount();
+                        dbPreferences.edit().putInt("maxPotholeCount", maxPotholeCount).apply();
+                    } catch (IllegalArgumentException illegalArgumentException) {
+                        //catches a crash in case user has zero potholes in HPT and creates a NaN trip
+                    }
                 }
                 createOfflineTripsListView();
             }

@@ -535,10 +535,9 @@ public class LoggerService extends Service implements SensorEventListener {
             minutesWasted = TimeUnit.MILLISECONDS.toMinutes(minutesWasted);
             newtrip.setMinutesWasted(minutesWasted);
         }
-        else
-            // Log.i(TAG, "minutesWasted was -1");
 
-        dbPreferences.edit().putLong("minutesWasted", 0).commit();
+        dbPreferences.edit().remove("minutesWasted").commit();
+        dbPreferences.edit().remove(getString(R.string.traffic_time_start)).commit();
         minutesAccuracyLow = Math.round((minutesWasted/1000.0)/60.0);
 
         logAnalytics("stopped_logging_sensor_data");
