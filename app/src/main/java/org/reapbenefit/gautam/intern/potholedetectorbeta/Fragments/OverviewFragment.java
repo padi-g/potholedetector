@@ -48,11 +48,13 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
+import com.google.maps.android.clustering.ClusterManager;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.DefinitePotholeCluster;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MapStateManager;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
@@ -113,6 +115,7 @@ public class OverviewFragment extends Fragment implements
     private FloatingActionButton floatingButton;
     private LatLng[] uniquePotholeLatLng;
     private final String TAG = getClass().getSimpleName();
+    private ClusterManager<DefinitePotholeCluster> definitePotholeClusterManager;
 
     private BroadcastReceiver uniquePotholesLatLngReceiver = new BroadcastReceiver() {
         @Override
@@ -239,6 +242,7 @@ public class OverviewFragment extends Fragment implements
         createLocationCallback();
         createLocationRequest();
         buildLocationSettingsRequest();
+
         mapView = fragmentView.findViewById(R.id.map_view);
         mapView.onCreate(savedInstanceState);
         if (mapView != null)
@@ -297,6 +301,8 @@ public class OverviewFragment extends Fragment implements
             }
         }
         drawMarkers();
+        if (definitePotholeClusterManager != null)
+            definitePotholeClusterManager.cluster();
         // Log.d(getClass().getSimpleName(), definiteLatLngList.toString());
         return fragmentView;
     }
@@ -313,8 +319,7 @@ public class OverviewFragment extends Fragment implements
     private void populateGlobalMap() {
         if (googleMap != null && uniquePotholeLatLng != null) {
             for (int i = 0; i < uniquePotholeLatLng.length; ++i) {
-                googleMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.defaultMarker())
-                .position(uniquePotholeLatLng[i]));
+                definitePotholeClusterManager.addItem(new DefinitePotholeCluster(uniquePotholeLatLng[i]));
             }
         }
     }
@@ -331,7 +336,7 @@ public class OverviewFragment extends Fragment implements
     private void populatePersonalMap() {
         if (googleMap != null) {
             for (LatLng potholeLocation : definiteLatLngList) {
-                googleMap.addMarker(new MarkerOptions().position(potholeLocation).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+                definitePotholeClusterManager.addItem(new DefinitePotholeCluster(potholeLocation));
             }
         }
     }
@@ -381,7 +386,12 @@ public class OverviewFragment extends Fragment implements
         googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         googleMap.setMyLocationEnabled(true);
         googleMap.getUiSettings().setMyLocationButtonEnabled(true);
+
+        //setting up cluster manager
+        definitePotholeClusterManager = new ClusterManager<>(getContext(), googleMap);
+        googleMap.setOnCameraIdleListener(definitePotholeClusterManager);
         drawMarkers();
+        definitePotholeClusterManager.cluster();
         googleApiClient = new GoogleApiClient.Builder(getActivity()).addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
@@ -401,6 +411,8 @@ public class OverviewFragment extends Fragment implements
             mapView.onResume();
         }
         drawMarkers();
+        if (definitePotholeClusterManager != null)
+            definitePotholeClusterManager.cluster();
         startLocationUpdates();
     }
 

@@ -234,6 +234,7 @@
     <orderEntry type="library" name="Gradle: com.google.firebase:firebase-config-12.0.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: com.android.support.test:exposed-instrumentation-api-publish-0.5" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-drive-license-12.0.1" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.maps.android:android-maps-utils-0.5" level="project" />
     <orderEntry type="library" name="Gradle: com.google.firebase:firebase-database-12.0.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-auth-base-license-12.0.1" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:design-26.1.0" level="project" />
