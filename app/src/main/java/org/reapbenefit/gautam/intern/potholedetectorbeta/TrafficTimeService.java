@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import com.google.android.gms.location.DetectedActivity;
 import com.google.gson.Gson;
@@ -39,10 +40,10 @@ public class TrafficTimeService extends IntentService {
         if (currentActivity != null) {
             DetectedActivity activity = new Gson().fromJson(currentActivity, DetectedActivity.class);
             // Log.i(TAG, currentActivity.toString());
-            if (currentActivity.toString().contains("STILL") && activity.getConfidence() >= 60) {
+            if (currentActivity.toString().contains("STILL") && activity.getConfidence() >= 30) {
                 newTime = Calendar.getInstance().getTime();
                 minutesWasted += newTime.getTime() - startTime.getTime();
-                // Log.i("minutesWasted", minutesWasted + "");
+                Log.i("minutesWasted", minutesWasted + "");
                 startTime = newTime;
                 editor.putLong("minutesWasted", minutesWasted);
                 editor.commit();

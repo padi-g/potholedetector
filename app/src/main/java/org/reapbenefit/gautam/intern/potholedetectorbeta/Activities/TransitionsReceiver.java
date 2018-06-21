@@ -42,6 +42,7 @@ public class TransitionsReceiver extends IntentService {
     private NotificationCompat.Builder builder;
     private NotificationManagerCompat notificationManagerCompat;
     private long timer;
+    private long minutesWasted;
     private final long NOTIFICATION_TIME_THRESHOLD = 60 * 1000 * 60;
     public TransitionsReceiver() {
         super("TransitionsReceiver");
@@ -53,6 +54,8 @@ public class TransitionsReceiver extends IntentService {
         //setting up notification system
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         editor = sharedPreferences.edit();
+        minutesWasted = sharedPreferences.getLong("minutesWasted", 0);
+        long startTime = Calendar.getInstance().getTime().getTime();
         timer = sharedPreferences.getLong("timer", 0);
         if (timer == 0) {
             timer = Calendar.getInstance().getTimeInMillis();
@@ -80,7 +83,7 @@ public class TransitionsReceiver extends IntentService {
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             DetectedActivity detectedActivity = result.getMostProbableActivity();
-            // Log.i(getClass().getSimpleName(), detectedActivity.toString());
+            Log.d(getClass().getSimpleName(), detectedActivity.toString());
             //committing current activity to shared prefs
             if (detectedActivity != null)
                 editor.putString("currentActivity", new Gson().toJson(detectedActivity).toString());
@@ -92,6 +95,11 @@ public class TransitionsReceiver extends IntentService {
                 editor.remove("timer").commit();
             }
             else {
+                if (detectedActivity.toString().contains("STILL") && ApplicationClass.getInstance().isTripInProgress()) {
+                    minutesWasted += Calendar.getInstance().getTime().getTime() - startTime;
+                    editor.putLong("minutesWasted", minutesWasted);
+                    editor.commit();
+                }
                 if (notificationManagerCompat != null) {
                     notificationManagerCompat.cancel(0);
                 }

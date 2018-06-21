@@ -27,6 +27,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -107,7 +108,7 @@ public class LoggerService extends Service implements SensorEventListener {
     private Handler trafficHandler;
     private BroadcastReceiver trafficReceiver;
     private long minutesWasted = -1;
-    private SharedPreferences transitionPrefs;
+    private SharedPreferences dbPreferences;
     private Date newTime;
     private Date startTrafficTime;
     private String currentActivity;
@@ -211,6 +212,8 @@ public class LoggerService extends Service implements SensorEventListener {
                 .setContentIntent(pendingIntent).build();
 
         startForeground(1337, notification);
+
+        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
 
     }
 
@@ -325,7 +328,7 @@ public class LoggerService extends Service implements SensorEventListener {
     public void onSensorChanged(SensorEvent sensorEvent) {
 
         //timing traffic latency
-        calcTrafficTime();
+        //calcTrafficTime();
 
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
             // Log.w("Prox", String.valueOf(sensorEvent.values[0]));
@@ -379,19 +382,21 @@ public class LoggerService extends Service implements SensorEventListener {
         startAccuracyTime = accuracyLostTime;
     }
 
-    private void calcTrafficTime() {
+    /*private void calcTrafficTime() {
         //tracking time wasted in traffic
-        transitionPrefs = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        transitionPrefs = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());transitionPrefs = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         currentActivity = transitionPrefs.getString("currentActivity", null);
+        Log.d(TAG, currentActivity.toString());
         if (currentActivity != null) {
             if (currentActivity.toString().contains("STILL")) {
                 newTime = Calendar.getInstance().getTime();
                 minutesWasted += newTime.getTime() - startTrafficTime.getTime();
                 startTrafficTime = newTime;
+                Log.d(TAG, minutesWasted + "");
             }
         }
 
-    }
+    }*/
 
     protected void writeToFile(float[] acc, float[] gyr, String LocationData) {
         String data;
@@ -524,21 +529,22 @@ public class LoggerService extends Service implements SensorEventListener {
         app.setTrip(newtrip);
         // Log.i(TAG, "logged newtrip");
 
-
+        minutesWasted = dbPreferences.getLong("minutesWasted", minutesWasted);
         if (minutesWasted != -1) {
-            // Log.i("minutesWasted", minutesWasted + " milliseconds");
+            Log.d("minutesWasted", minutesWasted + " milliseconds");
             minutesWasted = TimeUnit.MILLISECONDS.toMinutes(minutesWasted);
             newtrip.setMinutesWasted(minutesWasted);
         }
         else
             // Log.i(TAG, "minutesWasted was -1");
 
+        dbPreferences.edit().putLong("minutesWasted", 0).commit();
         minutesAccuracyLow = Math.round((minutesWasted/1000.0)/60.0);
 
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {
             logGPSpollstoFile(gpsPolls);
-            SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             newTripSet.add(new Gson().toJson(newtrip));
             if (internetAvailable())
                 toBeUploadedTripSet.add(new Gson().toJson(newtrip));
