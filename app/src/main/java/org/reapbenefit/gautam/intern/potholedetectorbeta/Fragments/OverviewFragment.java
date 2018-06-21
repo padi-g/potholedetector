@@ -252,9 +252,10 @@ public class OverviewFragment extends Fragment implements
         probablePotholeCount = tripStatsPreferences.getInt("probablePotholes", 0);
 
         bottomSheetText = fragmentView.findViewById(R.id.overview_sheet_text);
-        String bottomSheetString = tripStatsPreferences.getInt("validTrips", 0) + " trips taken" +
-                "\n" + definitePotholeCount + " definite potholes" +
-                "\n" + probablePotholeCount + " probable potholes";
+        int numberOfValidTrips = tripStatsPreferences.getInt("validTrips", 0);
+        String bottomSheetString = numberOfValidTrips + (numberOfValidTrips == 1?" trip":" trips") + " taken" +
+                "\n" + definitePotholeCount + " definite" + (definitePotholeCount==1?" pothole":" potholes") +
+                "\n" + probablePotholeCount + " probable" + (probablePotholeCount==1?" pothole":" potholes");
         bottomSheetText.setText(bottomSheetString);
 
         startTimeTextView = fragmentView.findViewById(R.id.start_time);

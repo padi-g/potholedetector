@@ -209,11 +209,8 @@ public class S3UploadService extends IntentService {
                         dbPreferencesEditor.putString("tripUploadedId", tripUploadedId).commit();
                         tripList.remove(tripUploaded);
 
-                        //checking if settings contain auto delete
-                        if (fileDelete) {
-                            File fileToBeDeleted = new File(uploadUri.getPath());
-                            fileToBeDeleted.delete();
-                        }
+                        File fileToBeDeleted = new File(uploadUri.getPath());
+                        fileToBeDeleted.delete();
 
                         //updating RDS
                         Intent apiIntent = new Intent(this, APIService.class);
