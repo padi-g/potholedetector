@@ -252,7 +252,8 @@ public class LoggerService extends Service implements SensorEventListener {
                 mCurrentLocation = location;
                 speed = location.getSpeed();
                 SpeedWithLocation speedWithLocation = new SpeedWithLocation();
-                speedWithLocation.setLocation(location);
+                speedWithLocation.setLatitude(location.getLatitude());
+                speedWithLocation.setLongitude(location.getLongitude());
                 speedWithLocation.setSpeed(speed);
                 speedWithLocationMap.put(no_of_lines, speedWithLocation);
                 mLastUpdateTime = getCurrentTime();
@@ -465,6 +466,7 @@ public class LoggerService extends Service implements SensorEventListener {
         iTemp.putExtra("LoggingStatus", status);
         iTemp.putExtra("filename", uploadFileId);
         iTemp.putExtra("trip_object", newtrip);
+        iTemp.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationMap);
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
         l.sendBroadcast(iTemp);
     }

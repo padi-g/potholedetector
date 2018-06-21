@@ -1,24 +1,33 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
-import android.location.Location;
+import java.io.Serializable;
 
-public class SpeedWithLocation {
+public class SpeedWithLocation implements Serializable{
     private float speed;
-    private Location location;
+    private double latitude;
+    private double longitude;
 
     public float getSpeed() {
         return speed;
     }
 
-    public Location getLocation() {
-        return location;
-    }
-
-    public void setLocation(Location location) {
-        this.location = location;
-    }
-
     public void setSpeed(float speed) {
         this.speed = speed;
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
 }

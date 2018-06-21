@@ -329,14 +329,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void setProbablePotholeCount(int a){
         ApplicationClass.getInstance().getTrip().setProbablePotholeCount(a);
-        finishedTrip.setDefinitePotholeCount(a);
+        finishedTrip.setProbablePotholeCount(a);
         //data required by TLF for updating TripViewModel instance
         dbPreferencesEditor.putInt("probablePotholeCount", a);
     }
 
     private void setDefinitePotholeCount(int a) {
         ApplicationClass.getInstance().getTrip().setDefinitePotholeCount(a);
-        finishedTrip.setProbablePotholeCount(a);
+        finishedTrip.setDefinitePotholeCount(a);
         dbPreferencesEditor.putInt("definitePotholeCount", a);
         dbPreferencesEditor.commit();
     }
@@ -406,6 +406,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
 
                     if (MapsActivity.this.getIntent().getParcelableExtra(getString(R.string.speed_with_location_hashmap)) != null) {
+                        Log.d(TAG, "inside if");
                         speedWithLocationHashMap = new LinkedHashMap<>();
                         //populating the set of the points we are interested in
                         while ((line = bufferedReader.readLine()) != null) {
@@ -431,11 +432,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
                     else if (speedWithLocationHashMap.size() < finishedTrip.getNo_of_lines()/2) {
-                        Toast.makeText(getApplicationContext(), "Your device was unable to detect speed quickly enough", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MapsActivity.this.getApplicationContext(), "Your device was unable to detect speed quickly enough", Toast.LENGTH_SHORT).show();
                         populateDataPoints(line, bufferedReader);
                     }
                     else {
-                        Toast.makeText(getApplicationContext(), "Device speed could not be measured.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MapsActivity.this.getApplicationContext(), "Device speed could not be measured", Toast.LENGTH_SHORT).show();
                         populateDataPoints(line, bufferedReader);
                     }
                 }

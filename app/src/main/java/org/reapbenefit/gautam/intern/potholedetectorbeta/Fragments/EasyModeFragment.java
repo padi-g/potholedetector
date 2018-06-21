@@ -34,6 +34,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
@@ -340,6 +341,7 @@ public class EasyModeFragment extends Fragment {
         Intent i = new Intent(this.getActivity(), MapsActivity.class);
         i.putExtra(getString(R.string.is_viewing_highest_pothole_trip), false);
         i.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationHashMap);
+        Log.d(getClass().getSimpleName(), new Gson().toJson(speedWithLocationHashMap));
         startActivity(i);
     }
 
