@@ -160,7 +160,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Intent updateUserRatingIntent = new Intent(MapsActivity.this, APIService.class);
                 updateUserRatingIntent.putExtra("request", "POST");
                 updateUserRatingIntent.putExtra("table", getString(R.string.trip_data_table));
-                updateUserRatingIntent.putExtra(getString(R.string.trip_with_user_rating), ApplicationClass.getInstance().getTrip());
+                finishedTrip.setUserRating(accuracy_result);
+                Log.d(TAG, accuracy_result + "");
+                updateUserRatingIntent.putExtra(getString(R.string.trip_with_user_rating), finishedTrip);
                 startService(updateUserRatingIntent);
             }
         });

@@ -129,8 +129,11 @@ public class APIService extends IntentService {
                 return;
             }
             if (submittedUserRatingTrip != null) {
-                TripDataLambda tripDataLambda = HTTPHandler.convertToTripDataLambda(submittedUserRatingTrip);
+                TripDataLambda tripDataLambda = new TripDataLambda();
+                Log.d("UserRating", submittedUserRatingTrip.getTrip_id() + "");
+                tripDataLambda.setTripID(submittedUserRatingTrip.getTrip_id());
                 tripDataLambda.setUpdateUserRatingFlag(true);
+                tripDataLambda.setUserRating(submittedUserRatingTrip.getUserRating());
                 HTTPHandler.updateUserRating(tripDataLambda);
                 return;
             }
