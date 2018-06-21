@@ -194,7 +194,7 @@ public class OverviewFragment extends Fragment implements
                 starButton.setVisibility(View.INVISIBLE);
                 floatingButton = groupButton;
                 if (googleMap != null) {
-                    googleMap.clear();
+                    definitePotholeClusterManager.clearItems();
                     populatePersonalMap();
                 }
             }
@@ -207,7 +207,7 @@ public class OverviewFragment extends Fragment implements
                 starButton.setVisibility(View.VISIBLE);
                 floatingButton = starButton;
                 if (googleMap != null) {
-                    googleMap.clear();
+                    definitePotholeClusterManager.clearItems();
                     populateGlobalMap();
                 }
             }
@@ -301,8 +301,6 @@ public class OverviewFragment extends Fragment implements
             }
         }
         drawMarkers();
-        if (definitePotholeClusterManager != null)
-            definitePotholeClusterManager.cluster();
         // Log.d(getClass().getSimpleName(), definiteLatLngList.toString());
         return fragmentView;
     }
@@ -321,6 +319,7 @@ public class OverviewFragment extends Fragment implements
             for (int i = 0; i < uniquePotholeLatLng.length; ++i) {
                 definitePotholeClusterManager.addItem(new DefinitePotholeCluster(uniquePotholeLatLng[i]));
             }
+            definitePotholeClusterManager.cluster();
         }
     }
 
@@ -334,7 +333,7 @@ public class OverviewFragment extends Fragment implements
     }
 
     private void populatePersonalMap() {
-        if (googleMap != null) {
+        if (googleMap != null && definitePotholeClusterManager != null) {
             for (LatLng potholeLocation : definiteLatLngList) {
                 definitePotholeClusterManager.addItem(new DefinitePotholeCluster(potholeLocation));
             }
@@ -391,7 +390,6 @@ public class OverviewFragment extends Fragment implements
         definitePotholeClusterManager = new ClusterManager<>(getContext(), googleMap);
         googleMap.setOnCameraIdleListener(definitePotholeClusterManager);
         drawMarkers();
-        definitePotholeClusterManager.cluster();
         googleApiClient = new GoogleApiClient.Builder(getActivity()).addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
@@ -411,8 +409,6 @@ public class OverviewFragment extends Fragment implements
             mapView.onResume();
         }
         drawMarkers();
-        if (definitePotholeClusterManager != null)
-            definitePotholeClusterManager.cluster();
         startLocationUpdates();
     }
 
