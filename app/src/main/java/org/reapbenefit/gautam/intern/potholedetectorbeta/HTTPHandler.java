@@ -288,6 +288,38 @@ public class HTTPHandler {
         }
     }
 
+    public static void updateUserRating(TripDataLambda tripDataLambda) {
+        try {
+            URL urlObject = new URL(tripsDataUrl);
+            HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
+            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
+            httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setDoOutput(true);
+            String jsonInput = new Gson().toJson(tripDataLambda);
+            Log.d(TAG, "Sending data: " + jsonInput);
+            OutputStream outputStream = httpURLConnection.getOutputStream();
+            outputStream.write(jsonInput.getBytes());
+            outputStream.flush();
+            outputStream.close();
+            int responseCode = httpURLConnection.getResponseCode();
+            if (responseCode == 200) { //success
+                BufferedReader in = new BufferedReader(new InputStreamReader(
+                        httpURLConnection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                // print result
+                // Log.d(TAG, response.toString());
+            } else
+                System.out.println("POST request failed " + responseCode);
+        } catch (IOException ioException) {
+            // Log.e(TAG, ioException.getMessage());
+        }
+    }
+
     public static String getAllPotholes() {
         try {
             URL urlObject = new URL(potholesDataUrl);

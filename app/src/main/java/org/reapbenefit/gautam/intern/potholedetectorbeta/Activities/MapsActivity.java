@@ -157,6 +157,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 submitButton.setVisibility(View.GONE);
                 accuracySeekbar.setVisibility(View.GONE);
                 textview.setVisibility(View.GONE);
+                Intent updateUserRatingIntent = new Intent(MapsActivity.this, APIService.class);
+                updateUserRatingIntent.putExtra("request", "POST");
+                updateUserRatingIntent.putExtra("table", getString(R.string.trip_data_table));
+                updateUserRatingIntent.putExtra(getString(R.string.trip_with_user_rating), ApplicationClass.getInstance().getTrip());
+                startService(updateUserRatingIntent);
             }
         });
 
