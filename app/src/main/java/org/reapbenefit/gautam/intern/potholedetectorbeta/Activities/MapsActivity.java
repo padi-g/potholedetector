@@ -474,11 +474,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             setProbablePotholeCount(probablePotholeCount);
             setDefinitePotholeCount(definitePotholeCount);
 
-            //TODO: REMOVE LATER
-            setProbablePotholeCount(1);
-            setDefinitePotholeCount(1);
-            //TODO: REMOVE ABOVE 2 LINES
-
             drawInformationalUI(finishedTrip);
             populatePotholeMarkerPoints();
             tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
