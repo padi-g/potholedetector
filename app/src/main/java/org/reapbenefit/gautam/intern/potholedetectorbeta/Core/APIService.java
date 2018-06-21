@@ -142,17 +142,21 @@ public class APIService extends IntentService {
         else if (requestMethod.equalsIgnoreCase("GET") && table.equalsIgnoreCase("UniquePotholes")) {
             String uniquePotholesJson = HTTPHandler.getAllPotholes();
             Log.d(TAG, uniquePotholesJson + "");
-            UniquePotholeDataLambda[] uniquePotholeDataLambdas = new Gson().fromJson(uniquePotholesJson, UniquePotholeDataLambda[].class);
-            LatLng[] potholeLatLngs = new LatLng[uniquePotholeDataLambdas.length];
-            if (uniquePotholeDataLambdas != null) {
-                for (int i = 0; i < uniquePotholeDataLambdas.length; ++i) {
-                    potholeLatLngs[i] = new LatLng(uniquePotholeDataLambdas[i].getLat(),
-                            uniquePotholeDataLambdas[i].getLng());
+            try {
+                UniquePotholeDataLambda[] uniquePotholeDataLambdas = new Gson().fromJson(uniquePotholesJson, UniquePotholeDataLambda[].class);
+                LatLng[] potholeLatLngs = new LatLng[uniquePotholeDataLambdas.length];
+                if (uniquePotholeDataLambdas != null) {
+                    for (int i = 0; i < uniquePotholeDataLambdas.length; ++i) {
+                        potholeLatLngs[i] = new LatLng(uniquePotholeDataLambdas[i].getLat(),
+                                uniquePotholeDataLambdas[i].getLng());
+                    }
                 }
+                Intent potholeLatLngsIntent = new Intent(getString(R.string.global_unique_pothole_locations));
+                potholeLatLngsIntent.putExtra(getString(R.string.global_unique_pothole_locations), potholeLatLngs);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(potholeLatLngsIntent);
+            } catch (Exception exception) {
+                Log.e(TAG, exception.getMessage());
             }
-            Intent potholeLatLngsIntent = new Intent(getString(R.string.global_unique_pothole_locations));
-            potholeLatLngsIntent.putExtra(getString(R.string.global_unique_pothole_locations), potholeLatLngs);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(potholeLatLngsIntent);
         }
     }
 

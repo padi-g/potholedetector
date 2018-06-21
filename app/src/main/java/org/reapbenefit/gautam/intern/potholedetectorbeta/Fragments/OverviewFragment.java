@@ -25,14 +25,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.DecelerateInterpolator;
-import android.view.animation.ScaleAnimation;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.appsee.Appsee;
 import com.google.android.gms.common.ConnectionResult;
@@ -64,7 +59,6 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -118,6 +112,7 @@ public class OverviewFragment extends Fragment implements
     private GridLayout mostPotholesGrid;
     private FloatingActionButton floatingButton;
     private LatLng[] uniquePotholeLatLng;
+    private final String TAG = getClass().getSimpleName();
 
     private BroadcastReceiver uniquePotholesLatLngReceiver = new BroadcastReceiver() {
         @Override
@@ -195,8 +190,10 @@ public class OverviewFragment extends Fragment implements
                 groupButton.setVisibility(View.VISIBLE);
                 starButton.setVisibility(View.INVISIBLE);
                 floatingButton = groupButton;
-                googleMap.clear();
-                //TODO: WRITE METHOD TO INSERT PERSONAL MARKERS
+                if (googleMap != null) {
+                    googleMap.clear();
+                    populatePersonalMap();
+                }
             }
         });
 
@@ -232,8 +229,10 @@ public class OverviewFragment extends Fragment implements
 
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                if (floatingButton != null)
+                if (floatingButton != null) {
+                    Log.d(TAG, String.valueOf((floatingButton.equals(groupButton))));
                     floatingButton.animate().scaleX(1 - slideOffset).scaleY(1 - slideOffset).setDuration(0).start();
+                }
             }
         });
 
@@ -302,6 +301,15 @@ public class OverviewFragment extends Fragment implements
         return fragmentView;
     }
 
+    private void drawMarkers() {
+        if (starButton.getVisibility() == View.VISIBLE) {
+            populateGlobalMap();
+        }
+        else {
+            populatePersonalMap();
+        }
+    }
+
     private void populateGlobalMap() {
         if (googleMap != null && uniquePotholeLatLng != null) {
             for (int i = 0; i < uniquePotholeLatLng.length; ++i) {
@@ -320,7 +328,7 @@ public class OverviewFragment extends Fragment implements
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
     }
 
-    private void drawMarkers() {
+    private void populatePersonalMap() {
         if (googleMap != null) {
             for (LatLng potholeLocation : definiteLatLngList) {
                 googleMap.addMarker(new MarkerOptions().position(potholeLocation).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
