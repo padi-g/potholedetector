@@ -134,7 +134,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     }
 
     @Override
-    public void onBindViewHolder(TripListViewHolder holder, final int position) {
+    public void onBindViewHolder(final TripListViewHolder holder, final int position) {
         holder.setIsRecyclable(false);
         //this method is called for every item in the list
         // Log.i(getClass().getSimpleName(), "inside onBindViewHolder");
@@ -171,9 +171,9 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                         String json = gson.toJson(trip);
                         positionChanged = position;
                         startUploadService(json, trip);
-                        uploadProgressBar.setIndeterminate(true);
-                        uploadProgressBar.setVisibility(View.VISIBLE);
-                        uploadButton.setVisibility(View.GONE);
+                        holder.uploadProgressBar.setIndeterminate(true);
+                        holder.uploadProgressBar.setVisibility(View.VISIBLE);
+                        holder.uploadButton.setVisibility(View.GONE);
                     } else {
                         Toast.makeText(context.getApplicationContext(), "Internet not available. Try again later", Toast.LENGTH_LONG).show();
                     }
