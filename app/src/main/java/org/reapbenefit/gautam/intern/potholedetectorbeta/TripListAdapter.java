@@ -47,7 +47,6 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     String countString, timeString, durationString, distanceString;
     ImageButton uploadButton;
     ImageButton uploadedTick;
-    ImageButton mapButton;
     TextView date, time, size, distance;
     ProgressBar uploadProgressBar;
 
@@ -68,7 +67,6 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             super(itemView);
             uploadButton = (ImageButton) itemView.findViewById(R.id.upload_button);
             uploadedTick = (ImageButton) itemView.findViewById(R.id.upload_tick);
-            mapButton = (ImageButton) itemView.findViewById(R.id.map_button);
             date = (TextView) itemView.findViewById(R.id.count);
             time = (TextView) itemView.findViewById(R.id.start_time);
             size = (TextView) itemView.findViewById(R.id.size);
@@ -103,7 +101,6 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             if (!trips.isEmpty()) {
                 uploadButton = rowView.findViewById(R.id.upload_button);
                 uploadedTick = rowView.findViewById(R.id.upload_tick);
-                mapButton = rowView.findViewById(R.id.map_button);
                 date = (TextView) rowView.findViewById(R.id.count);
                 time = (TextView) rowView.findViewById(R.id.start_time);
                 size = (TextView) rowView.findViewById(R.id.size);
@@ -157,8 +154,6 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             uploadedTick = holder.uploadedTick;
             uploadProgressBar = holder.uploadProgressBar;
             batchUpload = dbPreferences.getBoolean("batchUpload", false);
-            Log.d(TAG, trip.getTrip_id());
-            Log.d(TAG, tripId);
 
             if ((uploadStatus && trip.getTrip_id().equals(tripId)) || batchUpload) {
                 uploadProgressBar.setIndeterminate(true);
@@ -181,24 +176,6 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                         uploadButton.setVisibility(View.GONE);
                     } else {
                         Toast.makeText(context.getApplicationContext(), "Internet not available. Try again later", Toast.LENGTH_LONG).show();
-                    }
-                }
-            });
-            mapButton = holder.mapButton;
-            mapButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    File datafile = new File(context.getApplicationContext().getFilesDir(), "logs/" + trip.getTrip_id() + ".csv");
-                    File file = new File(context.getApplicationContext().getFilesDir(), "analysis/" + trip.getTrip_id() + ".csv");
-                    if (datafile.exists()) {
-                        if (!app.isTripInProgress() && file.exists()) { // check if file of same name is available in the analytics folder
-                            Intent i = new Intent(context, MapsActivity.class);
-                            i.putExtra("trip", trip);
-                            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            context.startActivity(i);
-                        }
-                    } else {
-                        Toast.makeText(context, "Sorry, file has been deleted", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
