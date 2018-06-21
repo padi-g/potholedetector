@@ -37,6 +37,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.SpeedWithLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
@@ -472,6 +473,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Log.d("definiteCount", definitePotholeCount + "");
             setProbablePotholeCount(probablePotholeCount);
             setDefinitePotholeCount(definitePotholeCount);
+
+            //TODO: REMOVE LATER
+            setProbablePotholeCount(1);
+            setDefinitePotholeCount(1);
+            //TODO: REMOVE ABOVE 2 LINES
+
             drawInformationalUI(finishedTrip);
             populatePotholeMarkerPoints();
             tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
@@ -493,6 +500,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(MapsActivity.this);
             localBroadcastManager.sendBroadcast(newTripIntent);
             mapFragment.getMapAsync(MapsActivity.this);
+
+            //initiating service call to update RDS with pothole count
+            Intent updateTripPotholeCountIntent = new Intent(MapsActivity.this, APIService.class);
+            updateTripPotholeCountIntent.putExtra("request", "POST");
+            updateTripPotholeCountIntent.putExtra("table", getString(R.string.trip_data_table));
+            updateTripPotholeCountIntent.putExtra(getString(R.string.processed_trip), finishedTrip);
+            MapsActivity.this.startService(updateTripPotholeCountIntent);
         }
     }
 }

@@ -109,11 +109,22 @@ public class APIService extends IntentService {
         }
         else if (requestMethod.equalsIgnoreCase("POST") && table.equalsIgnoreCase(getString(R.string.trip_data_table))) {
             Trip tripUploaded = (Trip) intent.getParcelableExtra("tripUploaded");
+            Trip processedTrip = (Trip) intent.getParcelableExtra(getString(R.string.processed_trip));
             if (tripUploaded != null) {
                 //trip was uploaded, must update rather than insert into TripsData table
                 TripDataLambda tripDataLambda = HTTPHandler.convertToTripDataLambda(tripUploaded);
                 tripDataLambda.setUpdateUploadedFlag(true);
                 HTTPHandler.updateUploadedStatus(tripDataLambda);
+                return;
+            }
+            if (processedTrip != null) {
+                Log.d(TAG, "inside PT function");
+                //trip has been processed for pothole count, must update rather than insert into TripsData table
+                TripDataLambda tripDataLambda = HTTPHandler.convertToTripDataLambda(processedTrip);
+                tripDataLambda.setSetPotholeCountFlag(true);
+                HTTPHandler.updatePotholeCount(tripDataLambda);
+                //updating corresponding user data
+                updateCorrespondingUserData(processedTrip);
                 return;
             }
             dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
