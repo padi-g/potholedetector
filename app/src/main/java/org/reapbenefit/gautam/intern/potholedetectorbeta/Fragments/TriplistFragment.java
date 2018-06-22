@@ -84,6 +84,7 @@ public class TriplistFragment extends Fragment {
                 tripUploadingId = null;
             }
             createOfflineTripsListView();
+            Log.d(TAG, "broadcast received to change PB");
         }
     };
 
@@ -237,6 +238,7 @@ public class TriplistFragment extends Fragment {
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
+            tripUploadedId = dbPreferences.getString("tripUploadedId", null);
             String tripUploadedJson = dbPreferences.getString("tripUploaded", null);
             // Log.d(getClass().getSimpleName(), tripUploadedJson + "");
             if (tripUploadedJson != null) {
@@ -280,6 +282,7 @@ public class TriplistFragment extends Fragment {
         recyclerLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerLayoutManager);
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        Log.d(TAG, tripUploadedId + "");
         createOfflineTripsListView();
         uploadAllButton = (ImageButton) v.findViewById(R.id.upload_all_button);
         uploadAllButton.setOnClickListener(new View.OnClickListener() {

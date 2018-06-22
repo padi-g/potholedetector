@@ -49,6 +49,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -188,7 +189,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             task.execute(tripID);
             File file = new File(getApplicationContext().getFilesDir(), "analysis/" + tripID + ".csv");
 
-            // Log.d("maps", file.toString());
+            Log.d("maps", file.toString());
 
             //File file = new File(getApplicationContext().getFilesDir(), "locs/"+trip.getTrip_id()+".txt");
 
@@ -210,7 +211,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         }
-
         else {
             //reading highestPotholeTrip data from SharedPreferences
             String highestPotholeTripJson = dbPreferences.getString("highestPotholeTrip", null);
@@ -321,8 +321,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 tripStatsEditor.commit();
                 //sending broadcast to TriplistFragment to confirm if location set belongs to highestPotholeTrip
                 Intent highestPotholeCheckIntent = new Intent(getString(R.string.highest_pothole_latlngs_check));
-                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_definite_potholes), (Parcelable) definitePotholeStringSet);
-                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_probable_potholes), (Parcelable) probablePotholeStringSet);
+                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_definite_potholes), (Serializable) definitePotholeStringSet);
+                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_probable_potholes), (Serializable) probablePotholeStringSet);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(highestPotholeCheckIntent);
             }
         }else if (!isViewingHighestPotholeTrip){

@@ -83,14 +83,12 @@ public class S3UploadService extends IntentService {
 
     private void stopProgressBar() {
         Intent stopProgressBarIntent = new Intent(getString(R.string.upload_start_notifier_intent));
-        stopProgressBarIntent.putExtra("tripUploadingId", "null");
-        LocalBroadcastManager.getInstance(this).sendBroadcast(stopProgressBarIntent);
+        dbPreferencesEditor.remove("tripUploadedId").commit();
     }
 
     private void startProgressBar(String tripUploadingId) {
         Intent startProgressBarIntent = new Intent(getString(R.string.upload_start_notifier_intent));
-        startProgressBarIntent.putExtra("tripUploadingId", tripUploadingId);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(startProgressBarIntent);
+        dbPreferencesEditor.remove("tripUploadedId");
     }
 
     private void notifyConnectionTimeout() {
@@ -117,11 +115,11 @@ public class S3UploadService extends IntentService {
         tripList = (List<Trip>) intent.getSerializableExtra("trip_arrayList");
         if (tripList != null && !tripList.isEmpty()) {
             tripUploaded = tripList.get(0);
-            // Log.d("tripUploaded", tripUploaded.getTrip_id());
+            Log.d("tripUploaded", tripUploaded.getTrip_id());
             if (tripUploaded == null)
                 tripUploaded = new Gson().fromJson(dbPreferences.getString("uploadedTripJson", null), Trip.class);
             tripUploadedId = tripUploaded.getTrip_id();
-            startProgressBar(tripUploadedId);
+            //startProgressBar(tripUploadedId);
             dbPreferencesEditor.putString("uploadedTripJson", new Gson().toJson(tripUploaded)).commit();
             uploadUri = intent.getParcelableExtra(UPLOAD_URI);
             dbPreferencesEditor.putString("uploadUriJson", new Gson().toJson(uploadUri)).commit();
