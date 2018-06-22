@@ -270,6 +270,7 @@ public class EasyModeFragment extends Fragment {
     }
 
     private Trip newTrip;
+    private long tripDurationInSeconds;
     /*
     *   receives the broadcast from the logger service once the trip is ended
     *   Sets the bg to one of two states depending on whether the last trip was successful
@@ -281,6 +282,7 @@ public class EasyModeFragment extends Fragment {
             newTrip = intent.getParcelableExtra("trip_object");
             tripStatus = intent.getBooleanExtra("LoggingStatus", false);
             speedWithLocationTreeMap = (TreeMap<Integer, SpeedWithLocation>) intent.getSerializableExtra(getString(R.string.speed_with_location_hashmap));
+            tripDurationInSeconds = intent.getLongExtra(getString(R.string.duration_in_seconds), 0);
             if(!tripStatus){
                 uploadFileUri = intent.getParcelableExtra("filename");
                 if(uploadFileUri == null){
@@ -291,9 +293,9 @@ public class EasyModeFragment extends Fragment {
                     if(internetAvailable() && autoUploadOn()) {
                         startUploadService();
                     }else if(!internetAvailable()){
-                        Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_SHORT).show();
                     }else if(!autoUploadOn())
-                        Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_SHORT).show();
                     openMap();
                 }
                 ////////// redundant
@@ -338,6 +340,8 @@ public class EasyModeFragment extends Fragment {
 
     private void openMap(){
         Intent i = new Intent(this.getActivity(), MapsActivity.class);
+        Log.d(getClass().getSimpleName(), tripDurationInSeconds + "");
+        i.putExtra("duration_in_seconds", tripDurationInSeconds);
         i.putExtra(getString(R.string.is_viewing_highest_pothole_trip), false);
         i.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationTreeMap);
         Log.d(getClass().getSimpleName(), new Gson().toJson(speedWithLocationTreeMap));

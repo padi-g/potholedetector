@@ -99,6 +99,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private SharedPreferences.Editor dbPreferencesEditor;
     private TextView definitePotholeCountTextView;
     private boolean isViewingHighestPotholeTrip;
+    private long tripDurationInSeconds;
 
 
     @Override
@@ -130,6 +131,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         else {
             speedWithLocationTreeMap = null;
         }
+
+        tripDurationInSeconds = getIntent().getLongExtra(getString(R.string.duration_in_seconds), 0);
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         logAnalytics("map_opened");
@@ -365,6 +368,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         int lineNumber = 0, prevLineNumber = 0;
         FileInputStream is;
         private float[] speedArray;
+        private boolean showInaccurateToast;
 
         private boolean didSpeedOscillate(float arr[]) {
             if (arr[0] > arr[1] && arr[1] < arr[2])
@@ -400,7 +404,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
 
-                    if (speedWithLocationTreeMap != null) {
+                    if (speedWithLocationTreeMap != null && speedWithLocationTreeMap.size() >= tripDurationInSeconds/3) {
                         Log.d(TAG, new Gson().toJson(speedWithLocationTreeMap.toString()));
                         //populating the set of the points we are interested in
                         while ((line = bufferedReader.readLine()) != null) {
@@ -423,6 +427,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
                     else {
+                        Log.d(TAG, "inside else");
+                        showInaccurateToast = true;
                         // populating our set of the points we are interested in
                         while ((line = bufferedReader.readLine()) != null) {
                             String values[] = line.split(",");
@@ -487,6 +493,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
+            if (showInaccurateToast) {
+                Toast.makeText(MapsActivity.this.getApplicationContext(), R.string.speed_updates_not_enough, Toast.LENGTH_LONG).show();
+            }
             int indexOfSpace = result.indexOf(' ');
             int definitePotholeCount = Integer.parseInt(result.substring(0, indexOfSpace));
             int probablePotholeCount = Integer.parseInt(result.substring(indexOfSpace + 1));
