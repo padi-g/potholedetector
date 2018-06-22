@@ -14,10 +14,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
-import android.os.Parcelable;
 import android.os.SystemClock;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -37,7 +34,6 @@ import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.SpeedWithLocation;
@@ -47,8 +43,8 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.TreeMap;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -94,7 +90,7 @@ public class EasyModeFragment extends Fragment {
     private SharedPreferences animatorPreferences;
     private SharedPreferences.Editor animatorPreferencesEditor;
 
-    private HashMap<Integer, SpeedWithLocation> speedWithLocationHashMap;
+    private TreeMap<Integer, SpeedWithLocation> speedWithLocationTreeMap;
 
     ApplicationClass app;
     private int stoppedMilliseconds;
@@ -284,7 +280,7 @@ public class EasyModeFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             newTrip = intent.getParcelableExtra("trip_object");
             tripStatus = intent.getBooleanExtra("LoggingStatus", false);
-            speedWithLocationHashMap = (HashMap<Integer, SpeedWithLocation>) intent.getSerializableExtra(getString(R.string.speed_with_location_hashmap));
+            speedWithLocationTreeMap = (TreeMap<Integer, SpeedWithLocation>) intent.getSerializableExtra(getString(R.string.speed_with_location_hashmap));
             if(!tripStatus){
                 uploadFileUri = intent.getParcelableExtra("filename");
                 if(uploadFileUri == null){
@@ -343,8 +339,8 @@ public class EasyModeFragment extends Fragment {
     private void openMap(){
         Intent i = new Intent(this.getActivity(), MapsActivity.class);
         i.putExtra(getString(R.string.is_viewing_highest_pothole_trip), false);
-        i.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationHashMap);
-        Log.d(getClass().getSimpleName(), new Gson().toJson(speedWithLocationHashMap));
+        i.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationTreeMap);
+        Log.d(getClass().getSimpleName(), new Gson().toJson(speedWithLocationTreeMap));
         startActivity(i);
     }
 

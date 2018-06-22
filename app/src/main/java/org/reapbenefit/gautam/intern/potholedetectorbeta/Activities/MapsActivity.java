@@ -54,8 +54,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import static org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter.roundTwoDecimals;
 
@@ -89,7 +91,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private SharedPreferences tripStatsPreferences;
     private SharedPreferences.Editor tripStatsEditor;
     private Set<String> tripIdSet;
-    private HashMap<Integer, SpeedWithLocation> speedWithLocationHashMap;
+    private TreeMap<Integer, SpeedWithLocation> speedWithLocationTreeMap = new TreeMap<>();
     private final String TAG = getClass().getSimpleName();
     private Trip highestPotholeTrip;
     private SharedPreferences dbPreferences;
@@ -119,7 +121,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         getSupportActionBar().setTitle("Trip Summary");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        speedWithLocationHashMap = (HashMap<Integer, SpeedWithLocation>) getIntent().getSerializableExtra(getString(R.string.speed_with_location_hashmap));
+
+        Map<Integer, SpeedWithLocation> simpleMap = (Map<Integer, SpeedWithLocation>) getIntent().getSerializableExtra(getString(R.string.speed_with_location_hashmap));
+        if (simpleMap != null) {
+            speedWithLocationTreeMap = new TreeMap<>(simpleMap);
+        }
+        else {
+            speedWithLocationTreeMap = null;
+        }
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         logAnalytics("map_opened");
@@ -211,7 +220,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //populating marker locations on map
                 Set<String> definitePotholeLocationSet = dbPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
                 Iterator iterator = definitePotholeLocationSet.iterator();
-                while (iterator.hasNext()) {
+                while (iterator.hasNext() && mMap != null) {
                     LatLng definitePotholeLocation = new Gson().fromJson(iterator.next().toString(), LatLng.class);
                     mMap.addMarker(new MarkerOptions().position(definitePotholeLocation).icon(BitmapDescriptorFactory.defaultMarker()));
                 }
@@ -360,8 +369,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         private boolean didSpeedOscillate(float arr[]) {
             if (arr[0] > arr[1] && arr[1] < arr[2])
                 return true;
-            else if (arr[1] > arr[2] && arr[2] > arr[3])
-                return true;
             else
                 return false;
         }
@@ -393,26 +400,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
 
-                    if (speedWithLocationHashMap != null) {
-                        Log.d(TAG, speedWithLocationHashMap.toString());
+                    if (speedWithLocationTreeMap != null) {
+                        Log.d(TAG, new Gson().toJson(speedWithLocationTreeMap.toString()));
                         //populating the set of the points we are interested in
                         while ((line = bufferedReader.readLine()) != null) {
                             String values[] = line.split(",");
                             lineNumber++;
                             if(Float.valueOf(values[axisIndex]) > threshold && lineNumber>prevLineNumber+ linesPerPeriod){
                                 // this ignores the first period of data
-                                int closestDecreasedKeyValue = findClosestKeyValue(lineNumber, true);
-                                int closestIncreasedKeyValue = findClosestKeyValue(lineNumber, false);
-                                int closestDecreasedKeyValue1 = findClosestKeyValue(closestDecreasedKeyValue, true);
-                                int closestIncreasedKeyValue1 = findClosestKeyValue(closestIncreasedKeyValue, false);
-                                float speedValues[] = new float[]{speedWithLocationHashMap.get(closestDecreasedKeyValue1).getSpeed(),
-                                speedWithLocationHashMap.get(closestDecreasedKeyValue).getSpeed(),
-                                speedWithLocationHashMap.get(closestIncreasedKeyValue).getSpeed(),
-                                speedWithLocationHashMap.get(closestIncreasedKeyValue1).getSpeed()};
-                                Log.d("CDKV-true", String.valueOf(closestDecreasedKeyValue));
-                                Log.d("CDKV-false", String.valueOf(closestDecreasedKeyValue1));
-                                Log.d("CDKV-true1", String.valueOf(closestIncreasedKeyValue));
-                                Log.d("CDKV-false1", String.valueOf(closestIncreasedKeyValue1));
+                                int[] closestKeyValues = findClosestKeyValues(lineNumber);
+
+                                float speedValues[] = new float[]{speedWithLocationTreeMap.get(closestKeyValues[0]).getSpeed(),
+                                speedWithLocationTreeMap.get(closestKeyValues[1]).getSpeed(),
+                                speedWithLocationTreeMap.get(closestKeyValues[2]).getSpeed()};
+                                Log.d("speedValues", speedValues.toString());
                                 if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
                                     definitePointsOfInterest.put(lineNumber, line);
                                 else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
@@ -449,23 +450,38 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
 
-        private int findClosestKeyValue(int lineNumber, boolean decreaseFlag) {
+        private int[] findClosestKeyValues(int lineNumber) {
+            int minDifference = Integer.MAX_VALUE;
+            int closestKeyValue = -1;
+            Set<Integer> keySet = speedWithLocationTreeMap.keySet();
+            int baseKey = findClosestKeyValue(lineNumber);
+            List<Integer> keyList = new ArrayList<>(keySet);
+            int[] arr = new int[3];
+            int indexOfBaseKey = keyList.indexOf(baseKey);
+            arr[0] = keyList.get(indexOfBaseKey - 1);
+            arr[1] = keyList.get(indexOfBaseKey);
+            arr[2] = keyList.get(indexOfBaseKey + 1);
+            return arr;
+        }
+
+        private int findClosestKeyValue(int lineNumber) {
+            int closestKey = -1;
             try {
-                Iterator iterator = speedWithLocationHashMap.entrySet().iterator();
+                Iterator iterator = speedWithLocationTreeMap.entrySet().iterator();
                 int tempNumber = lineNumber;
+                int minDifference = Integer.MAX_VALUE;
                 while (iterator.hasNext()) {
                     Map.Entry pair = (Map.Entry) iterator.next();
-                    if (pair.getKey().equals(tempNumber)) {
-                        break;
-                    } else {
-                        tempNumber = decreaseFlag?lineNumber - 1:lineNumber + 1;
+                    int diff = Math.abs((int)pair.getKey() - lineNumber);
+                    if (diff < minDifference) {
+                        minDifference = diff;
+                        closestKey = (int) pair.getKey();
                     }
                 }
-                return tempNumber;
             } catch (Exception exception) {
                 Log.e(TAG, exception.getMessage());
             }
-            return -1;
+            return closestKey;
         }
 
         @Override
