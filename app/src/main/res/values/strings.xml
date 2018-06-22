@@ -91,4 +91,5 @@
     <string name="highest_pothole_trip_probable_potholes">HIGHEST_POTHOLE_TRIP_PROBABLE_POTHOLES</string>
 
     <string name="traffic_time_start">TRAFFIC_TIME_START</string>
+    <string name="upload_start_notifier_intent">UPLOAD_START_NOTIFIER_INTENT</string>
 </resources>

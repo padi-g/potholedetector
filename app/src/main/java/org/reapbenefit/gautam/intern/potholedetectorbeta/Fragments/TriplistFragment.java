@@ -74,6 +74,15 @@ public class TriplistFragment extends Fragment {
     private ImageButton uploadAllButton;
     private String TAG = getClass().getSimpleName();
     private int maxPotholeCount;
+    private String tripUploadingId;
+
+    private BroadcastReceiver tripUploadingReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            tripUploadingId = intent.getStringExtra("tripUploadingId");
+            createOfflineTripsListView();
+        }
+    };
 
     private BroadcastReceiver definitePotholeLocationReceiver = new BroadcastReceiver() {
         @Override
@@ -172,6 +181,7 @@ public class TriplistFragment extends Fragment {
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(uploadBroadcastReceiver, new IntentFilter(getString(R.string.set_uploaded_true)));
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(newTripReceiver, new IntentFilter(getString(R.string.new_trip_insert)));
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(definitePotholeLocationReceiver, new IntentFilter(getString(R.string.highest_pothole_latlngs_check)));
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(tripUploadingReceiver, new IntentFilter(getString(R.string.upload_start_notifier_intent)));
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         maxPotholeCount = dbPreferences.getInt("maxPotholeCount", 0);
     }
@@ -202,14 +212,14 @@ public class TriplistFragment extends Fragment {
             // Log.d(TAG, "inside OfflineTLV");
             Collections.sort(offlineTrips, comparator);
             // Log.d("OfflineTLV", new Gson().toJson(offlineTrips));
-            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripViewModel, getActivity().getBaseContext());
+            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripUploadingId, tripViewModel, getActivity().getBaseContext());
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
         }
         else if (offlineTrips.isEmpty() && getActivity() != null) {
             // Log.d(TAG, "inside OfflineTLV empty");
             Collections.sort(offlineTrips, comparator);
-            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripViewModel, getActivity().getBaseContext());
+            recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripUploadingId, tripViewModel, getActivity().getBaseContext());
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
         }
@@ -288,6 +298,7 @@ public class TriplistFragment extends Fragment {
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(uploadBroadcastReceiver);
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(newTripReceiver);
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(definitePotholeLocationReceiver);
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(tripUploadingReceiver);
     }
 
 

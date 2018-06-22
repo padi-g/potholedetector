@@ -19,7 +19,6 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 
@@ -43,6 +42,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     private final String TAG = getClass().getSimpleName();
     private SharedPreferences dbPreferences;
     private boolean batchUpload;
+    private String tripUploadingId;
 
     String countString, timeString, durationString, distanceString;
     ImageButton uploadButton;
@@ -75,7 +75,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         }
     }
 
-    public TripListAdapter(Context context, ArrayList<Trip> trips, boolean uploadStatus, String tripId, TripViewModel tripViewModel, Context baseContext) {
+    public TripListAdapter(Context context, ArrayList<Trip> trips, boolean uploadStatus, String tripId, String tripUploadingId, TripViewModel tripViewModel, Context baseContext) {
         // Log.d("Constructor", "Hello");
         this.context = context;
         this.trips = trips;
@@ -83,6 +83,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
         this.tripId = tripId;
         this.tripViewModel = tripViewModel;
         this.baseContext = baseContext;
+        this.tripUploadingId = tripUploadingId;
     }
 
     @Override
@@ -159,6 +160,17 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 uploadProgressBar.setIndeterminate(true);
                 uploadProgressBar.setVisibility(View.VISIBLE);
                 uploadButton.setVisibility(View.GONE);
+            }
+
+            Log.d("TripListAdapter1", trip.getTrip_id());
+            Log.d("TripListAdapter2", tripUploadingId + "");
+
+            if (tripUploadingId != null) {
+                if ((uploadStatus && trip.getTrip_id().equals(tripUploadingId)) || batchUpload) {
+                    uploadProgressBar.setIndeterminate(true);
+                    uploadProgressBar.setVisibility(View.VISIBLE);
+                    uploadButton.setVisibility(View.GONE);
+                }
             }
 
             uploadButton.setOnClickListener(new View.OnClickListener() {
