@@ -80,6 +80,9 @@ public class TriplistFragment extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             tripUploadingId = intent.getStringExtra("tripUploadingId");
+            if (tripUploadingId.equalsIgnoreCase("null")) {
+                tripUploadingId = null;
+            }
             createOfflineTripsListView();
         }
     };

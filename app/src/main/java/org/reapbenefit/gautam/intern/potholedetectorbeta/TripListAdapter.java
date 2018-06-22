@@ -183,9 +183,9 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                         String json = gson.toJson(trip);
                         positionChanged = position;
                         startUploadService(json, trip);
-                        holder.uploadProgressBar.setIndeterminate(true);
+                        /*holder.uploadProgressBar.setIndeterminate(true);
                         holder.uploadProgressBar.setVisibility(View.VISIBLE);
-                        holder.uploadButton.setVisibility(View.GONE);
+                        holder.uploadButton.setVisibility(View.GONE);*/
                     } else {
                         Toast.makeText(context.getApplicationContext(), "Internet not available. Try again later", Toast.LENGTH_LONG).show();
                     }

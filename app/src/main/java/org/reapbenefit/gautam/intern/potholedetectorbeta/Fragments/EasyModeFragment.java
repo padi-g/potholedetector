@@ -334,10 +334,10 @@ public class EasyModeFragment extends Fragment {
         intent.putExtra("trip_arrayList", (Serializable) tripList);
         intent.putExtra("upload_uri", uploadFileUri);
         this.getContext().startService(intent);
-        //notifying TriplistFragment that upload has started (required for starting progress bar on auto-upload)
+        /*//notifying TriplistFragment that upload has started (required for starting progress bar on auto-upload)
         Intent uploadStartNotifierIntent = new Intent(getString(R.string.upload_start_notifier_intent));
         uploadStartNotifierIntent.putExtra("tripUploadingId", newTrip.getTrip_id());
-        LocalBroadcastManager.getInstance(getContext()).sendBroadcast(uploadStartNotifierIntent);
+        LocalBroadcastManager.getInstance(getContext()).sendBroadcast(uploadStartNotifierIntent);*/
     }
 
     private void openMap(){

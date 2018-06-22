@@ -81,6 +81,18 @@ public class S3UploadService extends IntentService {
         super.onDestroy();
     }
 
+    private void stopProgressBar() {
+        Intent stopProgressBarIntent = new Intent(getString(R.string.upload_start_notifier_intent));
+        stopProgressBarIntent.putExtra("tripUploadingId", "null");
+        LocalBroadcastManager.getInstance(this).sendBroadcast(stopProgressBarIntent);
+    }
+
+    private void startProgressBar(String tripUploadingId) {
+        Intent startProgressBarIntent = new Intent(getString(R.string.upload_start_notifier_intent));
+        startProgressBarIntent.putExtra("tripUploadingId", tripUploadingId);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(startProgressBarIntent);
+    }
+
     private void notifyConnectionTimeout() {
         initialiseNotification();
         notificationBuilder.setContentText("Network connection unavailable. Please try again later.");
@@ -89,6 +101,8 @@ public class S3UploadService extends IntentService {
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         dbPreferencesEditor = dbPreferences.edit();
         dbPreferencesEditor.putString("tripUploadedId", null).commit();
+        stopProgressBar();
+        stopProgressBar();
         stopSelf();
     }
 
@@ -107,6 +121,7 @@ public class S3UploadService extends IntentService {
             if (tripUploaded == null)
                 tripUploaded = new Gson().fromJson(dbPreferences.getString("uploadedTripJson", null), Trip.class);
             tripUploadedId = tripUploaded.getTrip_id();
+            startProgressBar(tripUploadedId);
             dbPreferencesEditor.putString("uploadedTripJson", new Gson().toJson(tripUploaded)).commit();
             uploadUri = intent.getParcelableExtra(UPLOAD_URI);
             dbPreferencesEditor.putString("uploadUriJson", new Gson().toJson(uploadUri)).commit();
@@ -184,6 +199,7 @@ public class S3UploadService extends IntentService {
                         notificationBuilder.setContentText("Upload failed");
                         notificationBuilder.setOngoing(false);
                         notificationManager.notify(mNotificationId, notificationBuilder.build());
+                        stopProgressBar();
                         break;
                     }
                 }
@@ -270,6 +286,7 @@ public class S3UploadService extends IntentService {
             notificationBuilder.setOngoing(false)
                     .setContentText("Upload timed out. Check your network connection.");
             notificationManager.notify(mNotificationId, notificationBuilder.build());
+            stopProgressBar();
             stopSelf();
         }
     }
