@@ -56,7 +56,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -132,7 +131,7 @@ public class LoggerService extends Service implements SensorEventListener {
     private Set<String> newTripSet;
     private Set<String> toBeUploadedTripSet;
     private float speed;
-    private LinkedHashMap<Integer, SpeedWithLocation> speedWithLocationMap = new LinkedHashMap<>();
+    private HashMap<Integer, SpeedWithLocation> speedWithLocationMap = new HashMap<>();
 
     public LoggerService() {
         super();
@@ -472,6 +471,7 @@ public class LoggerService extends Service implements SensorEventListener {
         iTemp.putExtra("filename", uploadFileId);
         iTemp.putExtra("trip_object", newtrip);
         iTemp.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationMap);
+        Log.d(TAG, speedWithLocationMap.toString() + "");
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
         l.sendBroadcast(iTemp);
     }

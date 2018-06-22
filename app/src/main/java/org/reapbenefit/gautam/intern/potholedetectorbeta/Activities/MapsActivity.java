@@ -47,16 +47,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.Buffer;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -92,7 +89,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private SharedPreferences tripStatsPreferences;
     private SharedPreferences.Editor tripStatsEditor;
     private Set<String> tripIdSet;
-    private LinkedHashMap<Integer, SpeedWithLocation> speedWithLocationHashMap;
+    private HashMap<Integer, SpeedWithLocation> speedWithLocationHashMap;
     private final String TAG = getClass().getSimpleName();
     private Trip highestPotholeTrip;
     private SharedPreferences dbPreferences;
@@ -121,6 +118,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Trip Summary");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        speedWithLocationHashMap = (HashMap<Integer, SpeedWithLocation>) getIntent().getSerializableExtra(getString(R.string.speed_with_location_hashmap));
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         logAnalytics("map_opened");
@@ -361,22 +360,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         private boolean didSpeedOscillate(float arr[]) {
             if (arr[0] > arr[1] && arr[1] < arr[2])
                 return true;
+            else if (arr[1] > arr[2] && arr[2] > arr[3])
+                return true;
             else
                 return false;
-        }
-
-
-        private int findClosestKeyValue(int lineNumber) {
-            int minDifference = Integer.MAX_VALUE;
-            int closestKeyValue = -1;
-            for (int key: speedWithLocationHashMap.keySet()) {
-                int diff = Math.abs(closestKeyValue - lineNumber);
-                if (diff < minDifference) {
-                    minDifference = diff;
-                    closestKeyValue = key;
-                }
-            }
-            return closestKeyValue;
         }
 
         @Override
@@ -389,6 +376,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 BufferedReader bufferedReader = new BufferedReader(isr);
                 String line;
                 try {
+
                     // extracting the index of the value to be compared in a given line of data
                     line = bufferedReader.readLine();
                     String tokens[] = line.split(",");
@@ -405,24 +393,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
 
-                    if (MapsActivity.this.getIntent().getParcelableExtra(getString(R.string.speed_with_location_hashmap)) != null) {
-                        Log.d(TAG, "inside if");
-                        speedWithLocationHashMap = new LinkedHashMap<>();
+                    if (speedWithLocationHashMap != null) {
+                        Log.d(TAG, speedWithLocationHashMap.toString());
                         //populating the set of the points we are interested in
                         while ((line = bufferedReader.readLine()) != null) {
                             String values[] = line.split(",");
                             lineNumber++;
                             if(Float.valueOf(values[axisIndex]) > threshold && lineNumber>prevLineNumber+ linesPerPeriod){
                                 // this ignores the first period of data
-                                int closestKey = findClosestKeyValue(lineNumber);
-                                ArrayList<Integer> keys = new ArrayList<>(speedWithLocationHashMap.keySet());
-                                Log.d("KeyArrayList", keys.toString());
-                                Log.d("closestKey", String.valueOf(closestKey));
-                                int belowClosestKey = keys.get(keys.indexOf(closestKey) - 1);
-                                int aboveClosestKey = keys.get(keys.indexOf(closestKey) + 1);
-                                Log.d("belowClosestKey", String.valueOf(belowClosestKey));
-                                Log.d("aboveClosestKey", String.valueOf(aboveClosestKey));
-                                float[] speedValues = new float[]{speedWithLocationHashMap.get(belowClosestKey).getSpeed(), speedWithLocationHashMap.get(closestKey).getSpeed(), speedWithLocationHashMap.get(aboveClosestKey).getSpeed()};
+                                int closestDecreasedKeyValue = findClosestKeyValue(lineNumber, true);
+                                int closestIncreasedKeyValue = findClosestKeyValue(lineNumber, false);
+                                int closestDecreasedKeyValue1 = findClosestKeyValue(closestDecreasedKeyValue, true);
+                                int closestIncreasedKeyValue1 = findClosestKeyValue(closestIncreasedKeyValue, false);
+                                float speedValues[] = new float[]{speedWithLocationHashMap.get(closestDecreasedKeyValue1).getSpeed(),
+                                speedWithLocationHashMap.get(closestDecreasedKeyValue).getSpeed(),
+                                speedWithLocationHashMap.get(closestIncreasedKeyValue).getSpeed(),
+                                speedWithLocationHashMap.get(closestIncreasedKeyValue1).getSpeed()};
+                                Log.d("CDKV-true", String.valueOf(closestDecreasedKeyValue));
+                                Log.d("CDKV-false", String.valueOf(closestDecreasedKeyValue1));
+                                Log.d("CDKV-true1", String.valueOf(closestIncreasedKeyValue));
+                                Log.d("CDKV-false1", String.valueOf(closestIncreasedKeyValue1));
                                 if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
                                     definitePointsOfInterest.put(lineNumber, line);
                                 else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
@@ -431,13 +421,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         }
                     }
-                    else if (speedWithLocationHashMap.size() < finishedTrip.getNo_of_lines()/2) {
-                        Toast.makeText(MapsActivity.this.getApplicationContext(), "Your device was unable to detect speed quickly enough", Toast.LENGTH_SHORT).show();
-                        populateDataPoints(line, bufferedReader);
-                    }
                     else {
-                        Toast.makeText(MapsActivity.this.getApplicationContext(), "Device speed could not be measured", Toast.LENGTH_SHORT).show();
-                        populateDataPoints(line, bufferedReader);
+                        // populating our set of the points we are interested in
+                        while ((line = bufferedReader.readLine()) != null) {
+                            String values[] = line.split(",");
+                            Log.d(TAG, "speedmap null");
+                            lineNumber++;
+                            if (Float.valueOf(values[axisIndex]) > threshold && lineNumber > prevLineNumber + linesPerPeriod) {
+                                // this ignores the first period of data
+                                if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
+                                    definitePointsOfInterest.put(lineNumber, line);
+                                else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND)
+                                    probablePointsOfInterest.put(lineNumber, line);
+                                prevLineNumber = lineNumber;
+                            }
+                        }
                     }
                 }
                 catch (Exception e){
@@ -451,24 +449,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
 
-        private void populateDataPoints(String line, BufferedReader bufferedReader) {
-            // populating our set of the points we are interested in
+        private int findClosestKeyValue(int lineNumber, boolean decreaseFlag) {
             try {
-                while ((line = bufferedReader.readLine()) != null) {
-                    String values[] = line.split(",");
-                    lineNumber++;
-                    if (Float.valueOf(values[axisIndex]) > threshold && lineNumber > prevLineNumber + linesPerPeriod) {
-                        // this ignores the first period of data
-                        if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
-                            definitePointsOfInterest.put(lineNumber, line);
-                        else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND)
-                            probablePointsOfInterest.put(lineNumber, line);
-                        prevLineNumber = lineNumber;
+                Iterator iterator = speedWithLocationHashMap.entrySet().iterator();
+                int tempNumber = lineNumber;
+                while (iterator.hasNext()) {
+                    Map.Entry pair = (Map.Entry) iterator.next();
+                    if (pair.getKey().equals(tempNumber)) {
+                        break;
+                    } else {
+                        tempNumber = decreaseFlag?lineNumber - 1:lineNumber + 1;
                     }
                 }
-            } catch (IOException ioException) {
-                Log.e(TAG, ioException.getMessage());
+                return tempNumber;
+            } catch (Exception exception) {
+                Log.e(TAG, exception.getMessage());
             }
+            return -1;
         }
 
         @Override
