@@ -331,7 +331,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_probable_potholes), (Serializable) probablePotholeStringSet);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(highestPotholeCheckIntent);
             }
-            updateUserPotholeTable(1, new LatLng(12, 77));
         }else if (!isViewingHighestPotholeTrip){
             textview.setText("No locations found");
         }
