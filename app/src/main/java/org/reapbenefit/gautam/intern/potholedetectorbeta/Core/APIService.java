@@ -21,6 +21,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.TripDataLambda;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.UniquePotholeDataLambda;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.UserData;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.UserPothole;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -178,6 +179,10 @@ public class APIService extends IntentService {
             } catch (Exception exception) {
                 // Log.e(TAG, exception.getMessage());
             }
+        }
+        else if (requestMethod.equalsIgnoreCase("POST") && table.equalsIgnoreCase("UserPotholes")) {
+            UserPothole userPothole = (UserPothole) intent.getSerializableExtra("userPotholeObject");
+            HTTPHandler.insertUserPothole(userPothole);
         }
     }
 

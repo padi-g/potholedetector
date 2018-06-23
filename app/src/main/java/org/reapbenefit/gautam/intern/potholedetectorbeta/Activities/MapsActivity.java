@@ -42,6 +42,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.SpeedWithLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.UserPothole;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -312,12 +313,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (!probablePotholeLatLngs.isEmpty()) {
                 for (LatLng l : probablePotholeLatLngs) {
                     probablePotholeStringSet.add(new Gson().toJson(l));
+                    updateUserPotholeTable(0, l);
                 }
             }
             if (!definitePotholeLatLngs.isEmpty()) {
                 for (LatLng l: definitePotholeLatLngs) {
                     mMap.addMarker(new MarkerOptions().position(l).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
                     definitePotholeStringSet.add(new Gson().toJson(l));
+                    updateUserPotholeTable(1, l);
                 }
                 tripStatsEditor.putStringSet(getString(R.string.probable_pothole_location_set), probablePotholeStringSet);
                 tripStatsEditor.putStringSet(getString(R.string.definite_pothole_location_set), definitePotholeStringSet);
@@ -328,9 +331,24 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_probable_potholes), (Serializable) probablePotholeStringSet);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(highestPotholeCheckIntent);
             }
+            updateUserPotholeTable(1, new LatLng(12, 77));
         }else if (!isViewingHighestPotholeTrip){
             textview.setText("No locations found");
         }
+    }
+
+    private void updateUserPotholeTable(int classification, LatLng latLng) {
+        //updating table in RDS
+        Intent addDefinitePotholeIntent = new Intent(this, APIService.class);
+        addDefinitePotholeIntent.putExtra("request", "POST");
+        addDefinitePotholeIntent.putExtra("table", "UserPotholes");
+        UserPothole userPothole = new UserPothole();
+        userPothole.setUserID(getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null));
+        userPothole.setPotLong((float) latLng.longitude);
+        userPothole.setPotLat((float) latLng.latitude);
+        userPothole.setClassification(classification);
+        addDefinitePotholeIntent.putExtra("userPotholeObject", userPothole);
+        startService(addDefinitePotholeIntent);
     }
 
     private void setUserPercievedAccuracy(int a){
