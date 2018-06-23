@@ -544,10 +544,9 @@ public class LoggerService extends Service implements SensorEventListener {
             logGPSpollstoFile(gpsPolls);
             dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             newTripSet.add(new Gson().toJson(newtrip));
-            if (internetAvailable())
+            if (internetAvailable()) {
                 toBeUploadedTripSet.add(new Gson().toJson(newtrip));
-            // Log.d("newTripSet", newTripSet.toString());
-            // Log.d("toBeUploadedTripSet", newTripSet.toString());
+            }
             dbPreferences.edit().putStringSet("newTripJson", newTripSet).commit();
             dbPreferences.edit().putStringSet("toBeUploadedTripSet", toBeUploadedTripSet).commit();
             sendTripLoggingBroadcast(false, fileuri);

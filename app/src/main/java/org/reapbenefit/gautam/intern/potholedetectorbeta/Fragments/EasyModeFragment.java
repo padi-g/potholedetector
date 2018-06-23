@@ -279,29 +279,31 @@ public class EasyModeFragment extends Fragment {
     private final BroadcastReceiver b = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            newTrip = intent.getParcelableExtra("trip_object");
-            tripStatus = intent.getBooleanExtra("LoggingStatus", false);
-            speedWithLocationTreeMap = (TreeMap<Integer, SpeedWithLocation>) intent.getSerializableExtra(getString(R.string.speed_with_location_hashmap));
-            tripDurationInSeconds = intent.getLongExtra(getString(R.string.duration_in_seconds), 0);
-            if(!tripStatus){
-                uploadFileUri = intent.getParcelableExtra("filename");
-                if(uploadFileUri == null){
-                    Toast.makeText(getActivity().getApplicationContext(), "Sorry, we could not detect your location accurately", Toast.LENGTH_SHORT).show();
-                }else {
-                    // Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
-                    Toast.makeText(getActivity().getApplicationContext(), "Thanks for your contribution!", Toast.LENGTH_SHORT).show();
-                    if(internetAvailable() && autoUploadOn()) {
-                        startUploadService();
-                    }else if(!internetAvailable()){
-                        Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_SHORT).show();
-                    }else if(!autoUploadOn())
-                        Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_SHORT).show();
-                    openMap();
+            if (intent.getAction() != null && intent.getAction().equals("tripstatus")) {
+                newTrip = intent.getParcelableExtra("trip_object");
+                tripStatus = intent.getBooleanExtra("LoggingStatus", false);
+                speedWithLocationTreeMap = (TreeMap<Integer, SpeedWithLocation>) intent.getSerializableExtra(getString(R.string.speed_with_location_hashmap));
+                tripDurationInSeconds = intent.getLongExtra(getString(R.string.duration_in_seconds), 0);
+                if (!tripStatus) {
+                    uploadFileUri = intent.getParcelableExtra("filename");
+                    if (uploadFileUri == null) {
+                        Toast.makeText(getActivity().getApplicationContext(), "Sorry, we could not detect your location accurately", Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
+                        Toast.makeText(getActivity().getApplicationContext(), "Thanks for your contribution!", Toast.LENGTH_SHORT).show();
+                        if (internetAvailable() && autoUploadOn()) {
+                            startUploadService();
+                        } else if (!internetAvailable()) {
+                            Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_SHORT).show();
+                        } else if (!autoUploadOn())
+                            Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_SHORT).show();
+                        openMap();
+                    }
+                    ////////// redundant
+                    startFloatingActionButton.setVisibility(View.VISIBLE);
+                    stopFloatingActionButton.setVisibility(View.GONE);
+                    ////////// redundant
                 }
-                ////////// redundant
-                startFloatingActionButton.setVisibility(View.VISIBLE);
-                stopFloatingActionButton.setVisibility(View.GONE);
-                ////////// redundant
             }
         }
     };
@@ -456,9 +458,15 @@ public class EasyModeFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        super.onDestroyView();
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(getActivity());
         l.unregisterReceiver(b);
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onDestroy() {
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(b);
+        super.onDestroy();
     }
 
     // TODO: Rename method, update argument and hook method into UI event
