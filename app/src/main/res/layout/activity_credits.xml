@@ -22,7 +22,7 @@
             android:orientation="vertical">
 
             <TextView
-                android:text="Built by Gautam Padiyar and Kanishk Kakar"
+                android:text="Built by Gautam Padiyar\nand\nKanishk Kakar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="50dp"
