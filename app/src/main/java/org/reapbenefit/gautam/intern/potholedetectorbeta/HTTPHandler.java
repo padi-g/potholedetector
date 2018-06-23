@@ -357,7 +357,7 @@ public class HTTPHandler {
             httpURLConnection.setRequestMethod("POST");
             httpURLConnection.setDoOutput(true);
             String jsonInput = new Gson().toJson(userPothole);
-            Log.d(TAG, "Sending data: " + jsonInput);
+            // Log.d(TAG, "Sending data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
