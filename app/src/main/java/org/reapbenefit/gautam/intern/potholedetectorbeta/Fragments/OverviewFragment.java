@@ -120,7 +120,7 @@ public class OverviewFragment extends Fragment implements
     private BroadcastReceiver uniquePotholesLatLngReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("OverviewFragment", "Broadcast received");
+            // Log.d("OverviewFragment", "Broadcast received");
             uniquePotholeLatLng = (LatLng[]) intent.getParcelableArrayExtra(getString(R.string.global_unique_pothole_locations));
         }
     };
@@ -233,7 +233,7 @@ public class OverviewFragment extends Fragment implements
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                 if (floatingButton != null) {
-                    Log.d(TAG, String.valueOf((floatingButton.equals(groupButton))));
+                    // Log.d(TAG, String.valueOf((floatingButton.equals(groupButton))));
                     floatingButton.animate().scaleX(1 - slideOffset).scaleY(1 - slideOffset).setDuration(0).start();
                 }
             }

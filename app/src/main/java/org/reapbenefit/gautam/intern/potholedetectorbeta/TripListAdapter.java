@@ -162,8 +162,8 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 uploadButton.setVisibility(View.GONE);
             }
 
-            Log.d("TripListAdapter1", trip.getTrip_id());
-            Log.d("TripListAdapter2", tripUploadingId + "");
+            // Log.d("TripListAdapter1", trip.getTrip_id());
+            // Log.d("TripListAdapter2", tripUploadingId + "");
 
             if (tripUploadingId != null) {
                 if ((uploadStatus && trip.getTrip_id().equals(tripUploadingId)) || batchUpload) {

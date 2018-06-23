@@ -470,7 +470,7 @@ public class LoggerService extends Service implements SensorEventListener {
         iTemp.putExtra(getString(R.string.duration_in_seconds), TimeUnit.MILLISECONDS.toSeconds(endTime.getTime() - startTime.getTime()));
         iTemp.putExtra("trip_object", newtrip);
         iTemp.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationMap);
-        Log.d(TAG, speedWithLocationMap.toString() + "");
+        // Log.d(TAG, speedWithLocationMap.toString() + "");
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
         l.sendBroadcast(iTemp);
     }
@@ -529,7 +529,7 @@ public class LoggerService extends Service implements SensorEventListener {
         // Log.i(TAG, "logged newtrip");
 
         if (minutesWasted != -1) {
-            Log.d("minutesWasted", minutesWasted + " milliseconds");
+            // Log.d("minutesWasted", minutesWasted + " milliseconds");
             minutesWasted = TimeUnit.MILLISECONDS.toMinutes(minutesWasted);
             newtrip.setMinutesWasted(minutesWasted);
         }

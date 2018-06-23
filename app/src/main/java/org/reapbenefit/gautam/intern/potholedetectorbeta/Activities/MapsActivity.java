@@ -173,7 +173,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 updateUserRatingIntent.putExtra("request", "POST");
                 updateUserRatingIntent.putExtra("table", getString(R.string.trip_data_table));
                 finishedTrip.setUserRating(accuracy_result);
-                Log.d(TAG, accuracy_result + "");
+                // Log.d(TAG, accuracy_result + "");
                 updateUserRatingIntent.putExtra(getString(R.string.trip_with_user_rating), finishedTrip);
                 startService(updateUserRatingIntent);
             }
@@ -192,7 +192,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             task.execute(tripID);
             File file = new File(getApplicationContext().getFilesDir(), "analysis/" + tripID + ".csv");
 
-            Log.d("maps", file.toString());
+            // Log.d("maps", file.toString());
 
             //File file = new File(getApplicationContext().getFilesDir(), "locs/"+trip.getTrip_id()+".txt");
 
@@ -405,7 +405,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
 
                     if (speedWithLocationTreeMap != null && speedWithLocationTreeMap.size() >= tripDurationInSeconds/3) {
-                        Log.d(TAG, new Gson().toJson(speedWithLocationTreeMap.toString()));
+                        // Log.d(TAG, new Gson().toJson(speedWithLocationTreeMap.toString()));
                         //populating the set of the points we are interested in
                         while ((line = bufferedReader.readLine()) != null) {
                             String values[] = line.split(",");
@@ -417,7 +417,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 float speedValues[] = new float[]{speedWithLocationTreeMap.get(closestKeyValues[0]).getSpeed(),
                                 speedWithLocationTreeMap.get(closestKeyValues[1]).getSpeed(),
                                 speedWithLocationTreeMap.get(closestKeyValues[2]).getSpeed()};
-                                Log.d("speedValues", speedValues.toString());
+                                // Log.d("speedValues", speedValues.toString());
                                 if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
                                     definitePointsOfInterest.put(lineNumber, line);
                                 else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
@@ -427,12 +427,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
                     else {
-                        Log.d(TAG, "inside else");
+                        // Log.d(TAG, "inside else");
                         showInaccurateToast = true;
                         // populating our set of the points we are interested in
                         while ((line = bufferedReader.readLine()) != null) {
                             String values[] = line.split(",");
-                            Log.d(TAG, "speedmap null");
+                            // Log.d(TAG, "speedmap null");
                             lineNumber++;
                             if (Float.valueOf(values[axisIndex]) > threshold && lineNumber > prevLineNumber + linesPerPeriod) {
                                 // this ignores the first period of data
@@ -485,7 +485,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 }
             } catch (Exception exception) {
-                Log.e(TAG, exception.getMessage());
+                // Log.e(TAG, exception.getMessage());
             }
             return closestKey;
         }

@@ -119,7 +119,7 @@ public class APIService extends IntentService {
                 return;
             }
             if (processedTrip != null) {
-                Log.d(TAG, "inside PT function");
+                // Log.d(TAG, "inside PT function");
                 //trip has been processed for pothole count, must update rather than insert into TripsData table
                 TripDataLambda tripDataLambda = HTTPHandler.convertToTripDataLambda(processedTrip);
                 tripDataLambda.setSetPotholeCountFlag(true);
@@ -130,7 +130,7 @@ public class APIService extends IntentService {
             }
             if (submittedUserRatingTrip != null) {
                 TripDataLambda tripDataLambda = new TripDataLambda();
-                Log.d("UserRating", submittedUserRatingTrip.getTrip_id() + "");
+                // Log.d("UserRating", submittedUserRatingTrip.getTrip_id() + "");
                 tripDataLambda.setTripID(submittedUserRatingTrip.getTrip_id());
                 tripDataLambda.setUpdateUserRatingFlag(true);
                 tripDataLambda.setUserRating(submittedUserRatingTrip.getUserRating());
@@ -162,7 +162,7 @@ public class APIService extends IntentService {
         }
         else if (requestMethod.equalsIgnoreCase("GET") && table.equalsIgnoreCase("UniquePotholes")) {
             String uniquePotholesJson = HTTPHandler.getAllPotholes();
-            Log.d(TAG, uniquePotholesJson + "");
+            // Log.d(TAG, uniquePotholesJson + "");
             try {
                 UniquePotholeDataLambda[] uniquePotholeDataLambdas = new Gson().fromJson(uniquePotholesJson, UniquePotholeDataLambda[].class);
                 LatLng[] potholeLatLngs = new LatLng[uniquePotholeDataLambdas.length];
@@ -176,7 +176,7 @@ public class APIService extends IntentService {
                 potholeLatLngsIntent.putExtra(getString(R.string.global_unique_pothole_locations), potholeLatLngs);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(potholeLatLngsIntent);
             } catch (Exception exception) {
-                Log.e(TAG, exception.getMessage());
+                // Log.e(TAG, exception.getMessage());
             }
         }
     }

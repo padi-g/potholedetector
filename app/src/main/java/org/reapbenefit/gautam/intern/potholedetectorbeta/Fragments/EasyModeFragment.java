@@ -340,11 +340,11 @@ public class EasyModeFragment extends Fragment {
 
     private void openMap(){
         Intent i = new Intent(this.getActivity(), MapsActivity.class);
-        Log.d(getClass().getSimpleName(), tripDurationInSeconds + "");
+        // Log.d(getClass().getSimpleName(), tripDurationInSeconds + "");
         i.putExtra("duration_in_seconds", tripDurationInSeconds);
         i.putExtra(getString(R.string.is_viewing_highest_pothole_trip), false);
         i.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationTreeMap);
-        Log.d(getClass().getSimpleName(), new Gson().toJson(speedWithLocationTreeMap));
+        // Log.d(getClass().getSimpleName(), new Gson().toJson(speedWithLocationTreeMap));
         startActivity(i);
     }
 

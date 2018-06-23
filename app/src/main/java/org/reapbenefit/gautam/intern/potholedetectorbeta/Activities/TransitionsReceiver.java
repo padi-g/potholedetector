@@ -79,7 +79,7 @@ public class TransitionsReceiver extends IntentService {
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             DetectedActivity detectedActivity = result.getMostProbableActivity();
-            Log.d(getClass().getSimpleName(), detectedActivity.toString());
+            // Log.d(getClass().getSimpleName(), detectedActivity.toString());
             //committing current activity to shared prefs
             if (detectedActivity != null) {
                 editor.putString("currentActivity", new Gson().toJson(detectedActivity).toString()).commit();

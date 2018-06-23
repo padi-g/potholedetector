@@ -264,7 +264,7 @@ public class HTTPHandler {
             httpURLConnection.setRequestMethod("POST");
             httpURLConnection.setDoOutput(true);
             String jsonInput = new Gson().toJson(tripDataLambda);
-            Log.d(TAG, "Sending data: " + jsonInput);
+            // Log.d(TAG, "Sending data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
@@ -296,7 +296,7 @@ public class HTTPHandler {
             httpURLConnection.setRequestMethod("POST");
             httpURLConnection.setDoOutput(true);
             String jsonInput = new Gson().toJson(tripDataLambda);
-            Log.d(TAG, "Sending user rating: " + jsonInput);
+            // Log.d(TAG, "Sending user rating: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
@@ -337,7 +337,7 @@ public class HTTPHandler {
                     response.append(inputLine);
                 }
                 in.close();
-                Log.d(TAG, response.toString());
+                // Log.d(TAG, response.toString());
                 return response.toString();
             } else
                 System.out.println("POST request failed " + responseCode);

@@ -84,7 +84,7 @@ public class TriplistFragment extends Fragment {
                 tripUploadingId = null;
             }
             createOfflineTripsListView();
-            Log.d(TAG, "broadcast received to change PB");
+            // Log.d(TAG, "broadcast received to change PB");
         }
     };
 
@@ -282,7 +282,7 @@ public class TriplistFragment extends Fragment {
         recyclerLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(recyclerLayoutManager);
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-        Log.d(TAG, tripUploadedId + "");
+        // Log.d(TAG, tripUploadedId + "");
         createOfflineTripsListView();
         uploadAllButton = (ImageButton) v.findViewById(R.id.upload_all_button);
         uploadAllButton.setOnClickListener(new View.OnClickListener() {

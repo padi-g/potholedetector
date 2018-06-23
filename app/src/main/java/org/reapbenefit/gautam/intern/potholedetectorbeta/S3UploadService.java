@@ -114,7 +114,7 @@ public class S3UploadService extends IntentService {
         tripList = (List<Trip>) intent.getSerializableExtra("trip_arrayList");
         if (tripList != null && !tripList.isEmpty()) {
             tripUploaded = tripList.get(0);
-            Log.d("tripUploaded", tripUploaded.getTrip_id());
+            // Log.d("tripUploaded", tripUploaded.getTrip_id());
             if (tripUploaded == null)
                 tripUploaded = new Gson().fromJson(dbPreferences.getString("uploadedTripJson", null), Trip.class);
             tripUploadedId = tripUploaded.getTrip_id();
