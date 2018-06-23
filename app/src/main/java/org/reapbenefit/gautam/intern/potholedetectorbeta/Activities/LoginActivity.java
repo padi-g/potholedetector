@@ -34,6 +34,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 
@@ -55,6 +56,8 @@ public class LoginActivity extends AppCompatActivity {
     private ProgressDialog dialog;
 
     ApplicationClass app;
+
+    private SharedPreferences uploadPreferences;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -79,7 +82,7 @@ public class LoginActivity extends AppCompatActivity {
                 .enableAutoManage(this /* FragmentActivity */, new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
                     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                        Log.i("Sign in", "Failed");
+                        // Log.i("Sign in", "Failed");
                     }
                 } /* OnConnectionFailedListener */)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
@@ -135,7 +138,7 @@ public class LoginActivity extends AppCompatActivity {
         //must prevent deletion of old user data
         SharedPreferences logoutPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         logoutPreferences.edit().putBoolean("loggedOut", false).commit();
-        Log.i("Sign in", "Trying");
+        // Log.i("Sign in", "Trying");
         signedIn = true;
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         startActivityForResult(signInIntent, RC_SIGN_IN);
@@ -159,7 +162,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void handleSignInResult(GoogleSignInResult result) {
-        Log.d("Sign in", "handleSignInResult:" + result.isSuccess());
+        // Log.d("Sign in", "handleSignInResult:" + result.isSuccess());
         if (result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
@@ -197,7 +200,7 @@ public class LoginActivity extends AppCompatActivity {
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        Log.i("Sign out", "yes");
+                        // Log.i("Sign out", "yes");
                         mStatusTextView.setVisibility(View.GONE);
                         mUser_nameTextView.setText("Please SIGN IN");
 
@@ -211,7 +214,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
         if(acct != null) {
-            Log.d("firebase auth", "firebaseAuthWithGoogle:" + acct.getId());
+            // Log.d("firebase auth", "firebaseAuthWithGoogle:" + acct.getId());
 
             AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
             mAuth.signInWithCredential(credential)
@@ -220,12 +223,18 @@ public class LoginActivity extends AppCompatActivity {
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
                                 // Sign in success, update UI with the signed-in user's information
-                                Log.d("firebase auth", "signInWithCredential:success");
+                                // Log.d("firebase auth", "signInWithCredential:success");
                                 FirebaseUser user = mAuth.getCurrentUser();
-                                //update UI
+                                //updating RDS
+                                uploadPreferences = getSharedPreferences("uploads", MODE_PRIVATE);
+                                uploadPreferences.edit().putString("FIREBASE_USER_ID", user.getUid().toString()).commit();
+                                Intent apiIntent = new Intent(LoginActivity.this, APIService.class);
+                                apiIntent.putExtra("request", "GET");
+                                apiIntent.putExtra("table", getString(R.string.user_data_table));
+                                startService(apiIntent);
                             } else {
                                 // If sign in fails, display a message to the user.
-                                Log.w("firebase auth", "signInWithCredential:failure", task.getException());
+                                // Log.w("firebase auth", "signInWithCredential:failure", task.getException());
                                 Toast.makeText(LoginActivity.this, "Authentication failed.",
                                         Toast.LENGTH_SHORT).show();
                                 //update UI

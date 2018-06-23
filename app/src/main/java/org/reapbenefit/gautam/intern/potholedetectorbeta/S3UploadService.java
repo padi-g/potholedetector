@@ -29,6 +29,7 @@ import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
 import com.google.gson.Gson;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 
 import java.io.File;
@@ -80,6 +81,16 @@ public class S3UploadService extends IntentService {
         super.onDestroy();
     }
 
+    private void stopProgressBar() {
+        Intent stopProgressBarIntent = new Intent(getString(R.string.upload_start_notifier_intent));
+        dbPreferencesEditor.remove("tripUploadedId").commit();
+    }
+
+    private void startProgressBar(String tripUploadingId) {
+        Intent startProgressBarIntent = new Intent(getString(R.string.upload_start_notifier_intent));
+        dbPreferencesEditor.remove("tripUploadedId");
+    }
+
     private void notifyConnectionTimeout() {
         initialiseNotification();
         notificationBuilder.setContentText("Network connection unavailable. Please try again later.");
@@ -88,13 +99,15 @@ public class S3UploadService extends IntentService {
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         dbPreferencesEditor = dbPreferences.edit();
         dbPreferencesEditor.putString("tripUploadedId", null).commit();
+        stopProgressBar();
+        stopProgressBar();
         stopSelf();
     }
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
-        settingsPreferences  = getSharedPreferences("uploads", MODE_PRIVATE);
+        // Log.d(getClass().getSimpleName(), "insideOnHandleIntent");
+        settingsPreferences = getSharedPreferences("uploads", MODE_PRIVATE);
         fileDelete = settingsPreferences.getBoolean(getString(R.string.file_delete_setting), false);
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         dbPreferencesEditor = dbPreferences.edit();
@@ -106,6 +119,7 @@ public class S3UploadService extends IntentService {
             if (tripUploaded == null)
                 tripUploaded = new Gson().fromJson(dbPreferences.getString("uploadedTripJson", null), Trip.class);
             tripUploadedId = tripUploaded.getTrip_id();
+            //startProgressBar(tripUploadedId);
             dbPreferencesEditor.putString("uploadedTripJson", new Gson().toJson(tripUploaded)).commit();
             uploadUri = intent.getParcelableExtra(UPLOAD_URI);
             dbPreferencesEditor.putString("uploadUriJson", new Gson().toJson(uploadUri)).commit();
@@ -121,16 +135,16 @@ public class S3UploadService extends IntentService {
                 filepath = uploadUri.toString().substring(uploadUri.toString().lastIndexOf('/'));
 
                 dbPreferencesEditor.putString("tripUploadedJson", tripUploadedId).commit();
-                Log.d(TAG, "tripUploaded " + tripUploadedId);
+                // Log.d(TAG, "tripUploaded " + tripUploadedId);
 
                 if (BuildConfig.DEBUG)
                     keyName = "debug/" + userId + filepath;
                 else
                     keyName = "logs/" + userId + filepath;
 
-                Log.d(getClass().getSimpleName(), keyName);
-                Log.d(getClass().getSimpleName(), filepath);
-                Log.d(getClass().getSimpleName(), bucketName);
+                // Log.d(getClass().getSimpleName(), keyName);
+                // Log.d(getClass().getSimpleName(), filepath);
+                // Log.d(getClass().getSimpleName(), bucketName);
 
                 s3Client = new AmazonS3Client(Util.getsCredProvider(this));
 
@@ -155,7 +169,7 @@ public class S3UploadService extends IntentService {
                 long filePosition = 0;
                 for (int i = 1; filePosition < contentLength; ++i) {
                     try {
-                        Log.d(getClass().getSimpleName(), "part " + i);
+                        // Log.d(getClass().getSimpleName(), "part " + i);
                         partSize = Math.min(partSize, (contentLength - filePosition));
                         UploadPartRequest uploadPartRequest = new UploadPartRequest()
                                 .withBucketName(bucketName)
@@ -168,9 +182,9 @@ public class S3UploadService extends IntentService {
 
                         long megabytesUploaded = (i - 1) * partSize;
                         int progress = (int) (((double) filePosition / (double) contentLength) * 100.0);
-                        Log.d("progress fp", String.valueOf(filePosition));
-                        Log.d("progress contentLength", String.valueOf(contentLength));
-                        Log.d("progress int", String.valueOf(progress));
+                        // Log.d("progress fp", String.valueOf(filePosition));
+                        // Log.d("progress contentLength", String.valueOf(contentLength));
+                        // Log.d("progress int", String.valueOf(progress));
                         notificationBuilder.setContentText(progress + "% uploaded");
                         notificationManager.notify(mNotificationId, notificationBuilder.build());
 
@@ -179,48 +193,55 @@ public class S3UploadService extends IntentService {
                         filePosition += partSize;
                         uploadIdList.add(initResult.getUploadId());
                     } catch (Exception e) {
-                        Log.e(getClass().getSimpleName(), e.getMessage());
+                        // Log.e(getClass().getSimpleName(), e.getMessage());
                         notificationBuilder.setContentText("Upload failed");
                         notificationBuilder.setOngoing(false);
                         notificationManager.notify(mNotificationId, notificationBuilder.build());
+                        stopProgressBar();
                         break;
                     }
                 }
                 if (uploadIdList != null) {
-                    for (int i = 0; i < uploadIdList.size(); ++i) {
-                        completeMultipartUploadRequest = new CompleteMultipartUploadRequest(
-                                bucketName, keyName, uploadIdList.get(i), partETags
-                        );
-                        Log.d(TAG + " " + i, uploadIdList.get(i));
-                        s3Client.completeMultipartUpload(completeMultipartUploadRequest);
-                        Log.d("progress int", "100");
-                        notificationBuilder.setContentText("100% uploaded");
-                        notificationBuilder.setOngoing(false);
-                        notificationManager.notify(mNotificationId, notificationBuilder.build());
+                    try {
+                        for (int i = 0; i < uploadIdList.size(); ++i) {
+                            completeMultipartUploadRequest = new CompleteMultipartUploadRequest(
+                                    bucketName, keyName, uploadIdList.get(i), partETags
+                            );
+                            // Log.d(TAG + " " + i, uploadIdList.get(i));
+                            s3Client.completeMultipartUpload(completeMultipartUploadRequest);
+                            // Log.d("progress int", "100");
+                            notificationBuilder.setContentText("100% uploaded");
+                            notificationBuilder.setOngoing(false);
+                            notificationManager.notify(mNotificationId, notificationBuilder.build());
 
-                        //initiating DB update through TripViewModel
-                        Intent dbUpdateIntent = new Intent(getString(R.string.set_uploaded_true));
-                        dbUpdateIntent.putExtra("tripUploaded", tripUploaded);
-                        LocalBroadcastManager.getInstance(this).sendBroadcast(dbUpdateIntent);
+                            //initiating DB update through TripViewModel
+                            Intent dbUpdateIntent = new Intent(getString(R.string.set_uploaded_true));
+                            dbUpdateIntent.putExtra("tripUploaded", tripUploaded);
+                            LocalBroadcastManager.getInstance(this).sendBroadcast(dbUpdateIntent);
 
-                        //in case TLF is not in memory, BroadcastReceiver won't work
-                        dbPreferencesEditor.putString("tripUploaded", new Gson().toJson(tripUploaded).toString());
-                        dbPreferencesEditor.putString("tripUploadedId", tripUploadedId).commit();
-                        tripList.remove(tripUploaded);
+                            //in case TLF is not in memory, BroadcastReceiver won't work
+                            dbPreferencesEditor.putString("tripUploaded", new Gson().toJson(tripUploaded).toString());
+                            dbPreferencesEditor.putString("tripUploadedId", tripUploadedId).commit();
+                            tripList.remove(tripUploaded);
 
-                        //checking if settings contain auto delete
-                        if (fileDelete) {
                             File fileToBeDeleted = new File(uploadUri.getPath());
                             fileToBeDeleted.delete();
-                        }
 
-                        //if batch upload was requested, there will be more files in the list
-                        if (tripList.size() > 0) {
-                            Intent uploadAllIntent = new Intent(this, S3UploadService.class);
-                            uploadAllIntent.putExtra("trip_arrayList", (Serializable) tripList);
-                            startService(uploadAllIntent);
+                            //updating RDS
+                            Intent apiIntent = new Intent(this, APIService.class);
+                            apiIntent.putExtra("request", "POST");
+                            apiIntent.putExtra("table", getString(R.string.trip_data_table));
+                            apiIntent.putExtra("tripUploaded", tripUploaded);
+                            startService(apiIntent);
+
+                            //if batch upload was requested, there will be more files in the list
+                            if (tripList.size() > 0) {
+                                Intent uploadAllIntent = new Intent(this, S3UploadService.class);
+                                uploadAllIntent.putExtra("trip_arrayList", (Serializable) tripList);
+                                startService(uploadAllIntent);
+                            }
                         }
-                    }
+                    } catch (Exception e) {notifyConnectionTimeout();}
                 }
             } else {
                 notifyConnectionTimeout();
@@ -263,6 +284,7 @@ public class S3UploadService extends IntentService {
             notificationBuilder.setOngoing(false)
                     .setContentText("Upload timed out. Check your network connection.");
             notificationManager.notify(mNotificationId, notificationBuilder.build());
+            stopProgressBar();
             stopSelf();
         }
     }
@@ -292,7 +314,7 @@ public class S3UploadService extends IntentService {
             }
             catch (IOException ioException) {
                 isWifiConnected = false;
-                Log.e(TAG, "WifiConnectionTest threw Exception");
+                // Log.e(TAG, "WifiConnectionTest threw Exception");
             }
             return null;
         }

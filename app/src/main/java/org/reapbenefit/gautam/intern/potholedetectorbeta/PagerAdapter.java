@@ -21,7 +21,7 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
         //Initializing tab count
         this.tabCount= tabCount;
         this.inCar = inCar;
-        Log.i(getClass().getSimpleName(), this.inCar + "");
+        // Log.i(getClass().getSimpleName(), this.inCar + "");
     }
 
     //Overriding method getItem

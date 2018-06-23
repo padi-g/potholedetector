@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_content"
@@ -17,10 +17,11 @@
     <LinearLayout
         android:id="@+id/viewPagerCountDots"
         android:layout_width="match_parent"
-        android:layout_above="@+id/ll_footer"
-        android:layout_marginBottom="12dp"
+        app:layout_anchor="@+id/ll_footer"
+        app:layout_anchorGravity="bottom|center"
+        android:layout_marginBottom="15sp"
         android:layout_alignParentLeft="true"
-        android:gravity="center"
+        android:gravity="center|bottom"
         android:orientation="horizontal"
         android:layout_height="?attr/actionBarSize"/>
 
@@ -28,6 +29,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:id="@+id/ll_footer"
+        android:layout_gravity="bottom"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:orientation="vertical">
@@ -36,7 +38,7 @@
         android:id="@+id/finish_button"
         style="?android:attr/borderlessButtonStyle"
         android:layout_width="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="center|bottom"
         android:layout_height="100dp"
         android:background="@color/colorPrimaryDark"
         android:text="Get started"
@@ -47,4 +49,4 @@
         />
 
     </LinearLayout>
-</RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

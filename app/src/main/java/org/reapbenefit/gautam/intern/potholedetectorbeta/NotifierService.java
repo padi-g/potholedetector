@@ -39,7 +39,7 @@ public class NotifierService extends Service {
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                Log.i(getClass().getSimpleName(), "Polling for activity successful");
+                // Log.i(getClass().getSimpleName(), "Polling for activity successful");
             }
         });
         return Service.START_STICKY;

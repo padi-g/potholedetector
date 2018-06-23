@@ -24,6 +24,17 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="version 1.26.1_debug"
+                android:textAlignment="center"
+                android:textStyle="normal|bold"
+                android:textColor="@android:color/black"
+                android:textSize="15dp"
+                android:fontFamily="sans-serif-condensed"
+                android:paddingTop="10dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:text="This app is in beta"
                 android:textAlignment="center"
                 android:textStyle="normal|bold"

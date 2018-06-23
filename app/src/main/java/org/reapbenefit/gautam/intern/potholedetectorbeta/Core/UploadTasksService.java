@@ -66,7 +66,7 @@ public class UploadTasksService extends IntentService {
         mStorageRef = FirebaseStorage.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
         prefs = getSharedPreferences("uploads" ,MODE_PRIVATE);
-        Log.d("Preferences", "Inside onHandleIntent Found file_delete = " + prefs.getBoolean("file_delete", false));
+        // Log.d("Preferences", "Inside onHandleIntent Found file_delete = " + prefs.getBoolean("file_delete", false));
 
         mBuilder = new NotificationCompat.Builder(getApplicationContext())
                 .setSmallIcon(R.drawable.ic_upload)
@@ -94,13 +94,13 @@ public class UploadTasksService extends IntentService {
 
         UploadTask uploadTask = fileRef.putFile(uri);
 
-        Log.d("GCPUploads", "happening");
+        // Log.d("GCPUploads", "happening");
 
         uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
                 double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                Log.d("Uploading ", progress + "% done");
+                // Log.d("Uploading ", progress + "% done");
                 uploadProgress = (int) progress;
                 publishProgress(uploadProgress);
             }

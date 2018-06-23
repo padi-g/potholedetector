@@ -75,7 +75,7 @@ public class OnboardingActivity extends AppCompatActivity {
                     .enableAutoManage(this /* FragmentActivity */, new GoogleApiClient.OnConnectionFailedListener() {
                         @Override
                         public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                            Log.i("Sign in", "Failed");
+                            // Log.i("Sign in", "Failed");
                         }
                     } /* OnConnectionFailedListener */)
                     .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
@@ -93,7 +93,7 @@ public class OnboardingActivity extends AppCompatActivity {
             });
 
             if(mAuth.getCurrentUser() != null) {
-                Log.d("Onboarding", "Using google auth");
+                // Log.d("Onboarding", "Using google auth");
                 sharedPreferences.edit().putBoolean(COMPLETED_ONBOARDING_PREF_NAME, true).commit();
                 signedIn = true;
                 continueToMainActivity();
@@ -113,14 +113,14 @@ public class OnboardingActivity extends AppCompatActivity {
 
 
         }else {
-            Log.d("Onboarding", "Using shared preferences");
+            // Log.d("Onboarding", "Using shared preferences");
             continueToMainActivity();
         }
     }
 
     public void signIn() {
         SignIn.setEnabled(false);
-        Log.i("Sign in", "Trying");
+        // Log.i("Sign in", "Trying");
         signedIn = true;
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         startActivityForResult(signInIntent, RC_SIGN_IN);
@@ -144,7 +144,7 @@ public class OnboardingActivity extends AppCompatActivity {
     }
 
     private void handleSignInResult(GoogleSignInResult result) {
-        Log.d("Sign in", "handleSignInResult:" + result.isSuccess());
+        // Log.d("Sign in", "handleSignInResult:" + result.isSuccess());
         if (result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
@@ -166,13 +166,13 @@ public class OnboardingActivity extends AppCompatActivity {
 
         } else {
             // Signed out, show unauthenticated UI.
-            Log.d("K-Onboarding", "FirebaseAuth failed");
+            // Log.d("K-Onboarding", "FirebaseAuth failed");
         }
     }
 
     private void firebaseAuthWithGoogle(final GoogleSignInAccount acct) {
         if(acct != null) {
-            Log.d("firebase auth", "firebaseAuthWithGoogle:" + acct.getId());
+            // Log.d("firebase auth", "firebaseAuthWithGoogle:" + acct.getId());
             AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
             mAuth.signInWithCredential(credential)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -180,9 +180,9 @@ public class OnboardingActivity extends AppCompatActivity {
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
                                 // Sign in success, update UI with the signed-in user's information
-                                Log.d("firebase auth", "signInWithCredential:success");
+                                // Log.d("firebase auth", "signInWithCredential:success");
                                 FirebaseUser user = mAuth.getCurrentUser();
-                                Log.d("Firebase UUID: ", user.getUid());
+                                // Log.d("Firebase UUID: ", user.getUid());
                                 uploadEditor.putString("FIREBASE_USER_ID", user.getUid());
                                 uploadEditor.apply();
                                 uploadEditor.commit();
@@ -190,7 +190,7 @@ public class OnboardingActivity extends AppCompatActivity {
                                 //update UI
                             } else {
                                 // If sign in fails, display a message to the user.
-                                Log.w("firebase auth", "signInWithCredential:failure", task.getException());
+                                // Log.w("firebase auth", "signInWithCredential:failure", task.getException());
                                 Toast.makeText(OnboardingActivity.this, "Authentication failed.",
                                         Toast.LENGTH_SHORT).show();
                                 //update UI

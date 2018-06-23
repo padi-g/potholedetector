@@ -14,10 +14,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
-import android.os.Parcelable;
 import android.os.SystemClock;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -34,11 +31,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.SpeedWithLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
@@ -46,6 +44,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -90,6 +89,8 @@ public class EasyModeFragment extends Fragment {
     private boolean isChronometerRunning;
     private SharedPreferences animatorPreferences;
     private SharedPreferences.Editor animatorPreferencesEditor;
+
+    private TreeMap<Integer, SpeedWithLocation> speedWithLocationTreeMap;
 
     ApplicationClass app;
     private int stoppedMilliseconds;
@@ -151,7 +152,7 @@ public class EasyModeFragment extends Fragment {
         chronometer = v.findViewById(R.id.chronometer);
 
         inCar = getArguments().getBoolean("inCar", false);
-        Log.i(getClass().getSimpleName(), inCar + "");
+        // Log.i(getClass().getSimpleName(), inCar + "");
         bgframe = (CoordinatorLayout) v.findViewById(R.id.easyframe);
         bgframe.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
         statusIndicatorText = (TextView) v.findViewById(R.id.easytext);
@@ -269,6 +270,7 @@ public class EasyModeFragment extends Fragment {
     }
 
     private Trip newTrip;
+    private long tripDurationInSeconds;
     /*
     *   receives the broadcast from the logger service once the trip is ended
     *   Sets the bg to one of two states depending on whether the last trip was successful
@@ -279,19 +281,21 @@ public class EasyModeFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             newTrip = intent.getParcelableExtra("trip_object");
             tripStatus = intent.getBooleanExtra("LoggingStatus", false);
+            speedWithLocationTreeMap = (TreeMap<Integer, SpeedWithLocation>) intent.getSerializableExtra(getString(R.string.speed_with_location_hashmap));
+            tripDurationInSeconds = intent.getLongExtra(getString(R.string.duration_in_seconds), 0);
             if(!tripStatus){
                 uploadFileUri = intent.getParcelableExtra("filename");
                 if(uploadFileUri == null){
-                    statusIndicatorText.setText("Sorry, we could not detect your location accurately");
+                    Toast.makeText(getActivity().getApplicationContext(), "Sorry, we could not detect your location accurately", Toast.LENGTH_SHORT).show();
                 }else {
-                    Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
-                    statusIndicatorText.setText("Thanks for your contribution!");
+                    // Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
+                    Toast.makeText(getActivity().getApplicationContext(), "Thanks for your contribution!", Toast.LENGTH_SHORT).show();
                     if(internetAvailable() && autoUploadOn()) {
                         startUploadService();
                     }else if(!internetAvailable()){
-                        Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_SHORT).show();
                     }else if(!autoUploadOn())
-                        Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_SHORT).show();
                     openMap();
                 }
                 ////////// redundant
@@ -328,11 +332,19 @@ public class EasyModeFragment extends Fragment {
         intent.putExtra("trip_arrayList", (Serializable) tripList);
         intent.putExtra("upload_uri", uploadFileUri);
         this.getContext().startService(intent);
-
+        /*//notifying TriplistFragment that upload has started (required for starting progress bar on auto-upload)
+        Intent uploadStartNotifierIntent = new Intent(getString(R.string.upload_start_notifier_intent));
+        uploadStartNotifierIntent.putExtra("tripUploadingId", newTrip.getTrip_id());
+        LocalBroadcastManager.getInstance(getContext()).sendBroadcast(uploadStartNotifierIntent);*/
     }
 
     private void openMap(){
         Intent i = new Intent(this.getActivity(), MapsActivity.class);
+        Log.d(getClass().getSimpleName(), tripDurationInSeconds + "");
+        i.putExtra("duration_in_seconds", tripDurationInSeconds);
+        i.putExtra(getString(R.string.is_viewing_highest_pothole_trip), false);
+        i.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationTreeMap);
+        Log.d(getClass().getSimpleName(), new Gson().toJson(speedWithLocationTreeMap));
         startActivity(i);
     }
 
@@ -367,7 +379,7 @@ public class EasyModeFragment extends Fragment {
         // Provide an additional rationale to the user. This would happen if the user denied the
         // request previously, but didn't check the "Don't ask again" checkbox.
         if (shouldProvideRationale) {
-            Log.i("EasyModeFragment", "Displaying permission rationale to provide additional context.");
+            // Log.i("EasyModeFragment", "Displaying permission rationale to provide additional context.");
 
             showSnackbar(R.string.permission_rationale, android.R.string.ok,
                     new View.OnClickListener() {
@@ -379,7 +391,7 @@ public class EasyModeFragment extends Fragment {
                     });
 
         } else {
-            Log.i("EasyModeFragment", "Requesting permission");
+            // Log.i("EasyModeFragment", "Requesting permission");
             // Request permission. It's possible this can be auto answered if device policy
             // sets the permission in a given state or the user denied the permission
             // previously and checked "Never ask again".
@@ -408,7 +420,7 @@ public class EasyModeFragment extends Fragment {
             isChronometerRunning = timePreferences.getBoolean("isChronometerRunning", false);
             if (isChronometerRunning && chronometer != null) {
                 long startTime = timePreferences.getLong("startTime", SystemClock.elapsedRealtime());
-                Log.d("Chronometer new Base", String.valueOf(startTime));
+                // Log.d("Chronometer new Base", String.valueOf(startTime));
                 chronometer.setBase(startTime);
                 chronometer.start();
             }
@@ -418,7 +430,7 @@ public class EasyModeFragment extends Fragment {
     @Override
         public void onPause() {
         super.onPause();
-        Log.d("Chronometer", "Pausing EMF");
+        // Log.d("Chronometer", "Pausing EMF");
         //getting current time of chronometer
         String currentTime = chronometer.getText().toString();
         String currentTimeArray[] = currentTime.split(":");
@@ -433,7 +445,7 @@ public class EasyModeFragment extends Fragment {
         long startTime = SystemClock.elapsedRealtime() - stoppedMilliseconds;
         timePreferencesEditor.putLong("startTime", startTime)
                 .apply();
-        Log.d("Chronometer set base", SystemClock.elapsedRealtime() - chronometer.getBase() + "");
+        // Log.d("Chronometer set base", SystemClock.elapsedRealtime() - chronometer.getBase() + "");
     }
 
     private boolean checkPermissions() {

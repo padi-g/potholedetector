@@ -13,7 +13,6 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 public class TrafficTimeService extends IntentService {
     private Date startTime;
@@ -33,15 +32,15 @@ public class TrafficTimeService extends IntentService {
         if (start != null)
             startTime = new Gson().fromJson(start, Date.class);
         else
-            Log.i(TAG, "startTime is null");
+            // Log.i(TAG, "startTime is null");
         //getting current activity from TransitionReceiver
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         editor = sharedPreferences.edit();
         currentActivity = sharedPreferences.getString("currentActivity", null);
         if (currentActivity != null) {
             DetectedActivity activity = new Gson().fromJson(currentActivity, DetectedActivity.class);
-            Log.i(TAG, currentActivity.toString());
-            if (currentActivity.toString().contains("STILL") && activity.getConfidence() >= 70) {
+            // Log.i(TAG, currentActivity.toString());
+            if (currentActivity.toString().contains("STILL") && activity.getConfidence() >= 30) {
                 newTime = Calendar.getInstance().getTime();
                 minutesWasted += newTime.getTime() - startTime.getTime();
                 Log.i("minutesWasted", minutesWasted + "");
@@ -50,7 +49,5 @@ public class TrafficTimeService extends IntentService {
                 editor.commit();
             }
         }
-        else
-            Log.i(TAG, "currentActivity is null");
     }
 }

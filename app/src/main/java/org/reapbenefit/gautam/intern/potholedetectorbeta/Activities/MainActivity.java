@@ -11,17 +11,14 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -29,25 +26,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
-import com.amazonaws.AmazonWebServiceClient;
-import com.amazonaws.AmazonWebServiceRequest;
-import com.amazonaws.AmazonWebServiceResponse;
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.DefaultRequest;
-import com.amazonaws.Request;
-import com.amazonaws.auth.AWS4Signer;
-import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.auth.CognitoCachingCredentialsProvider;
-import com.amazonaws.http.AmazonHttpClient;
-import com.amazonaws.http.HttpClient;
-import com.amazonaws.http.HttpMethodName;
-import com.amazonaws.http.HttpResponse;
-import com.amazonaws.http.HttpResponseHandler;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.internal.Constants;
 import com.appsee.Appsee;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
@@ -67,7 +46,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
@@ -77,14 +55,6 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.OverviewFragm
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.S3UploadService;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.SplashActivity;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Util;
-
-import java.net.URI;
-
-import io.appanalytics.sdk.AppAnalytics;
 
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
@@ -129,14 +99,14 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = this;
-        Log.d(TAG, "Inside onCreate");
+        // Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         setContentView(R.layout.activity_main);
 
         inCar = getIntent().getBooleanExtra("inCar", false);
-        Log.i("inCar MainActivity old", inCar + "");
+        // Log.i("inCar MainActivity old", inCar + "");
         //Adding toolbar to the activity
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -156,14 +126,12 @@ public class MainActivity extends AppCompatActivity
         settingsRequest();
         checkPermissions();
 
-        //Appsee.start();
-        //Appsee.setUserId(getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null));
-
-        /*
-        getting user data from AWS
-         */
-        //new GetUserDataAsyncTask().execute();
-
+        if (!BuildConfig.DEBUG) {
+            Appsee.start();
+            String userId = getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null);
+            if (userId != null)
+                Appsee.setUserId(userId);
+        }
         //Initializing the tablayout
         tabLayout = (TabLayout) findViewById(R.id.tabLayout);
 
@@ -275,10 +243,10 @@ public class MainActivity extends AppCompatActivity
                             app.setCurrentLocation(task.getResult());
                             if(task.getResult().getAccuracy() < 25 && app.isTripEnded()) {
                                 //showSnackbar("Location detected");
-                                Log.d(TAG, "Location Detected");
+                                // Log.d(TAG, "Location Detected");
                             }
                         } else {
-                            Log.w(TAG, "getLastLocation:exception", task.getException());
+                            // Log.w(TAG, "getLastLocation:exception", task.getException());
 
                             showSnackbar(getString(R.string.no_location_detected));
                         }
@@ -336,7 +304,7 @@ public class MainActivity extends AppCompatActivity
         // Provide an additional rationale to the user. This would happen if the user denied the
         // request previously, but didn't check the "Don't ask again" checkbox.
         if (shouldProvideRationale) {
-            Log.i(TAG, "Displaying permission rationale to provide additional context.");
+            // Log.i(TAG, "Displaying permission rationale to provide additional context.");
 
             showSnackbar(R.string.permission_rationale, android.R.string.ok,
                     new View.OnClickListener() {
@@ -348,7 +316,7 @@ public class MainActivity extends AppCompatActivity
                     });
 
         } else {
-            Log.i(TAG, "Requesting permission");
+            // Log.i(TAG, "Requesting permission");
             // Request permission. It's possible this can be auto answered if device policy
             // sets the permission in a given state or the user denied the permission
             // previously and checked "Never ask again".
@@ -362,12 +330,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        Log.i(TAG, "onRequestPermissionResult");
+        // Log.i(TAG, "onRequestPermissionResult");
         if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
             if (grantResults.length <= 0) {
                 // If user interaction was interrupted, the permission request is cancelled and you
                 // receive empty arrays.
-                Log.i(TAG, "User interaction was cancelled.");
+                // Log.i(TAG, "User interaction was cancelled.");
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted.
                 getLastLocation();
@@ -483,43 +451,6 @@ public class MainActivity extends AppCompatActivity
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
-
-    private class GetUserDataAsyncTask extends AsyncTask<Void, Void, Void>{
-        @Override
-        protected Void doInBackground(Void... voids) {
-            CognitoCachingCredentialsProvider cognitoCachingCredentialsProvider = Util.getsCredProvider(
-                    context);
-            String accessKey = cognitoCachingCredentialsProvider.getCredentials().getAWSAccessKeyId();
-            String secretKey = cognitoCachingCredentialsProvider.getCredentials().getAWSSecretKey();
-            String sessionKey = cognitoCachingCredentialsProvider.getCredentials().getSessionToken();
-
-            Log.d("Access Key", accessKey);
-            Log.d("Secret Key", secretKey);
-            int i = 0;
-            Log.d("Session Key", sessionKey.substring(0, sessionKey.length()/2));
-            Log.d("Session Key", sessionKey.substring(sessionKey.length()/2 + 1, sessionKey.length() - 1));
-
-            AmazonWebServiceRequest amazonWebServiceRequest = new AmazonWebServiceRequest() {};
-            ClientConfiguration clientConfiguration = new ClientConfiguration();
-            String API_GATEWAY_SERVICE_NAME = "execute-api";
-            Request request = new DefaultRequest(amazonWebServiceRequest,API_GATEWAY_SERVICE_NAME);
-            request.setEndpoint(URI.create("https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Staging/rdsCreate" +
-                    "/potholes/"));
-            request.setHttpMethod(HttpMethodName.GET);
-
-            AWS4Signer signer = new AWS4Signer();
-            signer.setServiceName(API_GATEWAY_SERVICE_NAME);
-            signer.setRegionName(Region.getRegion(Regions.US_EAST_1).getName());
-            signer.sign(request, cognitoCachingCredentialsProvider.getCredentials());
-
-            BasicSessionCredentials credentials = new BasicSessionCredentials(accessKey, secretKey, sessionKey);
-
-            AmazonWebServiceResponse response = new AmazonWebServiceResponse();
-
-            return null;
-        }
-    }
-
 
     /*
     public void startActivityService() {

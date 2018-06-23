@@ -24,7 +24,7 @@ public class TransitionAlarm extends BroadcastReceiver {
     @SuppressLint("RestrictedApi")
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.i(TAG, "Firing TransitionReceiver");
+        // Log.i(TAG, "Firing TransitionReceiver");
         activityRecognitionClient = new ActivityRecognitionClient(context);
         //connecting to ARS every 3 seconds, checking for activity
         Task<Void> task = activityRecognitionClient.requestActivityUpdates(
@@ -35,7 +35,7 @@ public class TransitionAlarm extends BroadcastReceiver {
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                Log.i(getClass().getSimpleName(), "Polling for activity successful");
+                // Log.i(getClass().getSimpleName(), "Polling for activity successful");
             }
         });
     }

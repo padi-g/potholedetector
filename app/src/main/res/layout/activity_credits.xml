@@ -22,7 +22,7 @@
             android:orientation="vertical">
 
             <TextView
-                android:text="Built by Gautam Padiyar"
+                android:text="Built by Gautam Padiyar\nand\nKanishk Kakar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="50dp"
@@ -32,12 +32,12 @@
                 android:textSize="18sp"
                 android:textStyle="normal|bold" />
 
-            <TextView
+            <!--<TextView
                 android:text="using \n Android Studio + Firebase"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                android:textAlignment="center"/>
+                android:textAlignment="center"/>-->
 
 
             <TextView

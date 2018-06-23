@@ -1,10 +1,15 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -16,11 +21,13 @@ import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -30,7 +37,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.SpeedWithLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
@@ -40,13 +49,18 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+
+import static org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter.roundTwoDecimals;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -78,15 +92,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private SharedPreferences tripStatsPreferences;
     private SharedPreferences.Editor tripStatsEditor;
     private Set<String> tripIdSet;
-
+    private TreeMap<Integer, SpeedWithLocation> speedWithLocationTreeMap = new TreeMap<>();
+    private final String TAG = getClass().getSimpleName();
+    private Trip highestPotholeTrip;
     private SharedPreferences dbPreferences;
     private SharedPreferences.Editor dbPreferencesEditor;
     private TextView definitePotholeCountTextView;
+    private boolean isViewingHighestPotholeTrip;
+    private long tripDurationInSeconds;
+
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
     }
 
     @Override
@@ -104,6 +122,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Trip Summary");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+
+        Map<Integer, SpeedWithLocation> simpleMap = (Map<Integer, SpeedWithLocation>) getIntent().getSerializableExtra(getString(R.string.speed_with_location_hashmap));
+        if (simpleMap != null) {
+            speedWithLocationTreeMap = new TreeMap<>(simpleMap);
+        }
+        else {
+            speedWithLocationTreeMap = null;
+        }
+
+        tripDurationInSeconds = getIntent().getLongExtra(getString(R.string.duration_in_seconds), 0);
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         logAnalytics("map_opened");
@@ -140,35 +169,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 submitButton.setVisibility(View.GONE);
                 accuracySeekbar.setVisibility(View.GONE);
                 textview.setVisibility(View.GONE);
+                Intent updateUserRatingIntent = new Intent(MapsActivity.this, APIService.class);
+                updateUserRatingIntent.putExtra("request", "POST");
+                updateUserRatingIntent.putExtra("table", getString(R.string.trip_data_table));
+                finishedTrip.setUserRating(accuracy_result);
+                Log.d(TAG, accuracy_result + "");
+                updateUserRatingIntent.putExtra(getString(R.string.trip_with_user_rating), finishedTrip);
+                startService(updateUserRatingIntent);
             }
         });
-
-
-        ProcessFileTask task = new ProcessFileTask();
-        task.execute(tripID);
-        File file = new File(getApplicationContext().getFilesDir(), "analysis/" + tripID + ".csv");
-
-        Log.d("maps", file.toString());
-
-        //File file = new File(getApplicationContext().getFilesDir(), "locs/"+trip.getTrip_id()+".txt");
-
-        try {
-            inputStream = new FileInputStream(file);
-        } catch (Exception e) {
-            System.out.println("Exception_raised " + e.toString());
-        }
-
-        InputStreamReader isr = new InputStreamReader(inputStream);
-        BufferedReader bufferedReader = new BufferedReader(isr);
-        String line;
-        try {
-            while ((line = bufferedReader.readLine()) != null) {
-                String tokens[] = line.split(",");
-                latLngs.add(new LatLng(Double.valueOf(tokens[0]), Double.valueOf(tokens[1])));
-            }
-        } catch (Exception e) {
-
-        }
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         mapFragment = (MapFragment) getFragmentManager()
@@ -176,9 +185,72 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mapFragment.getMapAsync(this);
 
+        isViewingHighestPotholeTrip = getIntent().getBooleanExtra(getString(R.string.is_viewing_highest_pothole_trip), false);
+
+        if (!isViewingHighestPotholeTrip) {
+            ProcessFileTask task = new ProcessFileTask();
+            task.execute(tripID);
+            File file = new File(getApplicationContext().getFilesDir(), "analysis/" + tripID + ".csv");
+
+            Log.d("maps", file.toString());
+
+            //File file = new File(getApplicationContext().getFilesDir(), "locs/"+trip.getTrip_id()+".txt");
+
+            try {
+                inputStream = new FileInputStream(file);
+            } catch (Exception e) {
+                System.out.println("Exception_raised " + e.toString());
+            }
+
+            InputStreamReader isr = new InputStreamReader(inputStream);
+            BufferedReader bufferedReader = new BufferedReader(isr);
+            String line;
+            try {
+                while ((line = bufferedReader.readLine()) != null) {
+                    String tokens[] = line.split(",");
+                    latLngs.add(new LatLng(Double.valueOf(tokens[0]), Double.valueOf(tokens[1])));
+                }
+            } catch (Exception e) {
+
+            }
+        }
+        else {
+            //reading highestPotholeTrip data from SharedPreferences
+            String highestPotholeTripJson = dbPreferences.getString("highestPotholeTrip", null);
+            if (highestPotholeTripJson != null) {
+                highestPotholeTrip = new Gson().fromJson(highestPotholeTripJson, Trip.class);
+                drawInformationalUI(highestPotholeTrip);
+                //populating marker locations on map
+                Set<String> definitePotholeLocationSet = dbPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
+                Iterator iterator = definitePotholeLocationSet.iterator();
+                while (iterator.hasNext() && mMap != null) {
+                    LatLng definitePotholeLocation = new Gson().fromJson(iterator.next().toString(), LatLng.class);
+                    mMap.addMarker(new MarkerOptions().position(definitePotholeLocation).icon(BitmapDescriptorFactory.defaultMarker()));
+                }
+            }
+        }
         // setup action bar
         }
 
+    private void drawInformationalUI(Trip trip) {
+        spinner.setVisibility(View.GONE);
+        duration.setText(trip.getDuration() + " minutes");
+        date.setText(trip.getStartTime().substring(0, 11));
+        trafficTime.setText(trip.getMinutesWasted() + " minutes");
+        accuracyLowTime.setText(trip.getMinutesAccuracyLow() + " minutes");
+        resultGrid.setVisibility(View.VISIBLE);
+        accuracySeekbar.setVisibility(View.VISIBLE);
+        submitButton.setVisibility(View.VISIBLE);
+        if (finishedTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG) {
+            distance.setText(" < 0.5 km");
+            probablePotholeCountTextView.setText("Sorry, you must travel at least 0.5 km");
+            definitePotholeCountTextView.setText("Sorry, you must travel at least 0.5 km");
+        } else {
+            distance.setText(roundTwoDecimals(trip.getDistanceInKM()) + " km");
+            probablePotholeCountTextView.setText(trip.getProbablePotholeCount() + "");
+            definitePotholeCountTextView.setText(trip.getDefinitePotholeCount() + "");
+        }
+    }
 
 
     public void populatePotholeMarkerPoints(){
@@ -217,7 +289,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
         if(!latLngs.isEmpty()) {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngs.get(0), 15));
 
@@ -227,13 +298,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 polyline.add(l);
             }
             mMap.addPolyline(polyline);
-            Set<String> probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.probable_pothole_location_set), new HashSet<String>());
-            Set<String> definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
+            Set<String> probablePotholeStringSet = new HashSet<>();
+            Set<String> definitePotholeStringSet = new HashSet<>();
+            if (!isViewingHighestPotholeTrip) {
+                probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.probable_pothole_location_set), new HashSet<String>());
+                definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
+            }
+            else {
+                //changing sets to read values of highest pothole trips
+                probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.highest_pothole_trip_probable_potholes), new HashSet<String>());
+                definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.highest_pothole_trip_definite_potholes), new HashSet<String>());
+            }
             if (!probablePotholeLatLngs.isEmpty()) {
-
                 for (LatLng l : probablePotholeLatLngs) {
                     probablePotholeStringSet.add(new Gson().toJson(l));
                 }
+            }
+            if (!definitePotholeLatLngs.isEmpty()) {
                 for (LatLng l: definitePotholeLatLngs) {
                     mMap.addMarker(new MarkerOptions().position(l).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
                     definitePotholeStringSet.add(new Gson().toJson(l));
@@ -241,8 +322,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 tripStatsEditor.putStringSet(getString(R.string.probable_pothole_location_set), probablePotholeStringSet);
                 tripStatsEditor.putStringSet(getString(R.string.definite_pothole_location_set), definitePotholeStringSet);
                 tripStatsEditor.commit();
+                //sending broadcast to TriplistFragment to confirm if location set belongs to highestPotholeTrip
+                Intent highestPotholeCheckIntent = new Intent(getString(R.string.highest_pothole_latlngs_check));
+                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_definite_potholes), (Serializable) definitePotholeStringSet);
+                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_probable_potholes), (Serializable) probablePotholeStringSet);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(highestPotholeCheckIntent);
             }
-        }else {
+        }else if (!isViewingHighestPotholeTrip){
             textview.setText("No locations found");
         }
     }
@@ -254,12 +340,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void setProbablePotholeCount(int a){
         ApplicationClass.getInstance().getTrip().setProbablePotholeCount(a);
+        finishedTrip.setProbablePotholeCount(a);
         //data required by TLF for updating TripViewModel instance
         dbPreferencesEditor.putInt("probablePotholeCount", a);
     }
 
     private void setDefinitePotholeCount(int a) {
         ApplicationClass.getInstance().getTrip().setDefinitePotholeCount(a);
+        finishedTrip.setDefinitePotholeCount(a);
         dbPreferencesEditor.putInt("definitePotholeCount", a);
         dbPreferencesEditor.commit();
     }
@@ -280,30 +368,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         int lineNumber = 0, prevLineNumber = 0;
         FileInputStream is;
         private float[] speedArray;
-
-        private float[] rightShift(float value) {
-            float arr[] = speedArray;
-            if (arr[2] != -1.0f) {
-                float temp = arr[2];
-                float temp1 = arr[1];
-                arr[0] = temp1;
-                arr[1] = temp;
-                arr[2] = value;
-            }
-            else if (arr[1] != -1.0f) {
-                arr[2] = value;
-            }
-            else if (arr[0] != -1.0f) {
-                arr[1] = value;
-            }
-            else
-                arr[0] = value;
-            return arr;
-        }
+        private boolean showInaccurateToast;
 
         private boolean didSpeedOscillate(float arr[]) {
-            if (speedArray[0] >= DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && speedArray[1] > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && speedArray[1] < DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND
-                    && speedArray[2] >= DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
+            if (arr[0] > arr[1] && arr[1] < arr[2])
                 return true;
             else
                 return false;
@@ -332,29 +400,55 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                         if (tokens[i].contains("speed")) {
                             speedIndex = i;
-                            Log.d("speedIndex", String.valueOf(i));
+                            // Log.d("speedIndex", String.valueOf(i));
                         }
                     }
 
-                    // populating our set of the points we are interested in
-                    while ((line = bufferedReader.readLine()) != null) {
-                        String values[] = line.split(",");
-                        lineNumber++;
-                        if(Float.valueOf(values[axisIndex]) > threshold && lineNumber>prevLineNumber+ linesPerPeriod){
-                            // this ignores the first period of data
-                            if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
-                                definitePointsOfInterest.put(lineNumber, line);
-                            else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND)
-                                probablePointsOfInterest.put(lineNumber, line);
-                            prevLineNumber = lineNumber;
+                    if (speedWithLocationTreeMap != null && speedWithLocationTreeMap.size() >= tripDurationInSeconds/3) {
+                        Log.d(TAG, new Gson().toJson(speedWithLocationTreeMap.toString()));
+                        //populating the set of the points we are interested in
+                        while ((line = bufferedReader.readLine()) != null) {
+                            String values[] = line.split(",");
+                            lineNumber++;
+                            if(Float.valueOf(values[axisIndex]) > threshold && lineNumber>prevLineNumber+ linesPerPeriod){
+                                // this ignores the first period of data
+                                int[] closestKeyValues = findClosestKeyValues(lineNumber);
+
+                                float speedValues[] = new float[]{speedWithLocationTreeMap.get(closestKeyValues[0]).getSpeed(),
+                                speedWithLocationTreeMap.get(closestKeyValues[1]).getSpeed(),
+                                speedWithLocationTreeMap.get(closestKeyValues[2]).getSpeed()};
+                                Log.d("speedValues", speedValues.toString());
+                                if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
+                                    definitePointsOfInterest.put(lineNumber, line);
+                                else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
+                                    probablePointsOfInterest.put(lineNumber, line);
+                                prevLineNumber = lineNumber;
+                            }
                         }
                     }
-
+                    else {
+                        Log.d(TAG, "inside else");
+                        showInaccurateToast = true;
+                        // populating our set of the points we are interested in
+                        while ((line = bufferedReader.readLine()) != null) {
+                            String values[] = line.split(",");
+                            Log.d(TAG, "speedmap null");
+                            lineNumber++;
+                            if (Float.valueOf(values[axisIndex]) > threshold && lineNumber > prevLineNumber + linesPerPeriod) {
+                                // this ignores the first period of data
+                                if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
+                                    definitePointsOfInterest.put(lineNumber, line);
+                                else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND)
+                                    probablePointsOfInterest.put(lineNumber, line);
+                                prevLineNumber = lineNumber;
+                            }
+                        }
+                    }
                 }
                 catch (Exception e){
 
                 }
-                Log.d("result before return", definitePointsOfInterest.size() + " " + probablePointsOfInterest.size());
+                // Log.d("result before return", definitePointsOfInterest.size() + " " + probablePointsOfInterest.size());
                 return definitePointsOfInterest.size() + " " + probablePointsOfInterest.size();
             } catch (FileNotFoundException e) {
                 return null;
@@ -362,53 +456,82 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
 
+        private int[] findClosestKeyValues(int lineNumber) {
+            int minDifference = Integer.MAX_VALUE;
+            int closestKeyValue = -1;
+            Set<Integer> keySet = speedWithLocationTreeMap.keySet();
+            int baseKey = findClosestKeyValue(lineNumber);
+            List<Integer> keyList = new ArrayList<>(keySet);
+            int[] arr = new int[3];
+            int indexOfBaseKey = keyList.indexOf(baseKey);
+            arr[0] = keyList.get(indexOfBaseKey - 1);
+            arr[1] = keyList.get(indexOfBaseKey);
+            arr[2] = keyList.get(indexOfBaseKey + 1);
+            return arr;
+        }
+
+        private int findClosestKeyValue(int lineNumber) {
+            int closestKey = -1;
+            try {
+                Iterator iterator = speedWithLocationTreeMap.entrySet().iterator();
+                int tempNumber = lineNumber;
+                int minDifference = Integer.MAX_VALUE;
+                while (iterator.hasNext()) {
+                    Map.Entry pair = (Map.Entry) iterator.next();
+                    int diff = Math.abs((int)pair.getKey() - lineNumber);
+                    if (diff < minDifference) {
+                        minDifference = diff;
+                        closestKey = (int) pair.getKey();
+                    }
+                }
+            } catch (Exception exception) {
+                Log.e(TAG, exception.getMessage());
+            }
+            return closestKey;
+        }
+
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
+            if (showInaccurateToast) {
+                Toast.makeText(MapsActivity.this.getApplicationContext(), R.string.speed_updates_not_enough, Toast.LENGTH_LONG).show();
+            }
             int indexOfSpace = result.indexOf(' ');
             int definitePotholeCount = Integer.parseInt(result.substring(0, indexOfSpace));
             int probablePotholeCount = Integer.parseInt(result.substring(indexOfSpace + 1));
-            Log.d("probableCount", probablePotholeCount + "");
-            Log.d("definiteCount", definitePotholeCount + "");
+            // Log.d("probableCount", probablePotholeCount + "");
+            // Log.d("definiteCount", definitePotholeCount + "");
             setProbablePotholeCount(probablePotholeCount);
             setDefinitePotholeCount(definitePotholeCount);
-            spinner.setVisibility(View.GONE);
-            duration.setText(finishedTrip.getDuration() + " minutes");
-            date.setText(finishedTrip.getStartTime().substring(0,11));
-            trafficTime.setText(finishedTrip.getMinutesWasted() + " minutes");
-            accuracyLowTime.setText(finishedTrip.getMinutesAccuracyLow() + " minutes");
-            resultGrid.setVisibility(View.VISIBLE);
-            accuracySeekbar.setVisibility(View.VISIBLE);
-            submitButton.setVisibility(View.VISIBLE);
-            if(finishedTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG){
-                distance.setText(" < 0.5 km");
-                probablePotholeCountTextView.setText("Sorry, you must travel at least 0.5 km");
-                definitePotholeCountTextView.setText("Sorry, you must travel at least 0.5 km");
-            }else{
-                distance.setText(roundTwoDecimals(finishedTrip.getDistanceInKM()) + " km");
-                probablePotholeCountTextView.setText(Integer.toString(probablePotholeCount));
-                definitePotholeCountTextView.setText(Integer.toString(definitePotholeCount));
-                populatePotholeMarkerPoints();
-                tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
-                if (!tripIdSet.contains(finishedTrip.getTrip_id())) {
-                    Log.d("MapsActivity", tripID + "");
-                    int validTrips = tripStatsPreferences.getInt("validTrips", 0);
-                    tripStatsEditor.putInt("validTrips", validTrips + 1);
-                    int sharedPrefsProbablePotholes = tripStatsPreferences.getInt("probablePotholes", 0);
-                    tripStatsEditor.putInt("probablePotholes", sharedPrefsProbablePotholes + probablePotholeCount);
-                    int sharedPrefsDefinitePotholes = tripStatsPreferences.getInt("definitePotholes", 0);
-                    tripStatsEditor.putInt("definitePotholes", sharedPrefsDefinitePotholes + definitePotholeCount);
-                }
-                tripIdSet.add(finishedTrip.getTrip_id());
-                tripStatsEditor.putStringSet("tripIdSet", tripIdSet);
-                tripStatsEditor.commit();
-                //only registering trip in database if it is useful to us
-                Intent newTripIntent = new Intent(getString(R.string.new_trip_insert));
-                newTripIntent.putExtra("trip_object", finishedTrip);
-                LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(MapsActivity.this);
-                localBroadcastManager.sendBroadcast(newTripIntent);
-                mapFragment.getMapAsync(MapsActivity.this);
+
+            drawInformationalUI(finishedTrip);
+            populatePotholeMarkerPoints();
+            tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
+            if (!tripIdSet.contains(finishedTrip.getTrip_id())) {
+                // Log.d("MapsActivity", tripID + "");
+                int validTrips = tripStatsPreferences.getInt("validTrips", 0);
+                tripStatsEditor.putInt("validTrips", validTrips + 1);
+                int sharedPrefsProbablePotholes = tripStatsPreferences.getInt("probablePotholes", 0);
+                tripStatsEditor.putInt("probablePotholes", sharedPrefsProbablePotholes + probablePotholeCount);
+                int sharedPrefsDefinitePotholes = tripStatsPreferences.getInt("definitePotholes", 0);
+                tripStatsEditor.putInt("definitePotholes", sharedPrefsDefinitePotholes + definitePotholeCount);
             }
+            tripIdSet.add(finishedTrip.getTrip_id());
+            tripStatsEditor.putStringSet("tripIdSet", tripIdSet);
+            tripStatsEditor.commit();
+            //only registering trip in database if it is useful to us
+            Intent newTripIntent = new Intent(getString(R.string.new_trip_insert));
+            newTripIntent.putExtra("trip_object", finishedTrip);
+            LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(MapsActivity.this);
+            localBroadcastManager.sendBroadcast(newTripIntent);
+            mapFragment.getMapAsync(MapsActivity.this);
+
+            //initiating service call to update RDS with pothole count
+            Intent updateTripPotholeCountIntent = new Intent(MapsActivity.this, APIService.class);
+            updateTripPotholeCountIntent.putExtra("request", "POST");
+            updateTripPotholeCountIntent.putExtra("table", getString(R.string.trip_data_table));
+            updateTripPotholeCountIntent.putExtra(getString(R.string.processed_trip), finishedTrip);
+            MapsActivity.this.startService(updateTripPotholeCountIntent);
         }
     }
 }

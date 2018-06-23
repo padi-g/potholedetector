@@ -7,7 +7,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.crashlytics.android.Crashlytics;
+import com.google.firebase.crash.FirebaseCrash;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.SplashActivity;
 
@@ -16,6 +18,7 @@ public class PlaceholderActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FirebaseCrash.setCrashCollectionEnabled(!BuildConfig.DEBUG);
         SharedPreferences onboardingPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         boolean onboarding = onboardingPreferences.getBoolean("onboarding", true);
 

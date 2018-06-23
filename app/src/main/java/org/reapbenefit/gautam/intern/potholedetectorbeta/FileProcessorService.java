@@ -72,7 +72,7 @@ public class FileProcessorService extends Service {
     public void onCreate(){
         super.onCreate();
 
-        Log.d(TAG, "onCreate");
+        // Log.d(TAG, "onCreate");
 
         //Get the csv file
 
@@ -88,8 +88,8 @@ public class FileProcessorService extends Service {
         File outputfile = new File(temp.getPath() + fetchTripID() + ".csv");
         //File outputfile = new File(temp.getPath(), "test.csv");
 
-        Log.d(TAG, inputfile.toString());
-        Log.d(TAG, outputfile.toString());
+        // Log.d(TAG, inputfile.toString());
+        // Log.d(TAG, outputfile.toString());
 
         try {
             inputStream = new FileInputStream(inputfile);
@@ -108,7 +108,7 @@ public class FileProcessorService extends Service {
                 }
             }
 
-            Log.d(TAG,latIndex + " " + accuracyIndex + " " + lngIndex);
+            // Log.d(TAG,latIndex + " " + accuracyIndex + " " + lngIndex);
 
             //////////////////   FOR first line
             line = bufferedReader.readLine();
@@ -128,7 +128,7 @@ public class FileProcessorService extends Service {
                 if (!(temp_gps0.equals(c_gps0) && temp_gps1.equals(c_gps1))) {
                     Location.distanceBetween(Double.valueOf(c_gps0), Double.valueOf(c_gps1), Double.valueOf(temp_gps0), Double.valueOf(temp_gps1), results);
                     distance_travelled += results[0];
-                    Log.d(TAG, "{lat: " + temp_gps0 + ", lng: " + temp_gps1 + "},");
+                    // Log.d(TAG, "{lat: " + temp_gps0 + ", lng: " + temp_gps1 + "},");
                     outputStream.write((temp_gps0 + "," + temp_gps1 + "\n").replace(" ", "").getBytes());
                 }
                 c_gps0 = temp_gps0;
@@ -138,17 +138,17 @@ public class FileProcessorService extends Service {
 
             }
 
-            Log.d(TAG, "Distance travelled " +  String.valueOf(distance_travelled));
+            // Log.d(TAG, "Distance travelled " +  String.valueOf(distance_travelled));
             mean = stats.getMean();
             std = stats.getStandardDeviation();
-            Log.d(TAG, "Mean " + mean);
-            Log.d(TAG, "std " + std);
+            // Log.d(TAG, "Mean " + mean);
+            // Log.d(TAG, "std " + std);
             setDistance_travelled(distance_travelled);
             inputStream.close();
             outputStream.close();
         } catch (Exception e) {
             System.out.println("Exception_raised " + e.toString());
-            Log.i("Exception_raised ", e.toString());
+            // Log.i("Exception_raised ", e.toString());
         }
 
         this.onDestroy();

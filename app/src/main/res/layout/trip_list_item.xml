@@ -69,9 +69,9 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:id="@+id/upload_button"
-        android:background="@drawable/button_border"
         android:textSize="15dp"
-        android:src="@drawable/ic_upload"
+        android:backgroundTint="@color/colorPrimary"
+        android:src="@drawable/ic_file_upload_black_24dp"
         android:textColor="@color/colorAccent"
         android:layout_marginRight="5dp"
         android:layout_marginBottom="15dp"
@@ -101,20 +101,6 @@
         android:layout_marginBottom="15dp"
         android:layout_marginTop="15dp"
         android:visibility="gone"
-        android:layout_weight="1"
-        android:focusable="true"/>
-
-    <ImageButton
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:id="@+id/map_button"
-        android:textSize="15dp"
-        android:background="@drawable/button_border"
-        android:src="@drawable/ic_action_map"
-        android:textColor="@color/colorAccent"
-        android:layout_marginRight="5dp"
-        android:layout_marginBottom="15dp"
-        android:layout_marginTop="15dp"
         android:layout_weight="1"
         android:focusable="true"/>
 

@@ -57,7 +57,7 @@
     </string-array>
     <string name="s3bucketname">***REMOVED***</string>
     <string name="notification_channel_id">PotholeNotifier</string>
-    <string name="invite_message">Hi! Check out this app to map potholes on Indian streets and help make our roads safer.</string>
+    <string name="invite_message">Hi! Check out this app to map potholes on Indian streets and help make our roads safer. Download it at: https://play.google.com/store/apps/details?id=org.reapbenefit.gautam.intern.potholedetectorbeta</string>
     <string name="db_update_from_maps_activity">DB_UPDATE_FROM_MAPS</string>
     <string name="set_uploaded_true">org.reapbenefit.gautam.intern.potholedetectorbeta.SET_UPLOADED_TRUE</string>
     <string name="new_trip_insert">tripstatus</string>
@@ -71,7 +71,29 @@
     <string name="first_section_title">Welcome.</string>
     <string name="second_section_title">Mapping potholes is simple.</string>
     <string name="third_section_title">Understand your data.</string>
-    <string name="first_section_info">This app is still in beta, which means that our calculations may be wrong sometimes.\nYou can help us by logging potholes continuously (preferably on a holder)</string>
-    <string name="second_section_info">Simply click the orange play button to start logging. Press the stop button to stop logging. </string>
+    <string name="first_section_info">Contribute to a global map of potholes on the road and ensure your own safety.</string>
+    <string name="second_section_info">Simply click the orange play button to start logging. Press the stop button to stop logging (preferably on a holder). </string>
     <string name="third_section_info">After every trip of more than half a kilometre, we\'ll show you a map.\nThe red markers represent definite potholes - watch out for them in the future.</string>
+
+    <!--API strings-->
+    <string name="user_data_table">UserData</string>
+    <string name="trip_data_table">TripsData</string>
+    <string name="highest_pothole_trip_broadcast">HIGHEST_POTHOLE_TRIP</string>
+    <string name="trips_not_in_RDS">tripsNotInRDS</string>
+    <string name="speed_with_location_hashmap">SPEED_WITH_LOCATION_HASHMAP</string>
+    <string name="global_unique_pothole_locations">GLOBAL_UNIQUE_POTHOLE_LOCATIONS</string>
+    <string name="processed_trip">PROCESSED_TRIP</string>
+    <string name="trip_with_user_rating">TRIP_WITH_USER_RATING</string>
+
+    <string name="highest_pothole_latlngs_check">HIGHEST_POTHOLE_LATLONG_CHECK</string>
+    <string name="is_viewing_highest_pothole_trip">IS_VIEWING_HIGHEST_POTHOLE_TRIP</string>
+    <string name="highest_pothole_trip_definite_potholes">HIGHEST_POTHOLE_TRIP_DEFINITE_POTHOLES</string>
+    <string name="highest_pothole_trip_probable_potholes">HIGHEST_POTHOLE_TRIP_PROBABLE_POTHOLES</string>
+
+    <string name="minutes_wasted">minutesWasted</string>
+    <string name="minutes_accuracy_low">minutesAccuracyLow</string>
+    <string name="traffic_time_start">TRAFFIC_TIME_START</string>
+    <string name="upload_start_notifier_intent">UPLOAD_START_NOTIFIER_INTENT</string>
+    <string name="duration_in_seconds">DURATION_IN_SECONDS</string>
+    <string name="speed_updates_not_enough">Your device could not register your vehicle speed. Results may be slightly inaccurate.</string>
 </resources>

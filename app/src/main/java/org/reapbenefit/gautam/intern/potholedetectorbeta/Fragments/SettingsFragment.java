@@ -32,13 +32,9 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-        boolean fileDeleteOption = prefs.getBoolean(getString(R.string.file_delete_setting), false);
         boolean autoUploadOption = prefs.getBoolean(getString(R.string.auto_upload_setting), true);
         if (s.equals(getString(R.string.auto_upload_setting))) {
             prefsEditor.putBoolean(getString(R.string.auto_upload_setting), !autoUploadOption).commit();
-        }
-        if (s.equals(getString(R.string.file_delete_setting))) {
-            prefsEditor.putBoolean(getString(R.string.file_delete_setting), !fileDeleteOption).commit();
         }
     }
 }

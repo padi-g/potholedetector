@@ -28,25 +28,20 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MyLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.TrafficTimeService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 
 import java.io.File;
@@ -61,8 +56,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -84,6 +80,8 @@ public class LoggerService extends Service implements SensorEventListener {
     protected String LocData, mLastUpdateTime;
     boolean gAvailable = true;
     private MediaPlayer mp;
+
+    private final float IDLE_TIME_UPPER_THRESHOLD = 1.38f;
 
     private boolean startFlag = false;
 
@@ -113,7 +111,7 @@ public class LoggerService extends Service implements SensorEventListener {
     private Handler trafficHandler;
     private BroadcastReceiver trafficReceiver;
     private long minutesWasted = -1;
-    private SharedPreferences transitionPrefs;
+    private SharedPreferences dbPreferences;
     private Date newTime;
     private Date startTrafficTime;
     private String currentActivity;
@@ -137,7 +135,7 @@ public class LoggerService extends Service implements SensorEventListener {
     private Set<String> newTripSet;
     private Set<String> toBeUploadedTripSet;
     private float speed;
-    private HashMap<Integer, SpeedWithLocation> speedWithLocationMap = new HashMap<>();
+    private TreeMap<Integer, SpeedWithLocation> speedWithLocationMap = new TreeMap<>();
 
     public LoggerService() {
         super();
@@ -218,6 +216,10 @@ public class LoggerService extends Service implements SensorEventListener {
 
         startForeground(1337, notification);
 
+        dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+
+        minutesWasted = dbPreferences.getLong(getString(R.string.minutes_wasted), 0);
+        minutesAccuracyLow = dbPreferences.getLong(getString(R.string.minutes_accuracy_low), 0);
     }
 
     @SuppressLint("RestrictedApi")
@@ -257,14 +259,23 @@ public class LoggerService extends Service implements SensorEventListener {
                 }
                 mCurrentLocation = location;
                 speed = location.getSpeed();
+                checkIfIdle(speed);
                 SpeedWithLocation speedWithLocation = new SpeedWithLocation();
-                speedWithLocation.setLocation(location);
+                speedWithLocation.setLatitude(location.getLatitude());
+                speedWithLocation.setLongitude(location.getLongitude());
                 speedWithLocation.setSpeed(speed);
                 speedWithLocationMap.put(no_of_lines, speedWithLocation);
                 mLastUpdateTime = getCurrentTime();
                 LocData = getLocData();
             }
         };
+    }
+
+    private void checkIfIdle(float s) {
+        if (s <= IDLE_TIME_UPPER_THRESHOLD) {
+            minutesWasted += Calendar.getInstance().getTimeInMillis() - startTrafficTime.getTime();
+            startTrafficTime = Calendar.getInstance().getTime();
+        }
     }
 
     private long age_ms(Location last) {
@@ -310,13 +321,13 @@ public class LoggerService extends Service implements SensorEventListener {
             gAvailable = false;
         }
 
-        Log.i(TAG, "Sensors setup");
+        // Log.i(TAG, "Sensors setup");
 
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
         mSensorManager.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
         mSensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_FASTEST);
 
-        Log.i(TAG, "Sensors listeners setup");
+        // Log.i(TAG, "Sensors listeners setup");
 
     }
 
@@ -330,10 +341,10 @@ public class LoggerService extends Service implements SensorEventListener {
     public void onSensorChanged(SensorEvent sensorEvent) {
 
         //timing traffic latency
-        calcTrafficTime();
+        //calcTrafficTime();
 
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
-            Log.w("Prox", String.valueOf(sensorEvent.values[0]));
+            // Log.w("Prox", String.valueOf(sensorEvent.values[0]));
 
             if (sensorEvent.values[0] < 5) {
                 mp.start();
@@ -355,7 +366,7 @@ public class LoggerService extends Service implements SensorEventListener {
             if (mCurrentLocation.getAccuracy() < ACCURACY_REQUIRED) {
                 if (!locAccHit && locUpdating) {
                     locAccHit = true;
-                    Log.i(TAG, "Location accuracy hit");
+                    // Log.i(TAG, "Location accuracy hit");
                     logAnalytics("location_accuracy_hit_started_logging");
                     prevLoc[0] = mCurrentLocation.getLatitude();
                     prevLoc[1] = mCurrentLocation.getLongitude();
@@ -371,7 +382,7 @@ public class LoggerService extends Service implements SensorEventListener {
                 no_of_lines++;
                 writeToFile(accVals, gyrVals, LocData);
             } else {
-                Log.i(TAG, "Location accuracy not hit " + mCurrentLocation.getAccuracy());
+                // Log.i(TAG, "Location accuracy not hit " + mCurrentLocation.getAccuracy());
                 calcAccuracyLowTime();
             }
         }
@@ -382,22 +393,6 @@ public class LoggerService extends Service implements SensorEventListener {
         accuracyLostTime = Calendar.getInstance().getTime();
         minutesAccuracyLow += accuracyLostTime.getTime() - startAccuracyTime.getTime();
         startAccuracyTime = accuracyLostTime;
-    }
-
-    private void calcTrafficTime() {
-        //tracking time wasted in traffic
-        transitionPrefs = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-        currentActivity = transitionPrefs.getString("currentActivity", null);
-        if (currentActivity != null) {
-            if (currentActivity.toString().contains("STILL")) {
-                newTime = Calendar.getInstance().getTime();
-                minutesWasted += newTime.getTime() - startTrafficTime.getTime();
-                startTrafficTime = newTime;
-            }
-        }
-        else
-            Log.i(TAG, "currentActivity is null");
-
     }
 
     protected void writeToFile(float[] acc, float[] gyr, String LocationData) {
@@ -411,9 +406,9 @@ public class LoggerService extends Service implements SensorEventListener {
 
         try {
             out.write(data.getBytes());
-            Log.i(TAG, "Writing " + data);
+            // Log.i(TAG, "Writing " + data);
         } catch (IOException e) {
-            Log.d(TAG, "File write failed: " + e.toString());
+            // Log.d(TAG, "File write failed: " + e.toString());
         }
         Marks = null;
 
@@ -439,14 +434,14 @@ public class LoggerService extends Service implements SensorEventListener {
 
     private void setupLogFile() {
 
-        Log.i(TAG, "start" + String.valueOf(newtrip.getStartTime()));
+        // Log.i(TAG, "start" + String.valueOf(newtrip.getStartTime()));
 
         String path = "/logs/";
         File temp = new File(getApplicationContext().getFilesDir() + "/logs/");
         temp.mkdir();
         file = new File(temp.getPath(), fileid.toString()+ ".csv");
 
-        Log.i(TAG, file.toString());
+        // Log.i(TAG, file.toString());
 
         String data;
 
@@ -463,7 +458,7 @@ public class LoggerService extends Service implements SensorEventListener {
             out.write(data.getBytes());
 
         } catch (IOException e) {
-            Log.d(TAG, "File setup failed: " + e.toString());
+            // Log.d(TAG, "File setup failed: " + e.toString());
         }
     }
 
@@ -472,7 +467,10 @@ public class LoggerService extends Service implements SensorEventListener {
         Intent iTemp = new Intent("tripstatus");
         iTemp.putExtra("LoggingStatus", status);
         iTemp.putExtra("filename", uploadFileId);
+        iTemp.putExtra(getString(R.string.duration_in_seconds), TimeUnit.MILLISECONDS.toSeconds(endTime.getTime() - startTime.getTime()));
         iTemp.putExtra("trip_object", newtrip);
+        iTemp.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationMap);
+        Log.d(TAG, speedWithLocationMap.toString() + "");
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(this);
         l.sendBroadcast(iTemp);
     }
@@ -482,9 +480,9 @@ public class LoggerService extends Service implements SensorEventListener {
     public void onDestroy() {
         calcMeans();
 
-        Log.i(TAG+"Means", "x = " + String.valueOf(meanx));
-        Log.i(TAG+"Means", "y = " + String.valueOf(meany));
-        Log.i(TAG+"Means", "z = " + String.valueOf(meanz));
+        // Log.i(TAG+"Means", "x = " + String.valueOf(meanx));
+        // Log.i(TAG+"Means", "y = " + String.valueOf(meany));
+        // Log.i(TAG+"Means", "z = " + String.valueOf(meanz));
 
         try {
             out.close();
@@ -492,7 +490,7 @@ public class LoggerService extends Service implements SensorEventListener {
                 file.delete();
             }
         } catch (IOException e) {
-            Log.d(TAG, "File closing failed: " + e.toString());
+            // Log.d(TAG, "File closing failed: " + e.toString());
         }
 
         if(mCurrentLocation!=null) {
@@ -514,45 +512,50 @@ public class LoggerService extends Service implements SensorEventListener {
         }catch (ArithmeticException ae){
             newtrip.setNo_of_lines(0);
         }
-        Log.i(TAG+" endtime", String.valueOf(newtrip.getEndTime()));
+        // Log.i(TAG+" endtime", String.valueOf(newtrip.getEndTime()));
         mp.stop();
         mSensorManager.unregisterListener(this);
 
         newtrip.setFilesize(file.length());
         newtrip.setUploaded(false);
         newtrip.setDistanceInKM(distance_travelled/1000);
-        Log.d(TAG, String.valueOf(distance_travelled));
+        // Log.d(TAG, String.valueOf(distance_travelled));
         Uri fileuri = Uri.fromFile(new File(file.getPath()));
 
         newtrip.setDuration(calcTimeTravelledMins());
-        Log.i(TAG+" Duration", String.valueOf(calcTimeTravelledMins()) + " minutes");
+        // Log.i(TAG+" Duration", String.valueOf(calcTimeTravelledMins()) + " minutes");
 
         app.setTrip(newtrip);
-        Log.i(TAG, "logged newtrip");
-
+        // Log.i(TAG, "logged newtrip");
 
         if (minutesWasted != -1) {
-            Log.i("minutesWasted", minutesWasted + " milliseconds");
+            Log.d("minutesWasted", minutesWasted + " milliseconds");
             minutesWasted = TimeUnit.MILLISECONDS.toMinutes(minutesWasted);
             newtrip.setMinutesWasted(minutesWasted);
         }
-        else
-            Log.i(TAG, "minutesWasted was -1");
 
-        minutesAccuracyLow = Math.round((minutesWasted/1000.0)/60.0);
+        dbPreferences.edit().remove(getString(R.string.minutes_wasted)).commit();
+        dbPreferences.edit().remove(getString(R.string.traffic_time_start)).commit();
+        minutesAccuracyLow = TimeUnit.MILLISECONDS.toMinutes(minutesAccuracyLow);
+        newtrip.setMinutesAccuracyLow(minutesAccuracyLow);
 
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {
             logGPSpollstoFile(gpsPolls);
-            SharedPreferences dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+            dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             newTripSet.add(new Gson().toJson(newtrip));
             if (internetAvailable())
                 toBeUploadedTripSet.add(new Gson().toJson(newtrip));
-            Log.d("newTripSet", newTripSet.toString());
-            Log.d("toBeUploadedTripSet", newTripSet.toString());
+            // Log.d("newTripSet", newTripSet.toString());
+            // Log.d("toBeUploadedTripSet", newTripSet.toString());
             dbPreferences.edit().putStringSet("newTripJson", newTripSet).commit();
             dbPreferences.edit().putStringSet("toBeUploadedTripSet", toBeUploadedTripSet).commit();
             sendTripLoggingBroadcast(false, fileuri);
+            Intent apiUpdateIntent = new Intent(this, APIService.class);
+            apiUpdateIntent.putExtra("newTrip", newtrip);
+            apiUpdateIntent.putExtra("request", "POST");
+            apiUpdateIntent.putExtra("table", getString(R.string.trip_data_table));
+            startService(apiUpdateIntent);
         }else {
             logAnalytics("unsuccessful_in_starting_logging");
             sendTripLoggingBroadcast(false, null/*, null*/);
@@ -575,7 +578,7 @@ public class LoggerService extends Service implements SensorEventListener {
 
     private void stopLocationUpdates() {
         if (!mRequestingLocationUpdates) {
-            Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
+            // Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
             return;
         }
 
@@ -652,7 +655,7 @@ public class LoggerService extends Service implements SensorEventListener {
         Bundle b = new Bundle();
         b.putString("LoggerService", data);
         mFirebaseAnalytics.logEvent(data, b);
-        Log.i("LoggerService", data);
+        // Log.i("LoggerService", data);
     }
 
     private void logGPSpollstoFile(ArrayList<MyLocation> polls) {
@@ -671,9 +674,9 @@ public class LoggerService extends Service implements SensorEventListener {
                 out.write(data.getBytes());
             }
         } catch (FileNotFoundException e) {
-            Log.d(TAG, "File_setup_failed: " + e.toString());
+            // Log.d(TAG, "File_setup_failed: " + e.toString());
         } catch (IOException e) {
-            Log.d(TAG, "File_setup_failed: " + e.toString());
+            // Log.d(TAG, "File_setup_failed: " + e.toString());
         }
 
     }
