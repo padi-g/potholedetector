@@ -81,6 +81,8 @@ public class LoggerService extends Service implements SensorEventListener {
     boolean gAvailable = true;
     private MediaPlayer mp;
 
+    private final float IDLE_TIME_UPPER_THRESHOLD = 1.38f;
+
     private boolean startFlag = false;
 
     private int no_of_lines = 0;
@@ -216,6 +218,8 @@ public class LoggerService extends Service implements SensorEventListener {
 
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
 
+        minutesWasted = dbPreferences.getLong(getString(R.string.minutes_wasted), 0);
+        minutesAccuracyLow = dbPreferences.getLong(getString(R.string.minutes_accuracy_low), 0);
     }
 
     @SuppressLint("RestrictedApi")
@@ -255,6 +259,7 @@ public class LoggerService extends Service implements SensorEventListener {
                 }
                 mCurrentLocation = location;
                 speed = location.getSpeed();
+                checkIfIdle(speed);
                 SpeedWithLocation speedWithLocation = new SpeedWithLocation();
                 speedWithLocation.setLatitude(location.getLatitude());
                 speedWithLocation.setLongitude(location.getLongitude());
@@ -264,6 +269,13 @@ public class LoggerService extends Service implements SensorEventListener {
                 LocData = getLocData();
             }
         };
+    }
+
+    private void checkIfIdle(float s) {
+        if (s <= IDLE_TIME_UPPER_THRESHOLD) {
+            minutesWasted += Calendar.getInstance().getTimeInMillis() - startTrafficTime.getTime();
+            startTrafficTime = Calendar.getInstance().getTime();
+        }
     }
 
     private long age_ms(Location last) {
@@ -382,22 +394,6 @@ public class LoggerService extends Service implements SensorEventListener {
         minutesAccuracyLow += accuracyLostTime.getTime() - startAccuracyTime.getTime();
         startAccuracyTime = accuracyLostTime;
     }
-
-    /*private void calcTrafficTime() {
-        //tracking time wasted in traffic
-        transitionPrefs = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());transitionPrefs = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
-        currentActivity = transitionPrefs.getString("currentActivity", null);
-        Log.d(TAG, currentActivity.toString());
-        if (currentActivity != null) {
-            if (currentActivity.toString().contains("STILL")) {
-                newTime = Calendar.getInstance().getTime();
-                minutesWasted += newTime.getTime() - startTrafficTime.getTime();
-                startTrafficTime = newTime;
-                Log.d(TAG, minutesWasted + "");
-            }
-        }
-
-    }*/
 
     protected void writeToFile(float[] acc, float[] gyr, String LocationData) {
         String data;
@@ -532,16 +528,16 @@ public class LoggerService extends Service implements SensorEventListener {
         app.setTrip(newtrip);
         // Log.i(TAG, "logged newtrip");
 
-        minutesWasted = dbPreferences.getLong("minutesWasted", minutesWasted);
         if (minutesWasted != -1) {
             Log.d("minutesWasted", minutesWasted + " milliseconds");
             minutesWasted = TimeUnit.MILLISECONDS.toMinutes(minutesWasted);
             newtrip.setMinutesWasted(minutesWasted);
         }
 
-        dbPreferences.edit().remove("minutesWasted").commit();
+        dbPreferences.edit().remove(getString(R.string.minutes_wasted)).commit();
         dbPreferences.edit().remove(getString(R.string.traffic_time_start)).commit();
-        minutesAccuracyLow = Math.round((minutesWasted/1000.0)/60.0);
+        minutesAccuracyLow = TimeUnit.MILLISECONDS.toMinutes(minutesAccuracyLow);
+        newtrip.setMinutesAccuracyLow(minutesAccuracyLow);
 
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {
