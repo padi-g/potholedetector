@@ -351,7 +351,7 @@ public class HTTPHandler {
 
     public static void insertUserPothole(UserPothole userPothole) {
         try {
-            URL urlObject = new URL(tripsDataUrl);
+            URL urlObject = new URL(userPotholesDataUrl);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
             httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
             httpURLConnection.setRequestMethod("POST");

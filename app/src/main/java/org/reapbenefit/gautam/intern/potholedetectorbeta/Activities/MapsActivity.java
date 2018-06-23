@@ -337,6 +337,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void updateUserPotholeTable(int classification, LatLng latLng) {
+        Log.d(TAG, "Called once");
         //updating table in RDS
         Intent addDefinitePotholeIntent = new Intent(this, APIService.class);
         addDefinitePotholeIntent.putExtra("request", "POST");
