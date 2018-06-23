@@ -100,7 +100,6 @@ public class S3UploadService extends IntentService {
         dbPreferencesEditor = dbPreferences.edit();
         dbPreferencesEditor.putString("tripUploadedId", null).commit();
         stopProgressBar();
-        stopProgressBar();
         stopSelf();
     }
 
