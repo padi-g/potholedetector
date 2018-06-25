@@ -46,7 +46,9 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 
+import org.reapbenefit.gautam.intern.potholedetectorbeta.AzureServiceAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TransitionAlarm;
@@ -55,6 +57,8 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.OverviewFragm
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+
+import java.net.MalformedURLException;
 
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
@@ -86,6 +90,7 @@ public class MainActivity extends AppCompatActivity
     private Context context;
     private boolean inCar;
     private SharedPreferences onboardingPreferences;
+    private final String AZURE_URL = "https://potholedetector.azurewebsites.net/";
 
     @Override
     public void onBackPressed() {
@@ -102,6 +107,8 @@ public class MainActivity extends AppCompatActivity
         // Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        AzureServiceAdapter.Initialize(this);
 
         setContentView(R.layout.activity_main);
 

@@ -35,6 +35,7 @@ import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.BlobUploader;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.LoggerService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.SpeedWithLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
@@ -332,6 +333,9 @@ public class EasyModeFragment extends Fragment {
         List<Trip> tripList = new ArrayList<>();
         tripList.add(newTrip);
         intent.putExtra("trip_arrayList", (Serializable) tripList);
+        intent.putExtra("upload_uri", uploadFileUri);
+        this.getContext().startService(intent);
+        intent = new Intent(getContext(), BlobUploader.class);
         intent.putExtra("upload_uri", uploadFileUri);
         this.getContext().startService(intent);
         /*//notifying TriplistFragment that upload has started (required for starting progress bar on auto-upload)

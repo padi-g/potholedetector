@@ -167,6 +167,9 @@
         <service
             android:name=".Core.APIService"
             android:exported="false" />
+        <service
+            android:name=".Core.BlobUploader"
+            android:exported="false"></service>
     </application>
 
 </manifest>

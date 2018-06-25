@@ -32,6 +32,10 @@ dependencies {
     implementation 'com.amazonaws:aws-android-sdk-cognito:2.6.+'
     implementation('com.amazonaws:aws-android-sdk-auth-google:2.6.+@aar') { transitive = true }
 
+    //Azure dependencies
+    compile 'com.microsoft.azure:azure-mobile-android:3.4.0@aar'
+    compile 'com.microsoft.azure.android:azure-storage-android:0.8.0@aar'
+
     compile 'com.appsee:appsee-android:+'
 
     //required for marker clustering
