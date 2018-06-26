@@ -260,6 +260,7 @@ public class LoggerService extends Service implements SensorEventListener {
                 mCurrentLocation = location;
                 speed = location.getSpeed();
                 checkIfIdle(speed);
+                startTrafficTime = Calendar.getInstance().getTime();
                 SpeedWithLocation speedWithLocation = new SpeedWithLocation();
                 speedWithLocation.setLatitude(location.getLatitude());
                 speedWithLocation.setLongitude(location.getLongitude());
@@ -274,7 +275,6 @@ public class LoggerService extends Service implements SensorEventListener {
     private void checkIfIdle(float s) {
         if (s <= IDLE_TIME_UPPER_THRESHOLD) {
             minutesWasted += Calendar.getInstance().getTimeInMillis() - startTrafficTime.getTime();
-            startTrafficTime = Calendar.getInstance().getTime();
         }
     }
 
