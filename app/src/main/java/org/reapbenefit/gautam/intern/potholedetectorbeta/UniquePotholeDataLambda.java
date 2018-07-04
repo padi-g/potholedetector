@@ -3,7 +3,7 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 public class UniquePotholeDataLambda {
     private float Lat;
     private float Lng;
-    private int Count;
+    private int Hits;
     private int Classification;
     private String PotholeID;
 
@@ -23,12 +23,12 @@ public class UniquePotholeDataLambda {
         Lng = lng;
     }
 
-    public int getCount() {
-        return Count;
+    public int getHits() {
+        return Hits;
     }
 
-    public void setCount(int count) {
-        Count = count;
+    public void setHits(int hits) {
+        Hits = hits;
     }
 
     public int getClassification() {

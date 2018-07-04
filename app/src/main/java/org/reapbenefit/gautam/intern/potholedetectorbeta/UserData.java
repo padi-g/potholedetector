@@ -7,7 +7,6 @@ public class UserData {
     private int Improbable;
     private int TotalTrips;
     private String UserID;
-    private boolean UpdateFlag;
 
     public float getTotalDistance() {
         return TotalDistance;
@@ -55,13 +54,5 @@ public class UserData {
 
     public void setUserID(String userID) {
         UserID = userID;
-    }
-
-    public boolean isUpdateFlag() {
-        return UpdateFlag;
-    }
-
-    public void setUpdateFlag(boolean updateFlag) {
-        UpdateFlag = updateFlag;
     }
 }

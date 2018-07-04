@@ -2,7 +2,6 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
 import android.util.Log;
 
-import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
@@ -16,84 +15,24 @@ import java.net.URL;
 import static com.amazonaws.http.HttpHeader.USER_AGENT;
 
 public class HTTPHandler {
-    private static final String userDataUrl = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/users/";
-    private static final String tripsDataUrl = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/trips/";
-    private static final String potholesDataUrl = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/potholes/";
-    private static final String userPotholesDataUrl = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/userpotholes/";
+
+    private static final String key = "***REMOVED***";
+
+    private static final String specificUserGetUrl = "http://***REMOVED***/getuserdata";
+    private static final String specificUserPostUrl = "http://***REMOVED***/insertuserdata";
+    private static final String specificUserUpdateUrl = "http://***REMOVED***/updateuserdata";
+    private static final String highestPotholeTripGetUrl = "http://***REMOVED***/gethighestpotholetripdata";
+    private static final String tripPostUrl = "http://***REMOVED***/inserttripdata";
+    private static final String tripUpdateUrl = "http://***REMOVED***/updatetripdata";
+    private static final String userPotholePostUrl = "http://***REMOVED***/insertuserpothole";
+    private static final String userPotholeGetUrl = "http://***REMOVED***/getuserpotholes";
+    private static final String uniquePotholesGetUrl = "http://***REMOVED***/getuniquepotholes";
     private static final String TAG = "HTTPHandler";
 
-    public static void insertUser(String userID, boolean updateFlag) {
+    public static String getUser(String UserID) {
         try {
-            URL urlObject = new URL(userDataUrl);
+            URL urlObject = new URL(specificUserGetUrl + UserID + key);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
-            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
-            httpURLConnection.setRequestMethod("POST");
-            httpURLConnection.setDoOutput(true);
-            UserData userData = new UserData();
-            userData.setUserID(userID);
-            userData.setUpdateFlag(updateFlag);
-            String jsonInput = new Gson().toJson(userData);
-            // Log.d(TAG, "Sending user data: " + jsonInput);
-            OutputStream outputStream = httpURLConnection.getOutputStream();
-            outputStream.write(jsonInput.getBytes());
-            outputStream.flush();
-            outputStream.close();
-            int responseCode = httpURLConnection.getResponseCode();
-            if (responseCode == 200) { //success
-                BufferedReader in = new BufferedReader(new InputStreamReader(
-                        httpURLConnection.getInputStream()));
-                String inputLine;
-                StringBuffer response = new StringBuffer();
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-                // print result
-                // Log.d(TAG, response.toString());
-            } else
-                System.out.println("POST request failed " + responseCode);
-        } catch (IOException ioException) {
-            // Log.e(TAG, ioException.getMessage());
-        }
-    }
-
-    public static void insertUser(UserData userData) {
-        try {
-            URL urlObject = new URL(userDataUrl);
-            HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
-            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
-            httpURLConnection.setRequestMethod("POST");
-            httpURLConnection.setDoOutput(true);
-            String jsonInput = new Gson().toJson(userData);
-            // Log.d(TAG, "Sending user data: " + jsonInput);
-            OutputStream outputStream = httpURLConnection.getOutputStream();
-            outputStream.write(jsonInput.getBytes());
-            outputStream.flush();
-            outputStream.close();
-            int responseCode = httpURLConnection.getResponseCode();
-            if (responseCode == 200) { //success
-                BufferedReader in = new BufferedReader(new InputStreamReader(
-                        httpURLConnection.getInputStream()));
-                String inputLine;
-                StringBuffer response = new StringBuffer();
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-                // print result
-                // Log.d(TAG, response.toString());
-            } else
-                System.out.println("POST request failed " + responseCode);
-        } catch (IOException ioException) {
-            // Log.e(TAG, ioException.getMessage());
-        }
-    }
-
-    public static String getAllUsers() {
-        try {
-            URL urlObject = new URL(userDataUrl);
-            HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
-            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
             httpURLConnection.setRequestMethod("GET");
             InputStream inputStream = httpURLConnection.getInputStream();
             int responseCode = httpURLConnection.getResponseCode();
@@ -106,21 +45,92 @@ public class HTTPHandler {
                     response.append(inputLine);
                 }
                 in.close();
-                // Log.d(TAG, response.toString());
+                Log.d(TAG, response.toString());
                 return response.toString();
-            } else
-                System.out.println("POST request failed " + responseCode);
+            } else {
+                System.out.println("GET request failed " + responseCode);
+            }
         } catch (IOException ioException) {
-            // Log.e(TAG, ioException.getMessage());
+            Log.e(TAG, ioException.getMessage());
         }
         return null;
     }
 
-    public static String getAllTrips() {
+    public static void insertUser(UserData userData) {
+        // updates user already present in Azure database
         try {
-            URL urlObject = new URL(tripsDataUrl);
+            URL urlObject = new URL(specificUserUpdateUrl + key);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
-            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
+            httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setDoOutput(true);
+            String jsonInput = new Gson().toJson(userData);
+            // Log.d(TAG, "Sending user data: " + jsonInput);
+            OutputStream outputStream = httpURLConnection.getOutputStream();
+            outputStream.write(jsonInput.getBytes());
+            outputStream.flush();
+            outputStream.close();
+            int responseCode = httpURLConnection.getResponseCode();
+            if (responseCode == 200) { //success
+                BufferedReader in = new BufferedReader(new InputStreamReader(
+                        httpURLConnection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                // print result
+                // Log.d(TAG, response.toString());
+            } else
+                System.out.println("POST request failed " + responseCode);
+        } catch (IOException ioException) {
+            // Log.e(TAG, ioException.getMessage());
+        }
+    }
+
+    public static void insertUser(String userId) {
+        // inserts user data into Azure database
+        try {
+            URL urlObject = new URL(specificUserPostUrl + key);
+            HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
+            httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setDoOutput(true);
+            UserData userData = new UserData();
+            userData.setTotalTime(0);
+            userData.setTotalDistance(0);
+            userData.setProbable(0);
+            userData.setImprobable(0);
+            userData.setTotalTrips(0);
+            userData.setUserID(userId);
+            String jsonInput = new Gson().toJson(userData).toString();
+            // Log.d(TAG, "Sending data: " + jsonInput);
+            OutputStream outputStream = httpURLConnection.getOutputStream();
+            outputStream.write(jsonInput.getBytes());
+            outputStream.flush();
+            outputStream.close();
+            int responseCode = httpURLConnection.getResponseCode();
+            if (responseCode == 200) { //success
+                BufferedReader in = new BufferedReader(new InputStreamReader(
+                        httpURLConnection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                Log.d(TAG, response.toString());
+            } else
+                System.out.println("POST request failed " + responseCode);
+        } catch (IOException ioException) {
+            // Log.e(TAG, ioException.getMessage());
+        }
+    }
+
+    public static String getHighestPotholeTrip(String userID) {
+        try {
+            URL urlObject = new URL(highestPotholeTripGetUrl + "/" + userID + key);
+            HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
+
             httpURLConnection.setRequestMethod("GET");
             InputStream inputStream = httpURLConnection.getInputStream();
             int responseCode = httpURLConnection.getResponseCode();
@@ -136,7 +146,7 @@ public class HTTPHandler {
                 // Log.d(TAG, response.toString());
                 return response.toString();
             } else
-                System.out.println("POST request failed " + responseCode);
+                System.out.println("GET request failed " + responseCode);
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }
@@ -145,12 +155,43 @@ public class HTTPHandler {
 
     public static void insertTrip(Trip newTrip) {
         try {
-            URL urlObject = new URL(tripsDataUrl);
+            URL urlObject = new URL(tripPostUrl + key);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
-            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
             httpURLConnection.setRequestMethod("POST");
             httpURLConnection.setDoOutput(true);
-            TripDataLambda tripDataLambda = convertToTripDataLambda(newTrip);
+            TripDataLambda tripDataLambda = HTTPHandler.convertToTripDataLambda(newTrip);
+            String jsonInput = new Gson().toJson(tripDataLambda);
+            // Log.d(TAG, "Sending data: " + jsonInput);
+            OutputStream outputStream = httpURLConnection.getOutputStream();
+            outputStream.write(jsonInput.getBytes());
+            outputStream.flush();
+            outputStream.close();
+            int responseCode = httpURLConnection.getResponseCode();
+            if (responseCode == 200) { //success
+                BufferedReader in = new BufferedReader(new InputStreamReader(
+                        httpURLConnection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                // print result
+                // Log.d(TAG, response.toString());
+            } else
+                System.out.println("POST request failed " + responseCode);
+        } catch (IOException ioException) {
+            // Log.e(TAG, ioException.getMessage());
+        }
+    }
+
+    public static void updateTrip(Trip newTrip) {
+        try {
+            URL urlObject = new URL(tripUpdateUrl + key);
+            HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
+            httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setDoOutput(true);
+            TripDataLambda tripDataLambda = HTTPHandler.convertToTripDataLambda(newTrip);
             String jsonInput = new Gson().toJson(tripDataLambda);
             // Log.d(TAG, "Sending data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
@@ -226,107 +267,10 @@ public class HTTPHandler {
         return trip;
     }
 
-    public static void updateUploadedStatus(TripDataLambda tripDataLambda) {
-        try {
-            URL urlObject = new URL(tripsDataUrl);
-            HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
-            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
-            httpURLConnection.setRequestMethod("POST");
-            httpURLConnection.setDoOutput(true);
-            String jsonInput = new Gson().toJson(tripDataLambda);
-            // Log.d(TAG, "Sending data: " + jsonInput);
-            OutputStream outputStream = httpURLConnection.getOutputStream();
-            outputStream.write(jsonInput.getBytes());
-            outputStream.flush();
-            outputStream.close();
-            int responseCode = httpURLConnection.getResponseCode();
-            if (responseCode == 200) { //success
-                BufferedReader in = new BufferedReader(new InputStreamReader(
-                        httpURLConnection.getInputStream()));
-                String inputLine;
-                StringBuffer response = new StringBuffer();
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-                // print result
-                // Log.d(TAG, response.toString());
-            } else
-                System.out.println("POST request failed " + responseCode);
-        } catch (IOException ioException) {
-            // Log.e(TAG, ioException.getMessage());
-        }
-    }
-
-    public static void updatePotholeCount(TripDataLambda tripDataLambda) {
-        try {
-            URL urlObject = new URL(tripsDataUrl);
-            HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
-            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
-            httpURLConnection.setRequestMethod("POST");
-            httpURLConnection.setDoOutput(true);
-            String jsonInput = new Gson().toJson(tripDataLambda);
-            // Log.d(TAG, "Sending data: " + jsonInput);
-            OutputStream outputStream = httpURLConnection.getOutputStream();
-            outputStream.write(jsonInput.getBytes());
-            outputStream.flush();
-            outputStream.close();
-            int responseCode = httpURLConnection.getResponseCode();
-            if (responseCode == 200) { //success
-                BufferedReader in = new BufferedReader(new InputStreamReader(
-                        httpURLConnection.getInputStream()));
-                String inputLine;
-                StringBuffer response = new StringBuffer();
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-                // print result
-                // Log.d(TAG, response.toString());
-            } else
-                System.out.println("POST request failed " + responseCode);
-        } catch (IOException ioException) {
-            // Log.e(TAG, ioException.getMessage());
-        }
-    }
-
-    public static void updateUserRating(TripDataLambda tripDataLambda) {
-        try {
-            URL urlObject = new URL(tripsDataUrl);
-            HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
-            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
-            httpURLConnection.setRequestMethod("POST");
-            httpURLConnection.setDoOutput(true);
-            String jsonInput = new Gson().toJson(tripDataLambda);
-            // Log.d(TAG, "Sending user rating: " + jsonInput);
-            OutputStream outputStream = httpURLConnection.getOutputStream();
-            outputStream.write(jsonInput.getBytes());
-            outputStream.flush();
-            outputStream.close();
-            int responseCode = httpURLConnection.getResponseCode();
-            if (responseCode == 200) { //success
-                BufferedReader in = new BufferedReader(new InputStreamReader(
-                        httpURLConnection.getInputStream()));
-                String inputLine;
-                StringBuffer response = new StringBuffer();
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-                // print result
-                // Log.d(TAG, response.toString());
-            } else
-                System.out.println("POST request failed " + responseCode);
-        } catch (IOException ioException) {
-            // Log.e(TAG, ioException.getMessage());
-        }
-    }
-
     public static String getAllPotholes() {
         try {
-            URL urlObject = new URL(potholesDataUrl);
+            URL urlObject = new URL(uniquePotholesGetUrl + key);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
-            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
             httpURLConnection.setRequestMethod("GET");
             InputStream inputStream = httpURLConnection.getInputStream();
             int responseCode = httpURLConnection.getResponseCode();
@@ -351,9 +295,8 @@ public class HTTPHandler {
 
     public static void insertUserPothole(UserPothole userPothole) {
         try {
-            URL urlObject = new URL(userPotholesDataUrl);
+            URL urlObject = new URL(userPotholePostUrl + key);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
-            httpURLConnection.setRequestProperty("User-Agent", USER_AGENT);
             httpURLConnection.setRequestMethod("POST");
             httpURLConnection.setDoOutput(true);
             String jsonInput = new Gson().toJson(userPothole);
