@@ -96,4 +96,7 @@
     <string name="upload_start_notifier_intent">UPLOAD_START_NOTIFIER_INTENT</string>
     <string name="duration_in_seconds">DURATION_IN_SECONDS</string>
     <string name="speed_updates_not_enough">Your device could not register your vehicle speed. Results may be slightly inaccurate.</string>
+
+    <string name="tweet_content"> potholes on my trip today. Map your trips too! https://goo.gl/p7CQjd </string>
+    <string name="tweet_snackbar">Tell others about your trip!</string>
 </resources>

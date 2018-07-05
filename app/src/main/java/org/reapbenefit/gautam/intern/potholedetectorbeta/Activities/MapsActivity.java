@@ -1,20 +1,17 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
+import android.content.pm.ResolveInfo;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.preference.PreferenceManager;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
@@ -27,7 +24,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -62,8 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-
-import static org.reapbenefit.gautam.intern.potholedetectorbeta.TripListAdapter.roundTwoDecimals;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -103,6 +97,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private TextView definitePotholeCountTextView;
     private boolean isViewingHighestPotholeTrip;
     private long tripDurationInSeconds;
+    private Snackbar tweetSnackbar;
 
 
     @Override
@@ -555,6 +550,37 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             updateTripPotholeCountIntent.putExtra("table", getString(R.string.trip_data_table));
             updateTripPotholeCountIntent.putExtra(getString(R.string.processed_trip), finishedTrip);
             MapsActivity.this.startService(updateTripPotholeCountIntent);
+
+            // drawing Snackbar and adding Tweet button
+            Snackbar snackbar = Snackbar.make(findViewById(R.id.maps_linear_layout), R.string.tweet_snackbar,
+                    Snackbar .LENGTH_LONG);
+            snackbar.setAction("Tweet", new TweetButtonListener());
+            snackbar.show();
+        }
+    }
+
+    private class TweetButtonListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            String text = "Found " + definitePotholeCountTextView.getText().toString()
+                    + " " + getString(R.string.tweet_content);
+            String tweetText = String.format("https://twitter.com/intent/tweet?text=%s", text);
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(tweetText));
+            // looking for official Twitter app
+            List<ResolveInfo> matches = getPackageManager().queryIntentActivities(intent, 0);
+            for (ResolveInfo info : matches) {
+                if (info.activityInfo.packageName.toLowerCase().startsWith("com.twitter")) {
+                    intent.setPackage(info.activityInfo.packageName);
+                    startActivity(intent);
+                    break;
+                }
+                else if (info.activityInfo.packageName.toLowerCase().startsWith("com.android.chrome")) {
+                    intent.setPackage(info.activityInfo.packageName);
+                    startActivity(intent);
+                    break;
+                }
+            }
+            // change Snackbar text to "Twitter-compatible app not found"
         }
     }
 }
