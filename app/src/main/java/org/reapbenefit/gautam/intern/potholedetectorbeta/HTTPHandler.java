@@ -1,8 +1,14 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.Preference;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.google.gson.Gson;
+
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,6 +17,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Date;
 
 import static com.amazonaws.http.HttpHeader.USER_AGENT;
 
@@ -28,6 +35,8 @@ public class HTTPHandler {
     private static final String userPotholeGetUrl = "http://***REMOVED***/getuserpotholes";
     private static final String uniquePotholesGetUrl = "http://***REMOVED***/getuniquepotholes";
     private static final String TAG = "HTTPHandler";
+
+    private static SharedPreferences userPotholePreferences;
 
     public static String getUser(String UserID) {
         try {
@@ -305,7 +314,7 @@ public class HTTPHandler {
             httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             httpURLConnection.setDoOutput(true);
             String jsonInput = new Gson().toJson(userPothole);
-            // Log.d(TAG, "Sending data: " + jsonInput);
+            Log.d(TAG, "Sending user pothole data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();

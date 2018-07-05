@@ -7,6 +7,7 @@ public class UserPothole implements Serializable {
     private float PotLat;
     private float PotLong;
     private int classification;
+    private String HitDate;
 
     public float getPotLong() {
         return PotLong;
@@ -38,5 +39,13 @@ public class UserPothole implements Serializable {
 
     public void setClassification(int classification) {
         this.classification = classification;
+    }
+
+    public String getHitDate() {
+        return HitDate;
+    }
+
+    public void setHitDate(String hitDate) {
+        HitDate = hitDate;
     }
 }

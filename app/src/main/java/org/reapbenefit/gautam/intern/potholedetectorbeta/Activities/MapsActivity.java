@@ -52,7 +52,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -269,7 +271,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             definitePotholeLatLngs.add(extractLatLng((String) pair.getValue()));
             it.remove();
         }
-
     }
 
     public LatLng extractLatLng(String line){
@@ -347,6 +348,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         userPothole.setPotLong((float) latLng.longitude);
         userPothole.setPotLat((float) latLng.latitude);
         userPothole.setClassification(classification);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date currentDate = new Date();
+        String hitDate = simpleDateFormat.format(currentDate);
+        userPothole.setHitDate(hitDate);
         addDefinitePotholeIntent.putExtra("userPotholeObject", userPothole);
         startService(addDefinitePotholeIntent);
     }
