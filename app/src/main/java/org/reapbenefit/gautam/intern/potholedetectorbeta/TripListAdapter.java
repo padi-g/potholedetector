@@ -67,7 +67,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             super(itemView);
             uploadButton = (ImageButton) itemView.findViewById(R.id.upload_button);
             uploadedTick = (ImageButton) itemView.findViewById(R.id.upload_tick);
-            date = (TextView) itemView.findViewById(R.id.count);
+            date = (TextView) itemView.findViewById(R.id.date);
             time = (TextView) itemView.findViewById(R.id.start_time);
             size = (TextView) itemView.findViewById(R.id.size);
             distance = (TextView) itemView.findViewById(R.id.distance_view);
@@ -102,7 +102,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             if (!trips.isEmpty()) {
                 uploadButton = rowView.findViewById(R.id.upload_button);
                 uploadedTick = rowView.findViewById(R.id.upload_tick);
-                date = (TextView) rowView.findViewById(R.id.count);
+                date = (TextView) rowView.findViewById(R.id.hits);
                 time = (TextView) rowView.findViewById(R.id.start_time);
                 size = (TextView) rowView.findViewById(R.id.size);
                 distance = (TextView) rowView.findViewById(R.id.distance_view);

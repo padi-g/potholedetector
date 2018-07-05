@@ -259,7 +259,7 @@ public class OverviewFragment extends Fragment implements
         bottomSheetText.setText(bottomSheetString);
 
         startTimeTextView = fragmentView.findViewById(R.id.start_time);
-        countTextView = fragmentView.findViewById(R.id.count);
+        countTextView = fragmentView.findViewById(R.id.hits);
         distanceTextView = fragmentView.findViewById(R.id.distance_view);
         sizeTextView = fragmentView.findViewById(R.id.size);
         if (highestPotholeTrip != null) {

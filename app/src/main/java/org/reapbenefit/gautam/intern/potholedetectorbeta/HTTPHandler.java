@@ -31,7 +31,7 @@ public class HTTPHandler {
 
     public static String getUser(String UserID) {
         try {
-            URL urlObject = new URL(specificUserGetUrl + UserID + key);
+            URL urlObject = new URL(specificUserGetUrl +"/" + UserID + key);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
             httpURLConnection.setRequestMethod("GET");
             InputStream inputStream = httpURLConnection.getInputStream();
@@ -62,9 +62,10 @@ public class HTTPHandler {
             URL urlObject = new URL(specificUserUpdateUrl + key);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
             httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             httpURLConnection.setDoOutput(true);
             String jsonInput = new Gson().toJson(userData);
-            // Log.d(TAG, "Sending user data: " + jsonInput);
+            Log.d(TAG, "Sending user data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
@@ -80,20 +81,21 @@ public class HTTPHandler {
                 }
                 in.close();
                 // print result
-                // Log.d(TAG, response.toString());
+                Log.d(TAG, response.toString());
             } else
-                System.out.println("POST request failed " + responseCode);
+                Log.d(TAG, "POST request failed " + responseCode);
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }
     }
 
     public static void insertUser(String userId) {
-        // inserts user data into Azure database
+        // inserts new user data into Azure database
         try {
             URL urlObject = new URL(specificUserPostUrl + key);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
             httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             httpURLConnection.setDoOutput(true);
             UserData userData = new UserData();
             userData.setTotalTime(0);
@@ -103,7 +105,7 @@ public class HTTPHandler {
             userData.setTotalTrips(0);
             userData.setUserID(userId);
             String jsonInput = new Gson().toJson(userData).toString();
-            // Log.d(TAG, "Sending data: " + jsonInput);
+            Log.d(TAG, "Sending data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
@@ -120,7 +122,7 @@ public class HTTPHandler {
                 in.close();
                 Log.d(TAG, response.toString());
             } else
-                System.out.println("POST request failed " + responseCode);
+                Log.d(TAG, "POST request failed " + responseCode);
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }

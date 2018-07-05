@@ -9,6 +9,7 @@ import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
@@ -48,7 +49,8 @@ public class APIService extends IntentService {
         if (requestMethod.equalsIgnoreCase("GET") && table.equalsIgnoreCase(getString(R.string.user_data_table))) {
             try {
                 String userJson = HTTPHandler.getUser(userId);
-                if (userJson.startsWith("None")) {
+                if (!userJson.contains("{")) {
+                    Log.d(TAG, "Inserting new user");
                     // user not found in existing database, must send POST request to table
                     HTTPHandler.insertUser(userId);
                 } else {
