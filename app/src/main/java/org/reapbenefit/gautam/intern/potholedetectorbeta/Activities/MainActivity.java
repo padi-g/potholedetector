@@ -22,12 +22,10 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.appsee.Appsee;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
@@ -46,7 +44,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.AzureServiceAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
@@ -57,8 +54,6 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.OverviewFragm
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
-
-import java.net.MalformedURLException;
 
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
@@ -133,12 +128,6 @@ public class MainActivity extends AppCompatActivity
         settingsRequest();
         checkPermissions();
 
-        if (!BuildConfig.DEBUG) {
-            Appsee.start();
-            String userId = getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null);
-            if (userId != null)
-                Appsee.setUserId(userId);
-        }
         //Initializing the tablayout
         tabLayout = (TabLayout) findViewById(R.id.tabLayout);
 

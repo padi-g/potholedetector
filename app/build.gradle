@@ -36,8 +36,6 @@ dependencies {
     compile 'com.microsoft.azure:azure-mobile-android:3.4.0@aar'
     compile 'com.microsoft.azure.android:azure-storage-android:0.8.0@aar'
 
-    compile 'com.appsee:appsee-android:+'
-
     //required for marker clustering
     compile 'com.google.maps.android:android-maps-utils:0.5+'
 
