@@ -190,8 +190,9 @@ public class HTTPHandler {
                 in.close();
                 // print result
                 // Log.d(TAG, response.toString());
-            } else
+            } else {
                 System.out.println("POST request failed " + responseCode);
+            }
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }
@@ -223,8 +224,9 @@ public class HTTPHandler {
                 in.close();
                 // print result
                 // Log.d(TAG, response.toString());
-            } else
+            } else {
                 System.out.println("POST request failed " + responseCode);
+            }
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }
@@ -298,8 +300,9 @@ public class HTTPHandler {
                 in.close();
                 Log.d("UniquePotholes", response.toString());
                 return response.toString();
-            } else
+            } else {
                 Log.d(TAG, "GET request failed " + responseCode);
+            }
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }
@@ -332,7 +335,7 @@ public class HTTPHandler {
                 // print result
                 // Log.d(TAG, response.toString());
             } else
-                System.out.println("POST request failed " + responseCode);
+            {System.out.println("POST request failed " + responseCode);}
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }

@@ -580,7 +580,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     break;
                 }
             }
-            tweetSnackbar.setText("Twitter-compatible app not found");
+            if (tweetSnackbar != null) {
+                tweetSnackbar.setText("Twitter-compatible app not found");
+            }
         }
     }
 }
