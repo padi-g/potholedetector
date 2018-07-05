@@ -296,10 +296,10 @@ public class HTTPHandler {
                     response.append(inputLine);
                 }
                 in.close();
-                // Log.d(TAG, response.toString());
+                Log.d("UniquePotholes", response.toString());
                 return response.toString();
             } else
-                System.out.println("POST request failed " + responseCode);
+                Log.d(TAG, "GET request failed " + responseCode);
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }
