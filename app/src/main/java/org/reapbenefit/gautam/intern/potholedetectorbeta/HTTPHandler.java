@@ -160,10 +160,11 @@ public class HTTPHandler {
             URL urlObject = new URL(tripPostUrl + key);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
             httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             httpURLConnection.setDoOutput(true);
             TripDataLambda tripDataLambda = HTTPHandler.convertToTripDataLambda(newTrip);
             String jsonInput = new Gson().toJson(tripDataLambda);
-            // Log.d(TAG, "Sending data: " + jsonInput);
+            Log.d(TAG, "Sending data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
@@ -192,6 +193,7 @@ public class HTTPHandler {
             URL urlObject = new URL(tripUpdateUrl + key);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
             httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             httpURLConnection.setDoOutput(true);
             TripDataLambda tripDataLambda = HTTPHandler.convertToTripDataLambda(newTrip);
             String jsonInput = new Gson().toJson(tripDataLambda);
@@ -300,6 +302,7 @@ public class HTTPHandler {
             URL urlObject = new URL(userPotholePostUrl + key);
             HttpURLConnection httpURLConnection = (HttpURLConnection) urlObject.openConnection();
             httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             httpURLConnection.setDoOutput(true);
             String jsonInput = new Gson().toJson(userPothole);
             // Log.d(TAG, "Sending data: " + jsonInput);
