@@ -100,18 +100,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean isViewingHighestPotholeTrip;
     private long tripDurationInSeconds;
     private Snackbar tweetSnackbar;
+    private boolean didUserRateTrip;
 
 
     @Override
     protected void onDestroy() {
-        // updating user rating when user exits activity
-        Intent updateUserRatingIntent = new Intent(MapsActivity.this, APIService.class);
-        updateUserRatingIntent.putExtra("request", "POST");
-        updateUserRatingIntent.putExtra("table", getString(R.string.trip_data_table));
-        finishedTrip.setUserRating(accuracy_result);
-        Log.d(TAG, accuracy_result + "");
-        updateUserRatingIntent.putExtra(getString(R.string.trip_with_user_rating), finishedTrip);
-        startService(updateUserRatingIntent);super.onDestroy();
+        if (didUserRateTrip) {
+            // updating user rating when user exits activity
+            Intent updateUserRatingIntent = new Intent(MapsActivity.this, APIService.class);
+            updateUserRatingIntent.putExtra("request", "POST");
+            updateUserRatingIntent.putExtra("table", getString(R.string.trip_data_table));
+            finishedTrip.setUserRating(accuracy_result);
+            Log.d(TAG, accuracy_result + "");
+            updateUserRatingIntent.putExtra(getString(R.string.trip_with_user_rating), finishedTrip);
+            startService(updateUserRatingIntent);
+        }
+        super.onDestroy();
     }
 
 
@@ -171,6 +175,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
                 // execute submit button related actions
+                didUserRateTrip = true;
                 accuracy_result = (int) accuracyRatingBar.getRating();
                 setUserPercievedAccuracy(accuracy_result);
             }
