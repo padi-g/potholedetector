@@ -12,6 +12,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
@@ -125,8 +126,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Map<Integer, SpeedWithLocation> simpleMap = (Map<Integer, SpeedWithLocation>) getIntent().getSerializableExtra(getString(R.string.speed_with_location_hashmap));
         if (simpleMap != null) {
             speedWithLocationTreeMap = new TreeMap<>(simpleMap);
-        }
-        else {
+        } else {
             speedWithLocationTreeMap = null;
         }
 
@@ -211,8 +211,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             } catch (Exception e) {
 
             }
-        }
-        else {
+        } else {
             //reading highestPotholeTrip data from SharedPreferences
             String highestPotholeTripJson = dbPreferences.getString("highestPotholeTrip", null);
             if (highestPotholeTripJson != null) {
@@ -228,7 +227,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
         // setup action bar
-        }
+    }
 
     private void drawInformationalUI(Trip trip) {
         spinner.setVisibility(View.GONE);
@@ -251,11 +250,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-    public void populatePotholeMarkerPoints(){
+    public void populatePotholeMarkerPoints() {
 
         Iterator it = probablePointsOfInterest.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
+            Map.Entry pair = (Map.Entry) it.next();
             probablePotholeLatLngs.add(extractLatLng((String) pair.getValue()));
             it.remove(); // avoids a ConcurrentModificationException
         }
@@ -268,9 +267,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    public LatLng extractLatLng(String line){
+    public LatLng extractLatLng(String line) {
         String vals[] = line.split(",");
-        LatLng l = new LatLng(Double.valueOf(vals[locIndex]), Double.valueOf(vals[locIndex+1]));
+        LatLng l = new LatLng(Double.valueOf(vals[locIndex]), Double.valueOf(vals[locIndex + 1]));
         return l;
     }
 
@@ -286,7 +285,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        if(!latLngs.isEmpty()) {
+        if (!latLngs.isEmpty()) {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngs.get(0), 15));
 
             PolylineOptions polyline = new PolylineOptions().geodesic(true).width(5).color(Color.BLUE);
@@ -300,8 +299,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (!isViewingHighestPotholeTrip) {
                 probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.probable_pothole_location_set), new HashSet<String>());
                 definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
-            }
-            else {
+            } else {
                 //changing sets to read values of highest pothole trips
                 probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.highest_pothole_trip_probable_potholes), new HashSet<String>());
                 definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.highest_pothole_trip_definite_potholes), new HashSet<String>());
@@ -313,7 +311,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
             if (!definitePotholeLatLngs.isEmpty()) {
-                for (LatLng l: definitePotholeLatLngs) {
+                for (LatLng l : definitePotholeLatLngs) {
                     mMap.addMarker(new MarkerOptions().position(l).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
                     definitePotholeStringSet.add(new Gson().toJson(l));
                     updateUserPotholeTable(1, l);
@@ -327,7 +325,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_probable_potholes), (Serializable) probablePotholeStringSet);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(highestPotholeCheckIntent);
             }
-        }else if (!isViewingHighestPotholeTrip){
+        } else if (!isViewingHighestPotholeTrip) {
             textview.setText("No locations found");
         }
     }
@@ -351,12 +349,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         startService(addDefinitePotholeIntent);
     }
 
-    private void setUserPercievedAccuracy(int a){
+    private void setUserPercievedAccuracy(int a) {
         ApplicationClass.getInstance().getTrip().setUserRating(a);
         dbPreferencesEditor.putInt("userPerceivedAccuracy", a);
     }
 
-    private void setProbablePotholeCount(int a){
+    private void setProbablePotholeCount(int a) {
         ApplicationClass.getInstance().getTrip().setProbablePotholeCount(a);
         finishedTrip.setProbablePotholeCount(a);
         //data required by TLF for updating TripViewModel instance
@@ -370,7 +368,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         dbPreferencesEditor.commit();
     }
 
-    public void logAnalytics(String data){
+    public void logAnalytics(String data) {
         Bundle b = new Bundle();
         b.putString("MapsActivity", data);
         mFirebaseAnalytics.logEvent(data, b);
@@ -381,7 +379,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return Float.valueOf(twoDForm.format(f));
     }
 
-    private class ProcessFileTask extends AsyncTask<String, Void, String>{
+    private class ProcessFileTask extends AsyncTask<String, Void, String> {
 
         int lineNumber = 0, prevLineNumber = 0;
         FileInputStream is;
@@ -413,7 +411,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         if (tokens[i].contains(axisOfInterest)) {
                             axisIndex = i;
                         }
-                        if(tokens[i].contains("latitude")){
+                        if (tokens[i].contains("latitude")) {
                             locIndex = i;
                         }
                         if (tokens[i].contains("speed")) {
@@ -422,19 +420,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
 
-                    if (speedWithLocationTreeMap != null && speedWithLocationTreeMap.size() >= tripDurationInSeconds/3) {
+                    if (speedWithLocationTreeMap != null && speedWithLocationTreeMap.size() >= tripDurationInSeconds / 3) {
                         // Log.d(TAG, new Gson().toJson(speedWithLocationTreeMap.toString()));
                         //populating the set of the points we are interested in
                         while ((line = bufferedReader.readLine()) != null) {
                             String values[] = line.split(",");
                             lineNumber++;
-                            if(Float.valueOf(values[axisIndex]) > threshold && lineNumber>prevLineNumber+ linesPerPeriod){
+                            if (Float.valueOf(values[axisIndex]) > threshold && lineNumber > prevLineNumber + linesPerPeriod) {
                                 // this ignores the first period of data
                                 int[] closestKeyValues = findClosestKeyValues(lineNumber);
 
                                 float speedValues[] = new float[]{speedWithLocationTreeMap.get(closestKeyValues[0]).getSpeed(),
-                                speedWithLocationTreeMap.get(closestKeyValues[1]).getSpeed(),
-                                speedWithLocationTreeMap.get(closestKeyValues[2]).getSpeed()};
+                                        speedWithLocationTreeMap.get(closestKeyValues[1]).getSpeed(),
+                                        speedWithLocationTreeMap.get(closestKeyValues[2]).getSpeed()};
                                 // Log.d("speedValues", speedValues.toString());
                                 if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
                                     definitePointsOfInterest.put(lineNumber, line);
@@ -443,8 +441,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 prevLineNumber = lineNumber;
                             }
                         }
-                    }
-                    else {
+                    } else {
                         // Log.d(TAG, "inside else");
                         showInaccurateToast = true;
                         // populating our set of the points we are interested in
@@ -462,8 +459,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         }
                     }
-                }
-                catch (Exception e){
+                } catch (Exception e) {
 
                 }
                 // Log.d("result before return", definitePointsOfInterest.size() + " " + probablePointsOfInterest.size());
@@ -496,7 +492,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 int minDifference = Integer.MAX_VALUE;
                 while (iterator.hasNext()) {
                     Map.Entry pair = (Map.Entry) iterator.next();
-                    int diff = Math.abs((int)pair.getKey() - lineNumber);
+                    int diff = Math.abs((int) pair.getKey() - lineNumber);
                     if (diff < minDifference) {
                         minDifference = diff;
                         closestKey = (int) pair.getKey();
@@ -553,7 +549,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             // drawing Snackbar and adding Tweet button
             Snackbar snackbar = Snackbar.make(findViewById(R.id.maps_linear_layout), R.string.tweet_snackbar,
-                    Snackbar .LENGTH_LONG);
+                    Snackbar.LENGTH_LONG);
             snackbar.setAction("Tweet", new TweetButtonListener());
             snackbar.show();
         }
@@ -562,26 +558,28 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private class TweetButtonListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
-            String text = "Found " + definitePotholeCountTextView.getText().toString()
-                    + " " + getString(R.string.tweet_content);
-            String tweetText = String.format("https://twitter.com/intent/tweet?text=%s", text);
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(tweetText));
-            // looking for official Twitter app
-            List<ResolveInfo> matches = getPackageManager().queryIntentActivities(intent, 0);
-            for (ResolveInfo info : matches) {
-                if (info.activityInfo.packageName.toLowerCase().startsWith("com.twitter")) {
-                    intent.setPackage(info.activityInfo.packageName);
-                    startActivity(intent);
-                    break;
+            try {
+                String text = "Found " + definitePotholeCountTextView.getText().toString()
+                        + " " + getString(R.string.tweet_content);
+                String tweetText = String.format("https://twitter.com/intent/tweet?text=%s", text);
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(tweetText));
+                // looking for official Twitter app
+                List<ResolveInfo> matches = getPackageManager().queryIntentActivities(intent, 0);
+                for (ResolveInfo info : matches) {
+                    if (info.activityInfo.packageName.toLowerCase().startsWith("com.twitter")) {
+                        intent.setPackage(info.activityInfo.packageName);
+                        startActivity(intent);
+                        break;
+                    } else if (info.activityInfo.packageName.toLowerCase().startsWith("com.android.chrome")) {
+                        intent.setPackage(info.activityInfo.packageName);
+                        startActivity(intent);
+                        break;
+                    } else {
+                        tweetSnackbar.setText("Twitter-compatible app not found");
+                    }
                 }
-                else if (info.activityInfo.packageName.toLowerCase().startsWith("com.android.chrome")) {
-                    intent.setPackage(info.activityInfo.packageName);
-                    startActivity(intent);
-                    break;
-                }
-            }
-            if (tweetSnackbar != null) {
-                tweetSnackbar.setText("Twitter-compatible app not found");
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage());
             }
         }
     }
