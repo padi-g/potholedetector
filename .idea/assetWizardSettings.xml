@@ -13,6 +13,46 @@
                       <PersistentState>
                         <option name="children">
                           <map>
+                            <entry key="launcher">
+                              <value>
+                                <PersistentState>
+                                  <option name="children">
+                                    <map>
+                                      <entry key="foregroundClipArt">
+                                        <value>
+                                          <PersistentState>
+                                            <option name="values">
+                                              <map>
+                                                <entry key="color" value="26a69a" />
+                                              </map>
+                                            </option>
+                                          </PersistentState>
+                                        </value>
+                                      </entry>
+                                      <entry key="foregroundClipartAsset">
+                                        <value>
+                                          <PersistentState>
+                                            <option name="values">
+                                              <map>
+                                                <entry key="url" value="jar:file:/snap/android-studio/51/android-studio/plugins/android/lib/android.jar!/images/material_design_icons/file/ic_cloud_done_black_24dp.xml" />
+                                              </map>
+                                            </option>
+                                          </PersistentState>
+                                        </value>
+                                      </entry>
+                                    </map>
+                                  </option>
+                                  <option name="values">
+                                    <map>
+                                      <entry key="backgroundAssetType" value="COLOR" />
+                                      <entry key="backgroundColor" value="ffffff" />
+                                      <entry key="foregroundAssetType" value="CLIP_ART" />
+                                      <entry key="outputName" value="ic_all_uploads_done" />
+                                    </map>
+                                  </option>
+                                </PersistentState>
+                              </value>
+                            </entry>
                             <entry key="launcherLegacy">
                               <value>
                                 <PersistentState>
@@ -40,13 +80,24 @@
                                           </PersistentState>
                                         </value>
                                       </entry>
+                                      <entry key="textAsset">
+                                        <value>
+                                          <PersistentState>
+                                            <option name="values">
+                                              <map>
+                                                <entry key="text" value="" />
+                                              </map>
+                                            </option>
+                                          </PersistentState>
+                                        </value>
+                                      </entry>
                                     </map>
                                   </option>
                                   <option name="values">
                                     <map>
                                       <entry key="backgroundColor" value="808080" />
                                       <entry key="iconShape" value="NONE" />
-                                      <entry key="outputName" value="grey_marker" />
+                                      <entry key="outputName" value="uploads_done" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -73,11 +124,6 @@
                                 </PersistentState>
                               </value>
                             </entry>
-                          </map>
-                        </option>
-                        <option name="values">
-                          <map>
-                            <entry key="outputIconType" value="LAUNCHER_LEGACY" />
                           </map>
                         </option>
                       </PersistentState>
@@ -113,9 +159,10 @@
                         </option>
                         <option name="values">
                           <map>
+                            <entry key="assetSourceType" value="FILE" />
                             <entry key="color" value="ffffff" />
-                            <entry key="outputName" value="ic_file_upload_black_24dp" />
-                            <entry key="sourceFile" value="$USER_HOME$" />
+                            <entry key="outputName" value="ic_five_pointed_star" />
+                            <entry key="sourceFile" value="$USER_HOME$/Downloads/Five-pointed_star.svg" />
                           </map>
                         </option>
                       </PersistentState>

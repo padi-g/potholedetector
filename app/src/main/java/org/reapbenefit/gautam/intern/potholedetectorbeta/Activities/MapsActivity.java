@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.ProgressBar;
+import android.widget.RatingBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -74,8 +75,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private final float PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND = 1.38f;
     private ProgressBar spinner;
     private TextView date, distance, duration, probablePotholeCountTextView, textview, trafficTime;
-    private SeekBar accuracySeekbar;
-    private Button submitButton;
+    private RatingBar accuracyRatingBar;
+
     private String tripID;
     private int linesPerPeriod;
     private float threshold;
@@ -103,8 +104,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        // updating user rating when user exits activity
+        Intent updateUserRatingIntent = new Intent(MapsActivity.this, APIService.class);
+        updateUserRatingIntent.putExtra("request", "POST");
+        updateUserRatingIntent.putExtra("table", getString(R.string.trip_data_table));
+        finishedTrip.setUserRating(accuracy_result);
+        Log.d(TAG, accuracy_result + "");
+        updateUserRatingIntent.putExtra(getString(R.string.trip_with_user_rating), finishedTrip);
+        startService(updateUserRatingIntent);super.onDestroy();
     }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,27 +165,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         textview = (TextView) findViewById(R.id.how_accurate_text);
         trafficTime = (TextView) findViewById(R.id.traffic_time);
         accuracyLowTime = (TextView) findViewById(R.id.accuracy_low_time);
-        accuracySeekbar = (SeekBar) findViewById(R.id.accuracy_seek);
+        accuracyRatingBar = (RatingBar) findViewById(R.id.accuracy_seek);
         setUserPercievedAccuracy(-1); // To have a non 0 value when the user does not submit
-        submitButton = (Button) findViewById(R.id.submit_button);
-        submitButton.setOnClickListener(new View.OnClickListener() {
+        accuracyRatingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             @Override
-            public void onClick(View v) {
-                accuracy_result = accuracySeekbar.getProgress();
+            public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
+                // execute submit button related actions
+                accuracy_result = (int) accuracyRatingBar.getRating();
                 setUserPercievedAccuracy(accuracy_result);
-                submitButton.setVisibility(View.GONE);
-                accuracySeekbar.setVisibility(View.GONE);
-                textview.setVisibility(View.GONE);
-                Intent updateUserRatingIntent = new Intent(MapsActivity.this, APIService.class);
-                updateUserRatingIntent.putExtra("request", "POST");
-                updateUserRatingIntent.putExtra("table", getString(R.string.trip_data_table));
-                finishedTrip.setUserRating(accuracy_result);
-                // Log.d(TAG, accuracy_result + "");
-                updateUserRatingIntent.putExtra(getString(R.string.trip_with_user_rating), finishedTrip);
-                startService(updateUserRatingIntent);
             }
         });
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         mapFragment = (MapFragment) getFragmentManager()
                 .findFragmentById(R.id.trip_map);
@@ -236,8 +234,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         trafficTime.setText(trip.getMinutesWasted() + " minutes");
         accuracyLowTime.setText(trip.getMinutesAccuracyLow() + " minutes");
         resultGrid.setVisibility(View.VISIBLE);
-        accuracySeekbar.setVisibility(View.VISIBLE);
-        submitButton.setVisibility(View.VISIBLE);
+        accuracyRatingBar.setVisibility(View.VISIBLE);
         if (finishedTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG) {
             distance.setText(" < 0.5 km");
             probablePotholeCountTextView.setText("Sorry, you must travel at least 0.5 km");

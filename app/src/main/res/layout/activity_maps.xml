@@ -204,24 +204,13 @@
         android:orientation="horizontal"
         android:paddingBottom="5dp">
 
-        <SeekBar
+        <RatingBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_gravity="center"
             android:id="@+id/accuracy_seek"
-            android:thumb="@drawable/right_arrow"
-            android:layout_weight="90"
-            android:max="9" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="10"
-            android:text="Submit"
-            android:fontFamily="sans-serif-condensed"
-            android:textStyle="bold"
-            android:id="@+id/submit_button"/>
+            android:numStars="5" />
 
     </LinearLayout>
 

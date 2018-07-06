@@ -50,6 +50,14 @@
             android:src="@drawable/ic_unarchive_white_24dp" />
     </GridLayout>
 
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/uploads_done_image"
+        android:layout_gravity="center"
+        android:src="@mipmap/ic_all_uploads_done"
+        android:visibility="visible"/>
+
     <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
