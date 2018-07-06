@@ -86,6 +86,8 @@ public class MainActivity extends AppCompatActivity
     private boolean inCar;
     private SharedPreferences onboardingPreferences;
     private final String AZURE_URL = "https://potholedetector.azurewebsites.net/";
+    private SharedPreferences settingsPreferences;
+    private SharedPreferences.Editor settingsPreferencesEditor;
 
     @Override
     public void onBackPressed() {
@@ -371,6 +373,8 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        settingsPreferences = getSharedPreferences("uploads",MODE_PRIVATE);
+        settingsPreferencesEditor = settingsPreferences.edit();
         return true;
     }
 
@@ -395,16 +399,24 @@ public class MainActivity extends AppCompatActivity
             intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
         }
-        if(id == R.id.actions_settings){
-            intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-        }
         if (id == R.id.actions_invite) {
             intent = new Intent();
             //intent.setAction(Intent.ACTION_SEND);
             intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.invite_message));
             intent.setType("text/plain");
             startActivity(intent.createChooser(intent, "Help your friends map potholes"));
+        }
+        if (id == R.id.in_menu_checkbox) {
+            if (item.isChecked()) {
+                // disable auto-upload
+                settingsPreferencesEditor.putBoolean(getString(R.string.auto_upload_setting), false).commit();
+                item.setChecked(false);
+            }
+            else {
+                // enable auto-upload
+                settingsPreferencesEditor.putBoolean(getString(R.string.auto_upload_setting), true).commit();
+                item.setChecked(true);
+            }
         }
         return super.onOptionsItemSelected(item);
     }
