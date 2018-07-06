@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.Serializable;
@@ -49,6 +50,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     ImageButton uploadedTick;
     TextView date, time, size, distance;
     ProgressBar uploadProgressBar;
+    TextView allUploadsDone;
 
 
     /*
@@ -88,7 +90,6 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
 
     @Override
     public TripListViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
 
         LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -111,6 +112,10 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             }
             else {
                 Toast.makeText(context.getApplicationContext(), "No trips made yet", Toast.LENGTH_SHORT).show();
+                allUploadsDone.setVisibility(View.VISIBLE);
+            }
+            if (getItemCount() == 0) {
+                allUploadsDone.setVisibility(View.VISIBLE);
             }
         }
         catch (NullPointerException nullPointerException) {

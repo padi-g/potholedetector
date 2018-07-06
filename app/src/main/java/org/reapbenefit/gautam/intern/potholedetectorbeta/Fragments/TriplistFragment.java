@@ -22,6 +22,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
@@ -75,6 +76,7 @@ public class TriplistFragment extends Fragment {
     private String TAG = getClass().getSimpleName();
     private int maxPotholeCount;
     private String tripUploadingId;
+    private TextView allUploadsDone;
 
     private BroadcastReceiver tripUploadingReceiver = new BroadcastReceiver() {
         @Override
@@ -219,6 +221,12 @@ public class TriplistFragment extends Fragment {
             recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripUploadingId, tripViewModel, getActivity().getBaseContext());
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
+            if (offlineTrips.isEmpty() && allUploadsDone != null) {
+                allUploadsDone.setVisibility(View.VISIBLE);
+            }
+            else if (!offlineTrips.isEmpty() && allUploadsDone != null) {
+                allUploadsDone.setVisibility(View.INVISIBLE);
+            }
         }
         else if (offlineTrips.isEmpty() && getActivity() != null) {
             // Log.d(TAG, "inside OfflineTLV empty");
@@ -226,6 +234,12 @@ public class TriplistFragment extends Fragment {
             recyclerAdapter = new TripListAdapter(getActivity(), offlineTrips, uploadStatus, tripUploadedId, tripUploadingId, tripViewModel, getActivity().getBaseContext());
             recyclerView.setAdapter(recyclerAdapter);
             recyclerAdapter.notifyDataSetChanged();
+            if (offlineTrips.isEmpty() && allUploadsDone != null) {
+                allUploadsDone.setVisibility(View.VISIBLE);
+            }
+            else if (!offlineTrips.isEmpty() && allUploadsDone != null) {
+                allUploadsDone.setVisibility(View.INVISIBLE);
+            }
         }
     }
 
@@ -295,6 +309,7 @@ public class TriplistFragment extends Fragment {
                 createOfflineTripsListView();
             }
         });
+        allUploadsDone = (TextView) v.findViewById(R.id.uploads_done_message);
         return v;
     }
 
