@@ -84,6 +84,7 @@
     <string name="global_unique_pothole_locations">GLOBAL_UNIQUE_POTHOLE_LOCATIONS</string>
     <string name="processed_trip">tripUploaded</string>
     <string name="trip_with_user_rating">tripUploaded</string>
+    <string name="hits_unique_potholes">HITS_UNIQUE_POTHOLES</string>
 
     <string name="highest_pothole_latlngs_check">HIGHEST_POTHOLE_LATLONG_CHECK</string>
     <string name="is_viewing_highest_pothole_trip">IS_VIEWING_HIGHEST_POTHOLE_TRIP</string>
@@ -99,4 +100,10 @@
 
     <string name="tweet_content"> potholes on my trip today. Map your trips too! https://goo.gl/p7CQjd </string>
     <string name="tweet_snackbar">Tell others about your trip!</string>
+
+    <string name="RED_100">#440000</string>
+    <string name="RED_80">#660000</string>
+    <string name="RED_60">#880000</string>
+    <string name="RED_40">#CC0000</string>
+    <string name="RED_20">#FF0000</string>
 </resources>

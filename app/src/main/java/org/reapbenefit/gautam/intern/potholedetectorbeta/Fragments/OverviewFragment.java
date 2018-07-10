@@ -51,6 +51,7 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.CustomClusterRenderer;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.DefinitePotholeCluster;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.MapStateManager;
@@ -111,6 +112,8 @@ public class OverviewFragment extends Fragment implements
     private GridLayout mostPotholesGrid;
     private FloatingActionButton floatingButton;
     private LatLng[] uniquePotholeLatLng;
+    private int[] uniquePotholeHits;
+    private int totalUniqueHits;
     private final String TAG = getClass().getSimpleName();
     private ClusterManager<DefinitePotholeCluster> definitePotholeClusterManager;
 
@@ -119,6 +122,12 @@ public class OverviewFragment extends Fragment implements
         public void onReceive(Context context, Intent intent) {
             Log.d("OverviewFragment", "Broadcast received");
             uniquePotholeLatLng = (LatLng[]) intent.getParcelableArrayExtra(getString(R.string.global_unique_pothole_locations));
+            uniquePotholeHits = intent.getIntArrayExtra(getString(R.string.hits_unique_potholes));
+            int sum = 0;
+            for (int i = 0; i < uniquePotholeHits.length; ++i) {
+                sum += uniquePotholeHits[i];
+            }
+            totalUniqueHits = sum;
         }
     };
 
@@ -315,6 +324,9 @@ public class OverviewFragment extends Fragment implements
     private void populateGlobalMap() {
         if (googleMap != null && uniquePotholeLatLng != null) {
             for (int i = 0; i < uniquePotholeLatLng.length; ++i) {
+                CustomClusterRenderer customClusterRenderer = new CustomClusterRenderer(getContext(), googleMap, definitePotholeClusterManager);
+                customClusterRenderer.setHitPercentage(((double)uniquePotholeHits[i]/(double)(totalUniqueHits)) * 100.0);
+                definitePotholeClusterManager.setRenderer(new CustomClusterRenderer(getContext(), googleMap, definitePotholeClusterManager));
                 definitePotholeClusterManager.addItem(new DefinitePotholeCluster(uniquePotholeLatLng[i]));
             }
             definitePotholeClusterManager.cluster();

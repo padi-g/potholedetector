@@ -14,11 +14,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,12 +25,17 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CustomCap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.database.DatabaseReference;
 import com.google.gson.Gson;
+import com.google.maps.GeoApiContext;
+import com.google.maps.RoadsApi;
+import com.google.maps.model.SnappedPoint;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
@@ -49,6 +52,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,9 +69,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private GoogleMap mMap;
     MapFragment mapFragment;
-    private ArrayList<LatLng> latLngs = new ArrayList<>();
-    private ArrayList<LatLng> probablePotholeLatLngs = new ArrayList<>();
-    private ArrayList<LatLng> definitePotholeLatLngs = new ArrayList<>();
+    private ArrayList<com.google.android.gms.maps.model.LatLng> latLngs = new ArrayList<>();
+    private ArrayList<com.google.android.gms.maps.model.LatLng> probablePotholeLatLngs = new ArrayList<>();
+    private ArrayList<com.google.android.gms.maps.model.LatLng> definitePotholeLatLngs = new ArrayList<>();
     private InputStream inputStream;
     private FirebaseAnalytics mFirebaseAnalytics;
     private DatabaseReference db;
@@ -101,6 +105,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private long tripDurationInSeconds;
     private Snackbar tweetSnackbar;
     private boolean didUserRateTrip;
+    private GeoApiContext geoApiContext;
+    private final String API_KEY = "***REMOVED***";
 
 
     @Override
@@ -209,7 +215,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             try {
                 while ((line = bufferedReader.readLine()) != null) {
                     String tokens[] = line.split(",");
-                    latLngs.add(new LatLng(Double.valueOf(tokens[0]), Double.valueOf(tokens[1])));
+                    latLngs.add(new com.google.android.gms.maps.model.LatLng(Double.valueOf(tokens[0]), Double.valueOf(tokens[1])));
                 }
             } catch (Exception e) {
 
@@ -224,12 +230,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Set<String> definitePotholeLocationSet = dbPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
                 Iterator iterator = definitePotholeLocationSet.iterator();
                 while (iterator.hasNext() && mMap != null) {
-                    LatLng definitePotholeLocation = new Gson().fromJson(iterator.next().toString(), LatLng.class);
+                    com.google.android.gms.maps.model.LatLng definitePotholeLocation = new Gson().fromJson(iterator.next().toString(), com.google.android.gms.maps.model.LatLng.class);
                     mMap.addMarker(new MarkerOptions().position(definitePotholeLocation).icon(BitmapDescriptorFactory.defaultMarker()));
                 }
             }
         }
         // setup action bar
+        geoApiContext = new GeoApiContext.Builder().apiKey(API_KEY).build();
     }
 
     private void drawInformationalUI(Trip trip) {
@@ -269,7 +276,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    public LatLng extractLatLng(String line) {
+    public com.google.android.gms.maps.model.LatLng extractLatLng(String line) {
         String vals[] = line.split(",");
         LatLng l = new LatLng(Double.valueOf(vals[locIndex]), Double.valueOf(vals[locIndex + 1]));
         return l;
@@ -289,6 +296,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap = googleMap;
         if (!latLngs.isEmpty()) {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngs.get(0), 15));
+
+            // using RoadsAPI to snap polyline to road taken by user
+
+            new SnapToRoadTask().execute();
 
             PolylineOptions polyline = new PolylineOptions().geodesic(true).width(5).color(Color.BLUE);
 
@@ -583,6 +594,35 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             } catch (Exception e) {
                 Log.e(TAG, e.getMessage());
             }
+        }
+    }
+
+    private class SnapToRoadTask extends AsyncTask<Void, Void, Void> {
+        private com.google.maps.model.LatLng[] path;
+        @Override
+        protected Void doInBackground(Void... voids) {
+
+        path = new com.google.maps.model.LatLng[latLngs.size()];
+        if (latLngs != null) {
+            for (LatLng latLng : latLngs) {
+                path[latLngs.indexOf(latLng)] = new com.google.maps.model.LatLng(latLng.latitude, latLng.longitude);
+            }
+        }
+        SnappedPoint[] points = RoadsApi.snapToRoads(geoApiContext, true, path).awaitIgnoreError();
+        return null;
+    }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            // drawing polyline in UI thread
+            LatLng[] polyLinePath = new LatLng[path.length];
+            for (int i = 0; i < path.length; ++i) {
+                polyLinePath[i] = new LatLng(path[i].lat, path[i].lng);
+            }
+            if (mMap != null) {
+                Polyline polyline = mMap.addPolyline(new PolylineOptions().add(polyLinePath));
+            }
+            super.onPostExecute(aVoid);
         }
     }
 }

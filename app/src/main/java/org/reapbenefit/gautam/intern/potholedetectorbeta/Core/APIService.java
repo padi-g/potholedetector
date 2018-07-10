@@ -110,14 +110,17 @@ public class APIService extends IntentService {
             try {
                 UniquePotholeDataLambda[] uniquePotholeDataLambdas = new Gson().fromJson(uniquePotholesJson, UniquePotholeDataLambda[].class);
                 LatLng[] potholeLatLngs = new LatLng[uniquePotholeDataLambdas.length];
+                int[] uniquePotholeHits = new int[uniquePotholeDataLambdas.length];
                 if (uniquePotholeDataLambdas != null) {
                     for (int i = 0; i < uniquePotholeDataLambdas.length; ++i) {
                         potholeLatLngs[i] = new LatLng(uniquePotholeDataLambdas[i].getLat(),
                                 uniquePotholeDataLambdas[i].getLng());
+                        uniquePotholeHits[i] = uniquePotholeDataLambdas[i].getHits();
                     }
                 }
                 Intent potholeLatLngsIntent = new Intent(getString(R.string.global_unique_pothole_locations));
                 potholeLatLngsIntent.putExtra(getString(R.string.global_unique_pothole_locations), potholeLatLngs);
+                potholeLatLngsIntent.putExtra(getString(R.string.hits_unique_potholes), uniquePotholeHits);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(potholeLatLngsIntent);
             } catch (Exception exception) {
                 // Log.e(TAG, exception.getMessage());

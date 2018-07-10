@@ -18,7 +18,7 @@ public class PlaceholderActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FirebaseCrash.setCrashCollectionEnabled(!BuildConfig.DEBUG);
+        FirebaseCrash.setCrashCollectionEnabled(false);
         SharedPreferences onboardingPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         boolean onboarding = onboardingPreferences.getBoolean("onboarding", true);
 

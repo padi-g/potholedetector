@@ -6,6 +6,8 @@ import com.google.maps.android.clustering.ClusterItem;
 public class DefinitePotholeCluster implements ClusterItem {
 
     private LatLng position;
+    private String title;
+    private int hits;
 
     public DefinitePotholeCluster(LatLng position) {
         this.position = position;
@@ -18,11 +20,19 @@ public class DefinitePotholeCluster implements ClusterItem {
 
     @Override
     public String getTitle() {
-        return null;
+        return title;
     }
 
     @Override
     public String getSnippet() {
         return null;
+    }
+
+    public void setHits(int hits) {
+        this.hits = hits;
+    }
+
+    public int getHits() {
+        return hits;
     }
 }
