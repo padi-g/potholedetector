@@ -67,6 +67,8 @@ import java.util.TreeMap;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
+    private static final int PAGINATION_OVERLAP = 5;
+    private static final int PAGE_SIZE_LIMIT = 100;
     private GoogleMap mMap;
     MapFragment mapFragment;
     private ArrayList<com.google.android.gms.maps.model.LatLng> latLngs = new ArrayList<>();
@@ -301,12 +303,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             new SnapToRoadTask().execute();
 
-            PolylineOptions polyline = new PolylineOptions().geodesic(true).width(5).color(Color.BLUE);
-
-            for (LatLng l : latLngs) {
-                polyline.add(l);
-            }
-            mMap.addPolyline(polyline);
             Set<String> probablePotholeStringSet = new HashSet<>();
             Set<String> definitePotholeStringSet = new HashSet<>();
             if (!isViewingHighestPotholeTrip) {
@@ -599,28 +595,51 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private class SnapToRoadTask extends AsyncTask<Void, Void, Void> {
         private com.google.maps.model.LatLng[] path;
+        private SnappedPoint[] points;
         @Override
         protected Void doInBackground(Void... voids) {
+            List<SnappedPoint> snappedPoints = new ArrayList<>();
+            int offset = 0;
+            while (offset < latLngs.size()) {
+                if (offset > PAGINATION_OVERLAP) {
+                    offset -= PAGINATION_OVERLAP;
+                }
+                int lowerBound = offset;
+                int upperBound = Math.min(offset + PAGE_SIZE_LIMIT, latLngs.size());
+                Log.d(TAG, lowerBound + " " + upperBound);
 
-        path = new com.google.maps.model.LatLng[latLngs.size()];
-        if (latLngs != null) {
-            for (LatLng latLng : latLngs) {
-                path[latLngs.indexOf(latLng)] = new com.google.maps.model.LatLng(latLng.latitude, latLng.longitude);
+                LatLng[] pathInitial = latLngs.subList(lowerBound, upperBound).toArray(new LatLng[upperBound - lowerBound]);
+                com.google.maps.model.LatLng[] path = new com.google.maps.model.LatLng[pathInitial.length];
+                for (int i = 0; i < pathInitial.length; ++i) {
+                    path[i] = new com.google.maps.model.LatLng(pathInitial[i].latitude, pathInitial[i].longitude);
+                }
+                points = RoadsApi.snapToRoads(geoApiContext, true, path).awaitIgnoreError();
+                boolean passedOverlap = false;
+                for (SnappedPoint point : points) {
+                    if (offset == 0 || point.originalIndex >= PAGINATION_OVERLAP - 1) {
+                        passedOverlap = true;
+                    }
+                    if (passedOverlap) {
+                        snappedPoints.add(point);
+                    }
+                }
+
+                offset = upperBound;
             }
-        }
-        SnappedPoint[] points = RoadsApi.snapToRoads(geoApiContext, true, path).awaitIgnoreError();
-        return null;
+            return null;
     }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             // drawing polyline in UI thread
-            LatLng[] polyLinePath = new LatLng[path.length];
-            for (int i = 0; i < path.length; ++i) {
-                polyLinePath[i] = new LatLng(path[i].lat, path[i].lng);
-            }
-            if (mMap != null) {
-                Polyline polyline = mMap.addPolyline(new PolylineOptions().add(polyLinePath));
+            if (points != null) {
+                LatLng[] polyLinePath = new LatLng[points.length];
+                for (int i = 0; i < points.length; ++i) {
+                    polyLinePath[i] = new LatLng(points[i].location.lat, points[i].location.lng);
+                }
+                if (mMap != null) {
+                    Polyline polyline = mMap.addPolyline(new PolylineOptions().add(polyLinePath));
+                }
             }
             super.onPostExecute(aVoid);
         }
