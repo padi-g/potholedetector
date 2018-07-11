@@ -35,6 +35,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.gson.Gson;
 import com.google.maps.GeoApiContext;
 import com.google.maps.RoadsApi;
+import com.google.maps.errors.ApiException;
 import com.google.maps.model.SnappedPoint;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
@@ -49,6 +50,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
@@ -594,51 +596,77 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private class SnapToRoadTask extends AsyncTask<Void, Void, Void> {
-        private com.google.maps.model.LatLng[] path;
+        private boolean didRoadSnapException;
         private SnappedPoint[] points;
         @Override
         protected Void doInBackground(Void... voids) {
-            List<SnappedPoint> snappedPoints = new ArrayList<>();
-            int offset = 0;
-            while (offset < latLngs.size()) {
-                if (offset > PAGINATION_OVERLAP) {
-                    offset -= PAGINATION_OVERLAP;
-                }
-                int lowerBound = offset;
-                int upperBound = Math.min(offset + PAGE_SIZE_LIMIT, latLngs.size());
-                Log.d(TAG, lowerBound + " " + upperBound);
-
-                LatLng[] pathInitial = latLngs.subList(lowerBound, upperBound).toArray(new LatLng[upperBound - lowerBound]);
-                com.google.maps.model.LatLng[] path = new com.google.maps.model.LatLng[pathInitial.length];
-                for (int i = 0; i < pathInitial.length; ++i) {
-                    path[i] = new com.google.maps.model.LatLng(pathInitial[i].latitude, pathInitial[i].longitude);
-                }
-                points = RoadsApi.snapToRoads(geoApiContext, true, path).awaitIgnoreError();
-                boolean passedOverlap = false;
-                for (SnappedPoint point : points) {
-                    if (offset == 0 || point.originalIndex >= PAGINATION_OVERLAP - 1) {
-                        passedOverlap = true;
+            try {
+                List<SnappedPoint> snappedPoints = new ArrayList<>();
+                int offset = 0;
+                while (offset < latLngs.size()) {
+                    if (offset > PAGINATION_OVERLAP) {
+                        offset -= PAGINATION_OVERLAP;
                     }
-                    if (passedOverlap) {
-                        snappedPoints.add(point);
-                    }
-                }
+                    int lowerBound = offset;
+                    int upperBound = Math.min(offset + PAGE_SIZE_LIMIT, latLngs.size());
+                    Log.d(TAG, lowerBound + " " + upperBound);
 
-                offset = upperBound;
+                    LatLng[] pathInitial = latLngs.subList(lowerBound, upperBound).toArray(new LatLng[upperBound - lowerBound]);
+                    com.google.maps.model.LatLng[] path = new com.google.maps.model.LatLng[pathInitial.length];
+                    for (int i = 0; i < pathInitial.length; ++i) {
+                        path[i] = new com.google.maps.model.LatLng(pathInitial[i].latitude, pathInitial[i].longitude);
+                    }
+                    try {
+                        points = RoadsApi.snapToRoads(geoApiContext, true, path).await();
+                    } catch (ApiException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    boolean passedOverlap = false;
+                    for (SnappedPoint point : points) {
+                        if (offset == 0 || point.originalIndex >= PAGINATION_OVERLAP - 1) {
+                            passedOverlap = true;
+                        }
+                        if (passedOverlap) {
+                            snappedPoints.add(point);
+                        }
+                    }
+
+                    offset = upperBound;
+                }
+            } catch (Exception e) {
+                // road snapping exception occurred, display polyline without snapping to road
+                didRoadSnapException = true;
             }
             return null;
     }
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            // drawing polyline in UI thread
+            if (didRoadSnapException) {
+                // drawing standard polyline in UI thread
+                PolylineOptions polyline = new PolylineOptions().geodesic(true).width(5).color(Color.BLUE);
+                if (latLngs != null) {
+                    for (LatLng l: latLngs) {
+                        polyline.add(l);
+                    }
+                    if (mMap != null) {
+                        mMap.addPolyline(polyline);
+                    }
+                }
+                return;
+            }
+            // drawing snapped polyline in UI thread
             if (points != null) {
                 LatLng[] polyLinePath = new LatLng[points.length];
                 for (int i = 0; i < points.length; ++i) {
                     polyLinePath[i] = new LatLng(points[i].location.lat, points[i].location.lng);
                 }
                 if (mMap != null) {
-                    Polyline polyline = mMap.addPolyline(new PolylineOptions().add(polyLinePath));
+                    mMap.addPolyline(new PolylineOptions().add(polyLinePath).color(Color.BLUE).geodesic(true).width(5));
                 }
             }
             super.onPostExecute(aVoid);
