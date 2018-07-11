@@ -25,10 +25,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CustomCap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.database.DatabaseReference;
@@ -54,7 +52,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -286,15 +283,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return l;
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -619,13 +607,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     try {
                         points = RoadsApi.snapToRoads(geoApiContext, true, path).await();
                     } catch (ApiException e) {
+                        logAnalytics("RoadsApiException");
                         e.printStackTrace();
                     } catch (InterruptedException e) {
+                        logAnalytics("RoadsApiInterruptedException");
                         e.printStackTrace();
                     } catch (IOException e) {
+                        logAnalytics("RoadsApiIOException");
                         e.printStackTrace();
                     }
                     boolean passedOverlap = false;
+                    logAnalytics("points.length = " + points.length);
                     for (SnappedPoint point : points) {
                         if (offset == 0 || point.originalIndex >= PAGINATION_OVERLAP - 1) {
                             passedOverlap = true;
@@ -657,6 +649,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         mMap.addPolyline(polyline);
                     }
                 }
+                super.onPostExecute(aVoid);
                 return;
             }
             // drawing snapped polyline in UI thread

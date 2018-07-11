@@ -25,6 +25,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -57,6 +58,7 @@ public class SplashActivity extends AppCompatActivity {
     private SharedPreferences onboardingPreferences;
     private SharedPreferences.Editor onboardingPreferencesEditor;
     private String userId;
+    private FirebaseAnalytics firebaseAnalytics;
     private String responseJson;
     private UserData[] userData;
     private final String url = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/users/";
@@ -163,6 +165,7 @@ public class SplashActivity extends AppCompatActivity {
                 dialog.show();
             }
         });
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this);
     }
 
     @Override
@@ -187,12 +190,14 @@ public class SplashActivity extends AppCompatActivity {
                                 onboardingPreferencesEditor.putBoolean("onboarding", false).commit();
                                 uploadEditor.putString("FIREBASE_USER_ID", firebaseAuth.getCurrentUser().getUid()).commit();
                                 userId = firebaseAuth.getCurrentUser().getUid();
-                                //starting service to access API and retrieve users
+                                // starting service to access API and retrieve users
                                 Intent apiServiceIntent = new Intent(SplashActivity.this, APIService.class);
                                 apiServiceIntent.putExtra("table", getString(R.string.user_data_table));
                                 apiServiceIntent.putExtra("request", "GET");
                                 apiServiceIntent.putExtra("FIREBASE_USER_ID", userId);
                                 SplashActivity.this.startService(apiServiceIntent);
+                                // logging userID with Firebase Analytics
+                                firebaseAnalytics.setUserId(userId);
                                 Intent intent = new Intent(SplashActivity.this, MainActivity.class);
                                 startActivity(intent);
                             }
