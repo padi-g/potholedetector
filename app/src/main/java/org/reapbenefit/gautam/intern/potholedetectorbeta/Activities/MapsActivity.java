@@ -668,7 +668,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mMap.addPolyline(new PolylineOptions().add(polyLinePath).color(Color.BLUE).geodesic(true).width(5));
                 }
             }
-            Toast.makeText(MapsActivity.this, "Polyline drawn", Toast.LENGTH_SHORT).show();
             super.onPostExecute(points);
         }
     }
