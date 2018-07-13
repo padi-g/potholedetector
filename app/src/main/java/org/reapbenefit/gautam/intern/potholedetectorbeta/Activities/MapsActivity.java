@@ -426,7 +426,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     if (speedWithLocationTreeMap != null && speedWithLocationTreeMap.size() >= tripDurationInSeconds / 3) {
                         // Log.d(TAG, new Gson().toJson(speedWithLocationTreeMap.toString()));
-                        //populating the set of the points we are interested in
+                        //populating the set of the pointsPerRequest we are interested in
                         while ((line = bufferedReader.readLine()) != null) {
                             String values[] = line.split(",");
                             lineNumber++;
@@ -448,7 +448,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     } else {
                         // Log.d(TAG, "inside else");
                         showInaccurateToast = true;
-                        // populating our set of the points we are interested in
+                        // populating our set of the pointsPerRequest we are interested in
                         while ((line = bufferedReader.readLine()) != null) {
                             String values[] = line.split(",");
                             // Log.d(TAG, "speedmap null");
@@ -590,16 +590,39 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private class SnapToRoadTask extends AsyncTask<Void, Void, List<LatLng>> {
         private boolean didRoadSnapException;
-        private SnappedPoint[] points;
+        private SnappedPoint[] pointsPerRequest;
+        private List<LatLng> allSnappedPoints = new ArrayList<>();
         @Override
         protected List<LatLng> doInBackground(Void... voids) {
             try {
-                com.google.maps.model.LatLng[] path = new com.google.maps.model.LatLng[latLngs.size()];
-                for (int i = 0; i < latLngs.size(); ++i) {
-                    path[i] = new com.google.maps.model.LatLng(latLngs.get(i).latitude, latLngs.get(i).longitude);
+                Set<String> geoHashSet = new TreeSet<>();
+                List<com.google.maps.model.LatLng> uniqueLatLngs = new ArrayList<>();
+                for (LatLng latLng: latLngs) {
+                    String geoHash = GeoHash.geoHashStringWithCharacterPrecision(latLng.latitude, latLng.longitude, 7);
+                    geoHashSet.add(geoHash);
+                }
+                Iterator geoHashIterator = geoHashSet.iterator();
+                while (geoHashIterator.hasNext()) {
+                    String geoHash = (String) geoHashIterator.next();
+                    uniqueLatLngs.add(new com.google.maps.model.LatLng(GeoHash.fromGeohashString(geoHash).getPoint().getLatitude(), GeoHash.fromGeohashString(geoHash).getPoint().getLongitude()));
                 }
                 try {
-                    points = RoadsApi.snapToRoads(geoApiContext, true, path).await();
+                    int offsets = 0;
+                    for (int i = 0; i < uniqueLatLngs.size(); i += PAGE_SIZE_LIMIT) {
+                        if (offsets >= PAGINATION_OVERLAP) {
+                            offsets -= PAGINATION_OVERLAP;
+                        }
+                        com.google.maps.model.LatLng[] path = new com.google.maps.model.LatLng[Math.min(i + PAGE_SIZE_LIMIT - offsets, uniqueLatLngs.size() - i)];
+                        int j = 0;
+                        for (com.google.maps.model.LatLng latLng: uniqueLatLngs.subList(i, Math.min(i + PAGE_SIZE_LIMIT - offsets, uniqueLatLngs.size() - i))) {
+                            path[j++] = latLng;
+                        }
+                        // sending requests with overlapping pointsPerRequest, with 100 hashed locations each request
+                        pointsPerRequest = RoadsApi.snapToRoads(geoApiContext, true, path).await();
+                        for (SnappedPoint snappedPoint: pointsPerRequest) {
+                            allSnappedPoints.add(new LatLng(snappedPoint.location.lat, snappedPoint.location.lng));
+                        }
+                    }
                 } catch (ApiException e) {
                     logAnalytics("RoadsApiException");
                     e.printStackTrace();
@@ -610,16 +633,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     logAnalytics("RoadsApiIOException");
                     e.printStackTrace();
                 }
-                Log.d(TAG, new Gson().toJson(points));
-                Set<LatLng> snappedGeoHashes = new TreeSet<>();
-                for (SnappedPoint point: points) {
-                    String geoHash = GeoHash.geoHashStringWithCharacterPrecision(point.location.lat, point.location.lng, 7);
-                    snappedGeoHashes.add(new LatLng(GeoHash.fromGeohashString(geoHash).getPoint().getLatitude(), GeoHash.fromGeohashString(geoHash).getPoint().getLongitude()));
-                }
-                return (List<LatLng>) snappedGeoHashes;
+                return allSnappedPoints;
             } catch (Exception e) {
                 // road snapping exception occurred, display polyline without snapping to road
-                Log.e(TAG, e.getMessage());
+                Log.e(TAG, String.valueOf(e.getLocalizedMessage()));
                 didRoadSnapException = true;
             }
             return null;
