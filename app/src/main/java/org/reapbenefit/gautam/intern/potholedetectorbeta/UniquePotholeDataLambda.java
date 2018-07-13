@@ -7,6 +7,8 @@ public class UniquePotholeDataLambda {
     private int Classification;
     private String PotholeID;
 
+    private String GeoHash;
+
     public float getLat() {
         return Lat;
     }
@@ -45,5 +47,14 @@ public class UniquePotholeDataLambda {
 
     public void setPotholeID(String potholeID) {
         PotholeID = potholeID;
+    }
+
+
+    public String getGeoHash() {
+        return GeoHash;
+    }
+
+    public void setGeoHash(String geoHash) {
+        GeoHash = geoHash;
     }
 }

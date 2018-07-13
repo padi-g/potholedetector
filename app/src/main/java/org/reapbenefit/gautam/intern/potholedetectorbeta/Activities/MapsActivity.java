@@ -64,9 +64,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import ch.hsr.geohash.GeoHash;
+
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final int PAGINATION_OVERLAP = 5;
+    public static final int GEOHASH_LENGTH = 8;
     private static final int PAGE_SIZE_LIMIT = 100;
     private GoogleMap mMap;
     MapFragment mapFragment;
@@ -327,6 +330,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         } else if (!isViewingHighestPotholeTrip) {
             textview.setText("No locations found");
         }
+        updateUserPotholeTable(1, new LatLng(12, 77));
     }
 
     private void updateUserPotholeTable(int classification, LatLng latLng) {
@@ -340,6 +344,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         userPothole.setPotLong((float) latLng.longitude);
         userPothole.setPotLat((float) latLng.latitude);
         userPothole.setClassification(classification);
+        userPothole.setGeoHash(GeoHash.geoHashStringWithCharacterPrecision(latLng.latitude, latLng.longitude, GEOHASH_LENGTH));
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date currentDate = new Date();
         String hitDate = simpleDateFormat.format(currentDate);

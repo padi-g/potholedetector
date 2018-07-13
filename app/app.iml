@@ -206,6 +206,7 @@
     <orderEntry type="library" name="Gradle: com.squareup.okhttp3:okhttp:3.10.0@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-location-license-12.0.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-cast-framework-12.0.1" level="project" />
+    <orderEntry type="library" name="Gradle: ch.hsr:geohash:1.3.0@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.crashlytics.sdk.android:crashlytics-2.9.3" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-base-12.0.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.firebase:firebase-auth-license-12.0.1" level="project" />

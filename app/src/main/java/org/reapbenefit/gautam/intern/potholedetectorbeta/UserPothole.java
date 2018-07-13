@@ -9,6 +9,8 @@ public class UserPothole implements Serializable {
     private int classification;
     private String HitDate;
 
+    private String GeoHash;
+
     public float getPotLong() {
         return PotLong;
     }
@@ -47,5 +49,14 @@ public class UserPothole implements Serializable {
 
     public void setHitDate(String hitDate) {
         HitDate = hitDate;
+    }
+
+
+    public String getGeoHash() {
+        return GeoHash;
+    }
+
+    public void setGeoHash(String geoHash) {
+        GeoHash = geoHash;
     }
 }
