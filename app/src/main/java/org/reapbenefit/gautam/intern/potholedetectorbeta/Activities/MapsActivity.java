@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import ch.hsr.geohash.GeoHash;
 
@@ -330,7 +331,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         } else if (!isViewingHighestPotholeTrip) {
             textview.setText("No locations found");
         }
-        updateUserPotholeTable(1, new LatLng(12, 77));
     }
 
     private void updateUserPotholeTable(int classification, LatLng latLng) {
@@ -588,61 +588,45 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private class SnapToRoadTask extends AsyncTask<Void, Void, Void> {
+    private class SnapToRoadTask extends AsyncTask<Void, Void, List<LatLng>> {
         private boolean didRoadSnapException;
         private SnappedPoint[] points;
         @Override
-        protected Void doInBackground(Void... voids) {
+        protected List<LatLng> doInBackground(Void... voids) {
             try {
-                List<SnappedPoint> snappedPoints = new ArrayList<>();
-                int offset = 0;
-                while (offset < latLngs.size()) {
-                    if (offset > PAGINATION_OVERLAP) {
-                        offset -= PAGINATION_OVERLAP;
-                    }
-                    int lowerBound = offset;
-                    int upperBound = Math.min(offset + PAGE_SIZE_LIMIT, latLngs.size());
-                    Log.d(TAG, lowerBound + " " + upperBound);
-
-                    LatLng[] pathInitial = latLngs.subList(lowerBound, upperBound).toArray(new LatLng[upperBound - lowerBound]);
-                    com.google.maps.model.LatLng[] path = new com.google.maps.model.LatLng[pathInitial.length];
-                    for (int i = 0; i < pathInitial.length; ++i) {
-                        path[i] = new com.google.maps.model.LatLng(pathInitial[i].latitude, pathInitial[i].longitude);
-                    }
-                    try {
-                        points = RoadsApi.snapToRoads(geoApiContext, true, path).await();
-                    } catch (ApiException e) {
-                        logAnalytics("RoadsApiException");
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        logAnalytics("RoadsApiInterruptedException");
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        logAnalytics("RoadsApiIOException");
-                        e.printStackTrace();
-                    }
-                    boolean passedOverlap = false;
-                    logAnalytics("points.length = " + points.length);
-                    for (SnappedPoint point : points) {
-                        if (offset == 0 || point.originalIndex >= PAGINATION_OVERLAP - 1) {
-                            passedOverlap = true;
-                        }
-                        if (passedOverlap) {
-                            snappedPoints.add(point);
-                        }
-                    }
-
-                    offset = upperBound;
+                com.google.maps.model.LatLng[] path = new com.google.maps.model.LatLng[latLngs.size()];
+                for (int i = 0; i < latLngs.size(); ++i) {
+                    path[i] = new com.google.maps.model.LatLng(latLngs.get(i).latitude, latLngs.get(i).longitude);
                 }
+                try {
+                    points = RoadsApi.snapToRoads(geoApiContext, true, path).await();
+                } catch (ApiException e) {
+                    logAnalytics("RoadsApiException");
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    logAnalytics("RoadsApiInterruptedException");
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    logAnalytics("RoadsApiIOException");
+                    e.printStackTrace();
+                }
+                Log.d(TAG, new Gson().toJson(points));
+                Set<LatLng> snappedGeoHashes = new TreeSet<>();
+                for (SnappedPoint point: points) {
+                    String geoHash = GeoHash.geoHashStringWithCharacterPrecision(point.location.lat, point.location.lng, 7);
+                    snappedGeoHashes.add(new LatLng(GeoHash.fromGeohashString(geoHash).getPoint().getLatitude(), GeoHash.fromGeohashString(geoHash).getPoint().getLongitude()));
+                }
+                return (List<LatLng>) snappedGeoHashes;
             } catch (Exception e) {
                 // road snapping exception occurred, display polyline without snapping to road
+                Log.e(TAG, e.getMessage());
                 didRoadSnapException = true;
             }
             return null;
     }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
+        protected void onPostExecute(List<LatLng> points) {
             if (didRoadSnapException) {
                 // drawing standard polyline in UI thread
                 PolylineOptions polyline = new PolylineOptions().geodesic(true).width(5).color(Color.BLUE);
@@ -654,20 +638,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         mMap.addPolyline(polyline);
                     }
                 }
-                super.onPostExecute(aVoid);
+                super.onPostExecute(points);
                 return;
             }
             // drawing snapped polyline in UI thread
             if (points != null) {
-                LatLng[] polyLinePath = new LatLng[points.length];
-                for (int i = 0; i < points.length; ++i) {
-                    polyLinePath[i] = new LatLng(points[i].location.lat, points[i].location.lng);
+                LatLng[] polyLinePath = new LatLng[points.size()];
+                for (int i = 0; i < points.size(); ++i) {
+                    polyLinePath[i] = new LatLng(points.get(i).latitude, points.get(i).longitude);
                 }
                 if (mMap != null) {
                     mMap.addPolyline(new PolylineOptions().add(polyLinePath).color(Color.BLUE).geodesic(true).width(5));
                 }
             }
-            super.onPostExecute(aVoid);
+            Toast.makeText(MapsActivity.this, "Polyline drawn", Toast.LENGTH_SHORT).show();
+            super.onPostExecute(points);
         }
     }
 }
