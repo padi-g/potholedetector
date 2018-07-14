@@ -55,6 +55,7 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -292,11 +293,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap = googleMap;
         if (!latLngs.isEmpty()) {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngs.get(0), 15));
-
-            // using RoadsAPI to snap polyline to road taken by user
-
-            new SnapToRoadTask().execute();
-
+            try {
+                PolylineOptions polylineOptions = new PolylineOptions().geodesic(true).width(5).color(Color.BLACK);
+                for (LatLng l : latLngs) {
+                    polylineOptions.add(l);
+                }
+                mMap.addPolyline(polylineOptions);
+            } catch (Exception e) {
+                Log.e(TAG, "Could not show polyline");
+                logAnalytics("Could not show map polyline");
+            }
             Set<String> probablePotholeStringSet = new HashSet<>();
             Set<String> definitePotholeStringSet = new HashSet<>();
             if (!isViewingHighestPotholeTrip) {
