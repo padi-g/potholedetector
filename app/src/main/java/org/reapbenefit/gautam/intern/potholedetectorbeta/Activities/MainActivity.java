@@ -12,7 +12,9 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.os.StatFs;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,6 +24,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -54,6 +57,8 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.OverviewFragm
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
@@ -155,8 +160,23 @@ public class MainActivity extends AppCompatActivity
         if (!prefs.contains("file_delete"))
             prefs.edit().putBoolean("file_delete", false);
 
+        // checking current storage and notifying user if app is likely to cause problems
+        long bytesAvailable = getAvailableInternalMemorySize();
+        if (bytesAvailable < 786432000) {
+            Snackbar.make(findViewById(R.id.main_activity_container), "The app may face problems because of low storage space on your phone.", Snackbar.LENGTH_LONG).setAction("Settings", new OnStorageLowListener()).show();
+            Log.d(TAG, "Creating snackbar");
+        }
+        Log.d(TAG, String.valueOf(bytesAvailable));
         //setting TransitionAlarm
         setAlarm(5000);
+    }
+
+    public static long getAvailableInternalMemorySize() {
+        File path = Environment.getDataDirectory();
+        StatFs stat = new StatFs(path.getPath());
+        long blockSize = stat.getBlockSizeLong();
+        long availableBlocks = stat.getAvailableBlocksLong();
+        return availableBlocks * blockSize;
     }
 
     private void setAlarm(long timeinMillis) {
@@ -458,6 +478,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    private class OnStorageLowListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            startActivityForResult(new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS), 0);
+        }
     }
 
     /*
