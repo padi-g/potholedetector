@@ -9,14 +9,19 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
@@ -116,6 +121,7 @@ public class OverviewFragment extends Fragment implements
     private int totalUniqueHits;
     private final String TAG = getClass().getSimpleName();
     private ClusterManager<DefinitePotholeCluster> definitePotholeClusterManager;
+    private CoordinatorLayout overviewCoordinator;
 
     private BroadcastReceiver uniquePotholesLatLngReceiver = new BroadcastReceiver() {
         @Override
@@ -179,6 +185,7 @@ public class OverviewFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View fragmentView = inflater.inflate(R.layout.fragment_overview, container, false);
+        overviewCoordinator = (CoordinatorLayout) fragmentView.findViewById(R.id.overview_coordinator);
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(uniquePotholesLatLngReceiver, new IntentFilter(getString(R.string.global_unique_pothole_locations)));
         starButton = fragmentView.findViewById(R.id.personal_scores);
         groupButton = fragmentView.findViewById(R.id.group_scores);
@@ -196,13 +203,15 @@ public class OverviewFragment extends Fragment implements
         starButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (googleMap != null) {
+                    definitePotholeClusterManager.clearItems();
+                    definitePotholeClusterManager.cluster();
+                    populatePersonalMap();
+                    Log.d(TAG, "populating personal map");
+                }
                 groupButton.setVisibility(View.VISIBLE);
                 starButton.setVisibility(View.INVISIBLE);
                 floatingButton = groupButton;
-                if (googleMap != null) {
-                    definitePotholeClusterManager.clearItems();
-                    populatePersonalMap();
-                }
             }
         });
 
@@ -214,6 +223,7 @@ public class OverviewFragment extends Fragment implements
                 floatingButton = starButton;
                 if (googleMap != null) {
                     definitePotholeClusterManager.clearItems();
+                    definitePotholeClusterManager.cluster();
                     populateGlobalMap();
                 }
             }
@@ -322,6 +332,10 @@ public class OverviewFragment extends Fragment implements
     }
 
     private void populateGlobalMap() {
+        if (!isInternetAvailable()) {
+            Snackbar.make(overviewCoordinator, "Couldn't connect to the Internet.", Snackbar.LENGTH_SHORT).setAction("Settings", new SettingsButtonListener()).show();
+            return;
+        }
         if (googleMap != null && uniquePotholeLatLng != null) {
             for (int i = 0; i < uniquePotholeLatLng.length; ++i) {
                 CustomClusterRenderer customClusterRenderer = new CustomClusterRenderer(getContext(), googleMap, definitePotholeClusterManager);
@@ -346,6 +360,7 @@ public class OverviewFragment extends Fragment implements
         if (googleMap != null && definitePotholeClusterManager != null) {
             for (LatLng potholeLocation : definiteLatLngList) {
                 definitePotholeClusterManager.addItem(new DefinitePotholeCluster(potholeLocation));
+                definitePotholeClusterManager.cluster();
             }
         }
     }
@@ -487,5 +502,23 @@ public class OverviewFragment extends Fragment implements
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
+    }
+
+    private boolean isInternetAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null && activeNetwork.isConnected();
+        if (!isConnected)
+            return false;
+        //TODO: HOW TO FIX THIS WHEN ASYNCTASK MIGHT TAKE TIME TO COMPLETE?
+        //new CheckWifiNoInternetAsyncTask().execute();
+        return true;
+    }
+
+    private class SettingsButtonListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            startActivityForResult(new Intent(Settings.ACTION_SETTINGS), 0);
+        }
     }
 }
