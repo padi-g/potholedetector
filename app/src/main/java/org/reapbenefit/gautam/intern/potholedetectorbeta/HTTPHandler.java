@@ -91,8 +91,9 @@ public class HTTPHandler {
                 in.close();
                 // print result
                 // Log.d(TAG, response.toString());
-            } else
+            } else {
                 // Log.d(TAG, "POST request failed " + responseCode);
+            }
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }
@@ -130,8 +131,9 @@ public class HTTPHandler {
                 }
                 in.close();
                 // Log.d(TAG, response.toString());
-            } else
+            } else {
                 // Log.d(TAG, "POST request failed " + responseCode);
+            }
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }
