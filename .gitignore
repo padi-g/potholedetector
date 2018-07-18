@@ -5,6 +5,7 @@
 /.idea/modules.xml
 /.idea/vcs.xml
 /.idea/workspaces.xml
+/.idea/
 /local.properties
 *.jar
 /.gradle
