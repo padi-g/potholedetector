@@ -233,7 +233,7 @@ public class S3UploadService extends IntentService {
                         }
 
                     } catch (Throwable t) {
-                        Log.e(TAG, t.getMessage());
+                        // Log.e(TAG, t.getMessage());
                         notificationBuilder.setContentText("Upload failed");
                         notificationBuilder.setProgress(0, 0, false);
                         notificationBuilder.setOngoing(false);
@@ -251,7 +251,7 @@ public class S3UploadService extends IntentService {
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            // Log.e(TAG, e.getMessage());
             notifyConnectionTimeout();
         }
     }

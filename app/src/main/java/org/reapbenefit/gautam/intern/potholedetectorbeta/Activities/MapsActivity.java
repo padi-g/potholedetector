@@ -123,7 +123,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             updateUserRatingIntent.putExtra("request", "POST");
             updateUserRatingIntent.putExtra("table", getString(R.string.trip_data_table));
             finishedTrip.setUserRating(accuracy_result);
-            Log.d(TAG, accuracy_result + "");
+            // Log.d(TAG, accuracy_result + "");
             updateUserRatingIntent.putExtra(getString(R.string.trip_with_user_rating), finishedTrip);
             startService(updateUserRatingIntent);
         }
@@ -300,7 +300,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
                 mMap.addPolyline(polylineOptions);
             } catch (Exception e) {
-                Log.e(TAG, "Could not show polyline");
+                // Log.e(TAG, "Could not show polyline");
                 logAnalytics("Could not show map polyline");
             }
             Set<String> probablePotholeStringSet = new HashSet<>();
@@ -432,7 +432,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     if (speedWithLocationTreeMap != null && speedWithLocationTreeMap.size() >= tripDurationInSeconds / 3) {
                         // Log.d(TAG, new Gson().toJson(speedWithLocationTreeMap.toString()));
-                        //populating the set of the pointsPerRequest we are interested in
+                        // populating the set of the pointsPerRequest we are interested in
                         while ((line = bufferedReader.readLine()) != null) {
                             String values[] = line.split(",");
                             lineNumber++;
@@ -446,8 +446,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 // Log.d("speedValues", speedValues.toString());
                                 if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
                                     definitePointsOfInterest.put(lineNumber, line);
-                                else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
+                                else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues)) {
                                     probablePointsOfInterest.put(lineNumber, line);
+                                }
                                 prevLineNumber = lineNumber;
                             }
                         }
@@ -518,7 +519,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             if (showInaccurateToast) {
-                Toast.makeText(MapsActivity.this.getApplicationContext(), R.string.speed_updates_not_enough, Toast.LENGTH_LONG).show();
+                Toast.makeText(MapsActivity.this, R.string.speed_updates_not_enough, Toast.LENGTH_LONG).show();
             }
             int indexOfSpace = result.indexOf(' ');
             int definitePotholeCount = Integer.parseInt(result.substring(0, indexOfSpace));
@@ -589,7 +590,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 }
             } catch (Exception e) {
-                Log.e(TAG, e.getMessage());
+                // Log.e(TAG, e.getMessage());
             }
         }
     }
@@ -642,7 +643,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return allSnappedPoints;
             } catch (Exception e) {
                 // road snapping exception occurred, display polyline without snapping to road
-                Log.e(TAG, String.valueOf(e.getLocalizedMessage()));
+                // Log.e(TAG, String.valueOf(e.getLocalizedMessage()));
                 didRoadSnapException = true;
             }
             return null;

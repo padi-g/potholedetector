@@ -54,13 +54,13 @@ public class HTTPHandler {
                     response.append(inputLine);
                 }
                 in.close();
-                Log.d(TAG, response.toString());
+                // Log.d(TAG, response.toString());
                 return response.toString();
             } else {
                 System.out.println("GET request failed " + responseCode);
             }
         } catch (IOException ioException) {
-            Log.e(TAG, ioException.getMessage());
+            // Log.e(TAG, ioException.getMessage());
         }
         return null;
     }
@@ -74,7 +74,7 @@ public class HTTPHandler {
             httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             httpURLConnection.setDoOutput(true);
             String jsonInput = new Gson().toJson(userData);
-            Log.d(TAG, "Sending user data: " + jsonInput);
+            // Log.d(TAG, "Sending user data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
@@ -90,9 +90,9 @@ public class HTTPHandler {
                 }
                 in.close();
                 // print result
-                Log.d(TAG, response.toString());
+                // Log.d(TAG, response.toString());
             } else
-                Log.d(TAG, "POST request failed " + responseCode);
+                // Log.d(TAG, "POST request failed " + responseCode);
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }
@@ -114,7 +114,7 @@ public class HTTPHandler {
             userData.setTotalTrips(0);
             userData.setUserID(userId);
             String jsonInput = new Gson().toJson(userData).toString();
-            Log.d(TAG, "Sending data: " + jsonInput);
+            // Log.d(TAG, "Sending data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
@@ -129,9 +129,9 @@ public class HTTPHandler {
                     response.append(inputLine);
                 }
                 in.close();
-                Log.d(TAG, response.toString());
+                // Log.d(TAG, response.toString());
             } else
-                Log.d(TAG, "POST request failed " + responseCode);
+                // Log.d(TAG, "POST request failed " + responseCode);
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
         }
@@ -173,7 +173,7 @@ public class HTTPHandler {
             httpURLConnection.setDoOutput(true);
             TripDataLambda tripDataLambda = HTTPHandler.convertToTripDataLambda(newTrip);
             String jsonInput = new Gson().toJson(tripDataLambda);
-            Log.d(TAG, "Sending data: " + jsonInput);
+            // Log.d(TAG, "Sending data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();
@@ -298,10 +298,10 @@ public class HTTPHandler {
                     response.append(inputLine);
                 }
                 in.close();
-                Log.d("UniquePotholes", response.toString());
+                // Log.d("UniquePotholes", response.toString());
                 return response.toString();
             } else {
-                Log.d(TAG, "GET request failed " + responseCode);
+                // Log.d(TAG, "GET request failed " + responseCode);
             }
         } catch (IOException ioException) {
             // Log.e(TAG, ioException.getMessage());
@@ -317,7 +317,7 @@ public class HTTPHandler {
             httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             httpURLConnection.setDoOutput(true);
             String jsonInput = new Gson().toJson(userPothole);
-            Log.d(TAG, "Sending user pothole data: " + jsonInput);
+            // Log.d(TAG, "Sending user pothole data: " + jsonInput);
             OutputStream outputStream = httpURLConnection.getOutputStream();
             outputStream.write(jsonInput.getBytes());
             outputStream.flush();

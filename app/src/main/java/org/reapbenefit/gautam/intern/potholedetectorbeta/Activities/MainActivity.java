@@ -48,7 +48,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 
-import org.reapbenefit.gautam.intern.potholedetectorbeta.AzureServiceAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TransitionAlarm;
@@ -90,7 +89,6 @@ public class MainActivity extends AppCompatActivity
     private Context context;
     private boolean inCar;
     private SharedPreferences onboardingPreferences;
-    private final String AZURE_URL = "https://potholedetector.azurewebsites.net/";
     private SharedPreferences settingsPreferences;
     private SharedPreferences.Editor settingsPreferencesEditor;
 
@@ -109,8 +107,6 @@ public class MainActivity extends AppCompatActivity
         // Log.d(TAG, "Inside onCreate");
         app = ApplicationClass.getInstance();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        AzureServiceAdapter.Initialize(this);
 
         setContentView(R.layout.activity_main);
 
@@ -164,9 +160,9 @@ public class MainActivity extends AppCompatActivity
         long bytesAvailable = getAvailableInternalMemorySize();
         if (bytesAvailable < 786432000) {
             Snackbar.make(findViewById(R.id.main_activity_container), "The app may face problems because of low storage space on your phone.", Snackbar.LENGTH_LONG).setAction("Settings", new OnStorageLowListener()).show();
-            Log.d(TAG, "Creating snackbar");
+            // Log.d(TAG, "Creating snackbar");
         }
-        Log.d(TAG, String.valueOf(bytesAvailable));
+        // Log.d(TAG, String.valueOf(bytesAvailable));
         //setting TransitionAlarm
         setAlarm(5000);
     }

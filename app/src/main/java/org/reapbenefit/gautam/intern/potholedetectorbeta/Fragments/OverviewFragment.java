@@ -126,7 +126,7 @@ public class OverviewFragment extends Fragment implements
     private BroadcastReceiver uniquePotholesLatLngReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("OverviewFragment", "Broadcast received");
+            // Log.d("OverviewFragment", "Broadcast received");
             uniquePotholeLatLng = (LatLng[]) intent.getParcelableArrayExtra(getString(R.string.global_unique_pothole_locations));
             uniquePotholeHits = intent.getIntArrayExtra(getString(R.string.hits_unique_potholes));
             int sum = 0;
@@ -207,7 +207,7 @@ public class OverviewFragment extends Fragment implements
                     definitePotholeClusterManager.clearItems();
                     definitePotholeClusterManager.cluster();
                     populatePersonalMap();
-                    Log.d(TAG, "populating personal map");
+                    // Log.d(TAG, "populating personal map");
                 }
                 groupButton.setVisibility(View.VISIBLE);
                 starButton.setVisibility(View.INVISIBLE);

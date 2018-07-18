@@ -50,7 +50,7 @@ public class APIService extends IntentService {
             try {
                 String userJson = HTTPHandler.getUser(userId);
                 if (!userJson.contains("{")) {
-                    Log.d(TAG, "Inserting new user");
+                    // Log.d(TAG, "Inserting new user");
                     // user not found in existing database, must send POST request to table
                     HTTPHandler.insertUser(userId);
                 } else {
