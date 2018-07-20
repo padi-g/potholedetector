@@ -12,6 +12,7 @@ import com.google.firebase.crash.FirebaseCrash;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.SplashActivity;
+import org.tensorflow.contrib.android.TensorFlowInferenceInterface;
 
 public class PlaceholderActivity extends AppCompatActivity {
 
@@ -21,6 +22,10 @@ public class PlaceholderActivity extends AppCompatActivity {
         FirebaseCrash.setCrashCollectionEnabled(true);
         SharedPreferences onboardingPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
         boolean onboarding = onboardingPreferences.getBoolean("onboarding", true);
+
+        // initialising TensorFlow
+        TensorFlowInferenceInterface tensorFlowInferenceInterface = new TensorFlowInferenceInterface(getAssets(), "tensorflow_accelerometer_model.pb");
+        ApplicationClass.getInstance().setTensorFlowInferenceInterface(tensorFlowInferenceInterface);
 
         if (onboarding) {
             Intent intent = new Intent(this, SplashActivity.class);

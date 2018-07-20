@@ -174,7 +174,7 @@
     <orderEntry type="library" name="Gradle: com.google.firebase:firebase-messaging-12.0.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-tagmanager-api-license-12.0.1" level="project" />
     <orderEntry type="library" name="Gradle: android.arch.lifecycle:runtime-1.1.0" level="project" />
-    <orderEntry type="library" name="Gradle: com.amazonaws:aws-android-sdk-auth-google-2.6.25" level="project" />
+    <orderEntry type="library" name="Gradle: com.amazonaws:aws-android-sdk-auth-google-2.6.26" level="project" />
     <orderEntry type="library" name="Gradle: com.microsoft.azure:azure-mobile-android-3.4.0" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:animated-vector-drawable-26.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-vision-common-12.0.1" level="project" />
@@ -273,6 +273,7 @@
     <orderEntry type="library" scope="TEST" name="Gradle: android.arch.persistence.room:testing-1.0.0" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:support-compat-26.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.firebase:firebase-database-connection-license-12.0.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.tensorflow:tensorflow-android-1.9.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-tagmanager-v4-impl-12.0.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-places-license-12.0.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-identity-12.0.1" level="project" />

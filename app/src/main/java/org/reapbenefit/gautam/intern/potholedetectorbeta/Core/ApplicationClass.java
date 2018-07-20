@@ -2,9 +2,9 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
 import android.location.Location;
 import android.support.multidex.MultiDexApplication;
-import android.util.Log;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
+import org.tensorflow.contrib.android.TensorFlowInferenceInterface;
 
 
 /**
@@ -17,6 +17,7 @@ public class ApplicationClass extends MultiDexApplication {
     protected static String TAG = "Application";
     private boolean tripInProgress, tripEnded = false;  // ended is to make sure that only one trip per instance
     private Location mCurrentLocation;
+    private TensorFlowInferenceInterface tensorFlowInferenceInterface;
 
     private Trip trip;
 
@@ -68,6 +69,14 @@ public class ApplicationClass extends MultiDexApplication {
 
     public void setCurrentLocation(Location mCurrentLocation) {
         this.mCurrentLocation = mCurrentLocation;
+    }
+
+    public TensorFlowInferenceInterface getTensorFlowInferenceInterface() {
+        return tensorFlowInferenceInterface;
+    }
+
+    public void setTensorFlowInferenceInterface(TensorFlowInferenceInterface tensorFlowInferenceInterface) {
+        this.tensorFlowInferenceInterface = tensorFlowInferenceInterface;
     }
 }
 
