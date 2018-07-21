@@ -397,6 +397,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         private int probablePotholeCount;
         private ArrayList<LatLng> definitePotholeLocations = new ArrayList<>();
         private ArrayList<LatLng> probablePotholeLocations = new ArrayList<>();
+        private Set<String> geoHashSet = new HashSet<>();
 
         @Override
         protected String doInBackground(String... params) {
@@ -420,8 +421,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         // limits pothole recognition to speeds above 10 km/h
                         if (meanSquaredError >= LOWER_MSE_THRESHOLD && meanSquaredError <= UPPER_MSE_THRESHOLD) {
                             // recognised definite pothole
-                            ++definitePotholeCount;
                             definitePotholeLocations.add(new LatLng(Double.valueOf(values[4]), Double.valueOf(values[5])));
+                            try {
+                                geoHashSet.add(GeoHash.geoHashStringWithCharacterPrecision(Double.valueOf(values[4]), Double.valueOf(values[5]), 7));
+                            } catch (Exception e) {
+                                // in case the set's uniqueness constraint forces a crash
+                                Log.e(TAG, e.getMessage());
+                            }
                         } else if (meanSquaredError >= UPPER_MSE_THRESHOLD) {
                             // could be a serious pothole, needs cross-validation from other people
                             // outliers will not get cross-validated
@@ -431,11 +437,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 }
 
+                Iterator iterator = geoHashSet.iterator();
+                while (iterator.hasNext()) {
+                    String geoHash = iterator.next().toString();
+                    definitePotholeLatLngs.add(new LatLng(GeoHash.fromGeohashString(geoHash).getPoint().getLatitude(),
+                            GeoHash.fromGeohashString(geoHash).getPoint().getLongitude()));
+                    ++definitePotholeCount;
+                }
+
+
             } catch (Exception exception) {
                 Log.e(TAG, exception.getMessage());
             }
-            probablePotholeLatLngs = probablePotholeLocations;
-            definitePotholeLatLngs = definitePotholeLocations;
             return definitePotholeCount + " " + probablePotholeCount;
         }
 
