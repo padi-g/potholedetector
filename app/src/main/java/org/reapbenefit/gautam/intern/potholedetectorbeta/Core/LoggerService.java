@@ -147,6 +147,7 @@ public class LoggerService extends Service implements SensorEventListener {
 
     private TensorFlowInferenceInterface tensorFlowInferenceInterface;
     private float[] loggedData = new float[4];
+    private double[] loggedLatLng = new double[2];
     private float[] modelOutput = new float[4];
     private String[] outputNodes = new String[1];
     private ArrayList<float[]> standardisedFileReadings = new ArrayList<>();
@@ -207,7 +208,7 @@ public class LoggerService extends Service implements SensorEventListener {
         startTrafficTime = startTime;
         startAccuracyTime = startTime;
         setupSensors();
-        setupLogFile();
+        setupSquaredErrorFile();
         mp = MediaPlayer.create(getApplication(), R.raw.beep);
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
@@ -265,20 +266,12 @@ public class LoggerService extends Service implements SensorEventListener {
                 tensorFlowInferenceInterface.run(outputNodes);
                 tensorFlowInferenceInterface.fetch(OUTPUT_NODE, modelOutput);
                 // iterating through standardised file readings
-                float totalSquaredError = 0.0f;
                 for (float[] reading: standardisedFileReadings) {
-                    float readingSquaredError = 0.0f;
+                    float[] readingSquaredError = new float[reading.length];
                     for (int i = 0; i < reading.length; ++i) {
-                        readingSquaredError += (loggedData[i] - reading[i]) * (loggedData[i] - reading[i]);
+                        readingSquaredError[i] = (loggedData[i] - reading[i]) * (loggedData[i] - reading[i]);
                     }
-                    totalSquaredError += readingSquaredError;
-                }
-                // TODO: VERY IMPORTANT: CHECK IF THIS IS 9.0 OR 10.0 (333.333 IS 334)
-                float meanSquaredError = totalSquaredError/9.0f;
-                if (LOWER_MSE_THRESHOLD <= meanSquaredError && meanSquaredError <= UPPER_MSE_THRESHOLD) {
-                    Log.d("Keras", "Pothole found!");
-                } else {
-                    Log.d("Keras", "Pothole not found.");
+                    saveSquaredError(readingSquaredError, loggedLatLng);
                 }
             }
         }, STANDARDISED_MILLISECONDS, STANDARDISED_MILLISECONDS);
@@ -287,15 +280,7 @@ public class LoggerService extends Service implements SensorEventListener {
     @SuppressLint("RestrictedApi")
     private void createLocationRequest() {
         mLocationRequest = new LocationRequest();
-
-        // Sets the desired interval for active location updates. This interval is
-        // inexact. You may not receive updates at all if no location sources are available, or
-        // you may receive them slower than requested. You may also receive updates faster than
-        // requested if other applications are requesting location at a faster interval.
         mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-
-        // Sets the fastest rate for active location updates. This interval is exact, and your
-        // application will never receive updates faster than this value.
         mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
 
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -442,12 +427,17 @@ public class LoggerService extends Service implements SensorEventListener {
                 meansumy += Math.abs(accVals[1]);
                 meansumz += Math.abs(accVals[2]);
                 no_of_lines++;
-                writeToFile(accVals, gyrVals, LocData);
+                prepSensorReadings(accVals);
             } else {
                 // Log.i(TAG, "Location accuracy not hit " + mCurrentLocation.getAccuracy());
                 calcAccuracyLowTime();
             }
         }
+
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
 
@@ -457,27 +447,41 @@ public class LoggerService extends Service implements SensorEventListener {
         startAccuracyTime = accuracyLostTime;
     }
 
-    protected void writeToFile(float[] acc, float[] gyr, String LocationData) {
-        String data;
+    private void setupSquaredErrorFile() {
+        String path = "/modelErrors/";
+        File temp = new File(getApplicationContext().getFilesDir() + "/modelErrors/");
+        temp.mkdir();
+        file = new File(temp.getPath(), fileid.toString()+ ".csv");
 
-        if(gAvailable)
-
-            data = floatArraytoString(acc) + floatArraytoString(gyr) + LocationData + ", " + Marks + "," + speed + "\n";
-        else
-            data = floatArraytoString(acc) + LocationData + ", " + Marks + "," + speed + "\n";
+        String data = "AccX,AccY,AccZ,Speed,Latitude,Longitude\n";
 
         try {
+            out = new FileOutputStream(file, true);
             out.write(data.getBytes());
-            // Log.i(TAG, "Writing " + data);
-        } catch (IOException e) {
-            // Log.d(TAG, "File write failed: " + e.toString());
-        }
-        Marks = null;
 
+        } catch (IOException e) {
+            // Log.d(TAG, "File setup failed: " + e.toString());
+        }
+    }
+
+    private void saveSquaredError(float[] squaredError, double[] latlng) {
+        String data = floatArraytoString(squaredError) + String.valueOf(latlng[0]) + ","
+                + String.valueOf(latlng[1]) + "\n";
+        Log.d("TotalSquaredError", data);
+        try {
+            out.write(data.getBytes());
+        } catch(IOException ioException) {
+            Log.e(TAG, "IOException");
+        }
+    }
+
+    protected void prepSensorReadings(float[] acc) {
         loggedData[0] = acc[0];
         loggedData[1] = acc[1];
         loggedData[2] = acc[2];
         loggedData[3] = speed;
+        loggedLatLng[0] = mCurrentLocation.getLatitude();
+        loggedLatLng[1] = mCurrentLocation.getLongitude();
     }
 
     public String floatArraytoString(float[] fa){
@@ -491,41 +495,6 @@ public class LoggerService extends Service implements SensorEventListener {
                 sb.append(temp.substring(0, 3) + ",");
         }
         return sb.toString();
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-
-    }
-
-    private void setupLogFile() {
-
-        // Log.i(TAG, "start" + String.valueOf(newtrip.getStartTime()));
-
-        String path = "/logs/";
-        File temp = new File(getApplicationContext().getFilesDir() + "/logs/");
-        temp.mkdir();
-        file = new File(temp.getPath(), fileid.toString()+ ".csv");
-
-        // Log.i(TAG, file.toString());
-
-        String data;
-
-        if (gAvailable){
-            // Accx, Acc y, Axxz, Gyrx, gyry, gyrz, lat, long, timestamp, accuracy, speed
-            data = "AccX, AccY, AccZ, GyrX, GyrY, GyrZ, latitude, longitude, timestamp, accuracy, proximity, speed\n";
-        }else{
-            // Accx, Acc y, Axxz, lat, long, timestamp, accuracy
-            data = "AccX, AccY, AccZ, latitude, longitude, timestamp, accuracy, proximity, speed\n";
-        }
-
-        try {
-            out = new FileOutputStream(file, true);
-            out.write(data.getBytes());
-
-        } catch (IOException e) {
-            // Log.d(TAG, "File setup failed: " + e.toString());
-        }
     }
 
 
@@ -546,11 +515,6 @@ public class LoggerService extends Service implements SensorEventListener {
     @Override
     public void onDestroy() {
         calcMeans();
-
-        // Log.i(TAG+"Means", "x = " + String.valueOf(meanx));
-        // Log.i(TAG+"Means", "y = " + String.valueOf(meany));
-        // Log.i(TAG+"Means", "z = " + String.valueOf(meanz));
-
         try {
             out.close();
             if(!locAccHit){
