@@ -55,7 +55,6 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -73,6 +72,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final int PAGINATION_OVERLAP = 5;
     public static final int GEOHASH_LENGTH = 8;
     private static final int PAGE_SIZE_LIMIT = 100;
+    private static final float LOWER_MSE_THRESHOLD = 6.49795f;
+    private static final float UPPER_MSE_THRESHOLD = 13.0633f;
     private GoogleMap mMap;
     MapFragment mapFragment;
     private ArrayList<com.google.android.gms.maps.model.LatLng> latLngs = new ArrayList<>();
@@ -391,136 +392,56 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private class ProcessFileTask extends AsyncTask<String, Void, String> {
 
-        int lineNumber = 0, prevLineNumber = 0;
-        FileInputStream is;
-        private float[] speedArray;
-        private boolean showInaccurateToast;
-
-        private boolean didSpeedOscillate(float arr[]) {
-            if (arr[0] > arr[1] && arr[1] < arr[2])
-                return true;
-            else
-                return false;
-        }
+        private FileInputStream is;
+        private int definitePotholeCount;
+        private int probablePotholeCount;
+        private ArrayList<LatLng> definitePotholeLocations = new ArrayList<>();
+        private ArrayList<LatLng> probablePotholeLocations = new ArrayList<>();
 
         @Override
         protected String doInBackground(String... params) {
-            speedArray = new float[]{-1, -1, -1};
-            File file = new File(getApplicationContext().getFilesDir(), "logs/" + tripID + ".csv");
+            File file = new File(getApplicationContext().getFilesDir(), "modelErrors/" + tripID + ".csv");
             try {
                 is = new FileInputStream(file);
                 InputStreamReader isr = new InputStreamReader(is);
                 BufferedReader bufferedReader = new BufferedReader(isr);
-                String line;
-                try {
+                String line = bufferedReader.readLine();
 
-                    // extracting the index of the value to be compared in a given line of data
-                    line = bufferedReader.readLine();
-                    String tokens[] = line.split(",");
-                    for (int i = 0; i < tokens.length; i++) {
-                        if (tokens[i].contains(axisOfInterest)) {
-                            axisIndex = i;
-                        }
-                        if (tokens[i].contains("latitude")) {
-                            locIndex = i;
-                        }
-                        if (tokens[i].contains("speed")) {
-                            speedIndex = i;
-                            // Log.d("speedIndex", String.valueOf(i));
-                        }
+                while ((line = bufferedReader.readLine()) != null) {
+                    String[] values = line.split(",");
+                    float readingSum = 0.0f;
+                    for (int i = 0; i < 4; ++i) {
+                        readingSum += Float.valueOf(values[i]);
                     }
-
-                    if (speedWithLocationTreeMap != null && speedWithLocationTreeMap.size() >= tripDurationInSeconds / 3) {
-                        // Log.d(TAG, new Gson().toJson(speedWithLocationTreeMap.toString()));
-                        // populating the set of the pointsPerRequest we are interested in
-                        while ((line = bufferedReader.readLine()) != null) {
-                            String values[] = line.split(",");
-                            lineNumber++;
-                            if (Float.valueOf(values[axisIndex]) > threshold && lineNumber > prevLineNumber + linesPerPeriod) {
-                                // this ignores the first period of data
-                                int[] closestKeyValues = findClosestKeyValues(lineNumber);
-
-                                float speedValues[] = new float[]{speedWithLocationTreeMap.get(closestKeyValues[0]).getSpeed(),
-                                        speedWithLocationTreeMap.get(closestKeyValues[1]).getSpeed(),
-                                        speedWithLocationTreeMap.get(closestKeyValues[2]).getSpeed()};
-                                // Log.d("speedValues", speedValues.toString());
-                                if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues))
-                                    definitePointsOfInterest.put(lineNumber, line);
-                                else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND && didSpeedOscillate(speedValues)) {
-                                    probablePointsOfInterest.put(lineNumber, line);
-                                }
-                                prevLineNumber = lineNumber;
-                            }
+                    float meanSquaredError = readingSum/4.0f;
+                    float speed = Float.valueOf(values[3]);
+                    if (speed >= 2.7778) {
+                        // TODO: IMPLEMENT GEOHASHING THROUGH FILE WITH PRECISION = 7 TO AVOID FALSE POSITIVES
+                        // limits pothole recognition to speeds above 10 km/h
+                        if (meanSquaredError >= LOWER_MSE_THRESHOLD && meanSquaredError <= UPPER_MSE_THRESHOLD) {
+                            // recognised definite pothole
+                            ++definitePotholeCount;
+                            definitePotholeLocations.add(new LatLng(Double.valueOf(values[4]), Double.valueOf(values[5])));
+                        } else if (meanSquaredError >= UPPER_MSE_THRESHOLD) {
+                            // could be a serious pothole, needs cross-validation from other people
+                            // outliers will not get cross-validated
+                            ++probablePotholeCount;
+                            probablePotholeLocations.add(new LatLng(Double.valueOf(values[4]), Double.valueOf(values[5])));
                         }
-                    } else {
-                        // Log.d(TAG, "inside else");
-                        showInaccurateToast = true;
-                        // populating our set of the pointsPerRequest we are interested in
-                        while ((line = bufferedReader.readLine()) != null) {
-                            String values[] = line.split(",");
-                            // Log.d(TAG, "speedmap null");
-                            lineNumber++;
-                            if (Float.valueOf(values[axisIndex]) > threshold && lineNumber > prevLineNumber + linesPerPeriod) {
-                                // this ignores the first period of data
-                                if (Float.valueOf(values[speedIndex]) > DEFINITE_THRESHOLD_SPEED_METRES_PER_SECOND)
-                                    definitePointsOfInterest.put(lineNumber, line);
-                                else if (Float.valueOf(values[speedIndex]) > PROBABLE_THRESHOLD_SPEED_METRES_PER_SECOND)
-                                    probablePointsOfInterest.put(lineNumber, line);
-                                prevLineNumber = lineNumber;
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-
-                }
-                // Log.d("result before return", definitePointsOfInterest.size() + " " + probablePointsOfInterest.size());
-                return definitePointsOfInterest.size() + " " + probablePointsOfInterest.size();
-            } catch (FileNotFoundException e) {
-                return null;
-            }
-
-        }
-
-        private int[] findClosestKeyValues(int lineNumber) {
-            int minDifference = Integer.MAX_VALUE;
-            int closestKeyValue = -1;
-            Set<Integer> keySet = speedWithLocationTreeMap.keySet();
-            int baseKey = findClosestKeyValue(lineNumber);
-            List<Integer> keyList = new ArrayList<>(keySet);
-            int[] arr = new int[3];
-            int indexOfBaseKey = keyList.indexOf(baseKey);
-            arr[0] = keyList.get(indexOfBaseKey - 1);
-            arr[1] = keyList.get(indexOfBaseKey);
-            arr[2] = keyList.get(indexOfBaseKey + 1);
-            return arr;
-        }
-
-        private int findClosestKeyValue(int lineNumber) {
-            int closestKey = -1;
-            try {
-                Iterator iterator = speedWithLocationTreeMap.entrySet().iterator();
-                int tempNumber = lineNumber;
-                int minDifference = Integer.MAX_VALUE;
-                while (iterator.hasNext()) {
-                    Map.Entry pair = (Map.Entry) iterator.next();
-                    int diff = Math.abs((int) pair.getKey() - lineNumber);
-                    if (diff < minDifference) {
-                        minDifference = diff;
-                        closestKey = (int) pair.getKey();
                     }
                 }
+
             } catch (Exception exception) {
-                // Log.e(TAG, exception.getMessage());
+                Log.e(TAG, exception.getMessage());
             }
-            return closestKey;
+            probablePotholeLatLngs = probablePotholeLocations;
+            definitePotholeLatLngs = definitePotholeLocations;
+            return definitePotholeCount + " " + probablePotholeCount;
         }
 
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            if (showInaccurateToast) {
-                Toast.makeText(MapsActivity.this, R.string.speed_updates_not_enough, Toast.LENGTH_LONG).show();
-            }
             int indexOfSpace = result.indexOf(' ');
             int definitePotholeCount = Integer.parseInt(result.substring(0, indexOfSpace));
             int probablePotholeCount = Integer.parseInt(result.substring(indexOfSpace + 1));
@@ -530,7 +451,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             setDefinitePotholeCount(definitePotholeCount);
 
             drawInformationalUI(finishedTrip);
-            populatePotholeMarkerPoints();
+            // populatePotholeMarkerPoints();
             tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
             if (!tripIdSet.contains(finishedTrip.getTrip_id())) {
                 // Log.d("MapsActivity", tripID + "");

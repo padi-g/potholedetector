@@ -73,8 +73,6 @@ import java.util.concurrent.TimeUnit;
 public class LoggerService extends Service implements SensorEventListener {
 
     private static final int STANDARDISED_MILLISECONDS = 334;
-    private static final float LOWER_MSE_THRESHOLD = 6.49795f;
-    private static final float UPPER_MSE_THRESHOLD = 13.0633f;
     protected String TAG = "Logger_Service";
     private SensorManager mSensorManager;
     private Sensor mAccelerometer, mGyroscope, mProximity;
@@ -467,7 +465,6 @@ public class LoggerService extends Service implements SensorEventListener {
     private void saveSquaredError(float[] squaredError, double[] latlng) {
         String data = floatArraytoString(squaredError) + String.valueOf(latlng[0]) + ","
                 + String.valueOf(latlng[1]) + "\n";
-        Log.d("TotalSquaredError", data);
         try {
             out.write(data.getBytes());
         } catch(IOException ioException) {
