@@ -204,29 +204,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (!isViewingHighestPotholeTrip) {
             ProcessFileTask task = new ProcessFileTask();
             task.execute(tripID);
-            File file = new File(getApplicationContext().getFilesDir(), "analysis/" + tripID + ".csv");
-
-            // Log.d("maps", file.toString());
-
-            //File file = new File(getApplicationContext().getFilesDir(), "locs/"+trip.getTrip_id()+".txt");
-
-            try {
-                inputStream = new FileInputStream(file);
-            } catch (Exception e) {
-                System.out.println("Exception_raised " + e.toString());
-            }
-
-            InputStreamReader isr = new InputStreamReader(inputStream);
-            BufferedReader bufferedReader = new BufferedReader(isr);
-            String line;
-            try {
-                while ((line = bufferedReader.readLine()) != null) {
-                    String tokens[] = line.split(",");
-                    latLngs.add(new com.google.android.gms.maps.model.LatLng(Double.valueOf(tokens[0]), Double.valueOf(tokens[1])));
-                }
-            } catch (Exception e) {
-
-            }
         } else {
             //reading highestPotholeTrip data from SharedPreferences
             String highestPotholeTripJson = dbPreferences.getString("highestPotholeTrip", null);

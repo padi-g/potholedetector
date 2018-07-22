@@ -85,7 +85,6 @@ public class LoggerService extends Service implements SensorEventListener {
     float accVals[] = null, gyrVals[] = null;
     protected String LocData, mLastUpdateTime;
     boolean gAvailable = true;
-    private MediaPlayer mp;
 
     private final float IDLE_TIME_UPPER_THRESHOLD = 1.38f;
 
@@ -207,7 +206,6 @@ public class LoggerService extends Service implements SensorEventListener {
         startAccuracyTime = startTime;
         setupSensors();
         setupSquaredErrorFile();
-        mp = MediaPlayer.create(getApplication(), R.raw.beep);
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         logAnalytics("trip_started");
@@ -238,24 +236,6 @@ public class LoggerService extends Service implements SensorEventListener {
         minutesWasted = dbPreferences.getLong(getString(R.string.minutes_wasted), 0);
         minutesAccuracyLow = dbPreferences.getLong(getString(R.string.minutes_accuracy_low), 0);
 
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(getAssets().open("standardised_dataset.csv")));
-            String standardisedLine = bufferedReader.readLine();
-            while((standardisedLine = bufferedReader.readLine()) != null) {
-                // processing the line
-                String values[] = standardisedLine.split(",");
-                float[] standardisedSensorReadings = new float[4];
-                standardisedSensorReadings[0] = Float.parseFloat(values[0]);
-                standardisedSensorReadings[1] = Float.parseFloat(values[1]);
-                standardisedSensorReadings[2] = Float.parseFloat(values[2]);
-                standardisedSensorReadings[3] = Float.parseFloat(values[3]);
-                standardisedFileReadings.add(standardisedSensorReadings);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -263,14 +243,11 @@ public class LoggerService extends Service implements SensorEventListener {
                 tensorFlowInferenceInterface.feed(INPUT_NODE, loggedData, 1l, loggedData.length);
                 tensorFlowInferenceInterface.run(outputNodes);
                 tensorFlowInferenceInterface.fetch(OUTPUT_NODE, modelOutput);
-                // iterating through standardised file readings
-                for (float[] reading: standardisedFileReadings) {
-                    float[] readingSquaredError = new float[reading.length];
-                    for (int i = 0; i < reading.length; ++i) {
-                        readingSquaredError[i] = (loggedData[i] - reading[i]) * (loggedData[i] - reading[i]);
-                    }
-                    saveSquaredError(readingSquaredError, loggedLatLng);
+                float[] readingSquaredError = new float[modelOutput.length];
+                for (int i = 0; i < modelOutput.length; ++i) {
+                    readingSquaredError[i] = (loggedData[i] - modelOutput[i]) * (loggedData[i] - modelOutput[i]);
                 }
+                saveSquaredError(readingSquaredError, loggedLatLng);
             }
         }, STANDARDISED_MILLISECONDS, STANDARDISED_MILLISECONDS);
     }
@@ -385,14 +362,10 @@ public class LoggerService extends Service implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
 
-        //timing traffic latency
-        //calcTrafficTime();
-
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
             // Log.w("Prox", String.valueOf(sensorEvent.values[0]));
 
             if (sensorEvent.values[0] < 5) {
-                mp.start();
                 Marks = "1, ";
             }
         }
@@ -449,7 +422,7 @@ public class LoggerService extends Service implements SensorEventListener {
         String path = "/modelErrors/";
         File temp = new File(getApplicationContext().getFilesDir() + "/modelErrors/");
         temp.mkdir();
-        file = new File(temp.getPath(), fileid.toString()+ ".csv");
+        file = new File(temp.getPath(), fileid.toString() + ".csv");
 
         String data = "AccX,AccY,AccZ,Speed,Latitude,Longitude\n";
 
@@ -466,9 +439,10 @@ public class LoggerService extends Service implements SensorEventListener {
         String data = floatArraytoString(squaredError) + String.valueOf(latlng[0]) + ","
                 + String.valueOf(latlng[1]) + "\n";
         try {
+            Log.d(TAG, "Writing " + data);
             out.write(data.getBytes());
         } catch(IOException ioException) {
-            Log.e(TAG, "IOException");
+            Log.e(TAG, ioException.getStackTrace().toString());
         }
     }
 
@@ -532,7 +506,7 @@ public class LoggerService extends Service implements SensorEventListener {
     }
 
     public void stopTrip() {
-
+        timer.cancel();
         newtrip.setEndTime(getCurrentDateTime());
         endTime = new Date();
         try {
@@ -540,8 +514,6 @@ public class LoggerService extends Service implements SensorEventListener {
         }catch (ArithmeticException ae){
             newtrip.setNo_of_lines(0);
         }
-        // Log.i(TAG+" endtime", String.valueOf(newtrip.getEndTime()));
-        mp.stop();
         mSensorManager.unregisterListener(this);
 
         newtrip.setFilesize(file.length());
@@ -569,7 +541,6 @@ public class LoggerService extends Service implements SensorEventListener {
 
         logAnalytics("stopped_logging_sensor_data");
         if(locAccHit) {
-            logGPSpollstoFile(gpsPolls);
             dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
             newTripSet.add(new Gson().toJson(newtrip));
             if (internetAvailable()) {
@@ -683,29 +654,6 @@ public class LoggerService extends Service implements SensorEventListener {
         b.putString("LoggerService", data);
         mFirebaseAnalytics.logEvent(data, b);
         // Log.i("LoggerService", data);
-    }
-
-    private void logGPSpollstoFile(ArrayList<MyLocation> polls) {
-
-        String path = "/analysis/";
-        File temp = new File(getApplicationContext().getFilesDir() + path);
-        temp.mkdir();
-        File outfile = new File(temp.getPath(), fileid.toString() + ".csv");
-
-        try {
-            out = new FileOutputStream(outfile, true);
-
-            for (MyLocation loc : polls) {
-                String data = String.valueOf(loc.getLatitude()).trim() + "," + String.valueOf(loc.getLongitude()).trim()
-                        + "," + String.valueOf(loc.getAccuracy()).trim() + "\n";
-                out.write(data.getBytes());
-            }
-        } catch (FileNotFoundException e) {
-            // Log.d(TAG, "File_setup_failed: " + e.toString());
-        } catch (IOException e) {
-            // Log.d(TAG, "File_setup_failed: " + e.toString());
-        }
-
     }
 }
 
