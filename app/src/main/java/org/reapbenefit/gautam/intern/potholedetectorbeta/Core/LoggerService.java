@@ -144,10 +144,9 @@ public class LoggerService extends Service implements SensorEventListener {
 
     private TensorFlowInferenceInterface tensorFlowInferenceInterface;
     private float[] loggedData = new float[4];
-    private double[] loggedLatLng = new double[2];
+    private double[] loggedLatLng = new double[3];
     private float[] modelOutput = new float[4];
     private String[] outputNodes = new String[1];
-    private ArrayList<float[]> standardisedFileReadings = new ArrayList<>();
     private Timer timer = new Timer();
 
     public LoggerService() {
@@ -424,7 +423,7 @@ public class LoggerService extends Service implements SensorEventListener {
         temp.mkdir();
         file = new File(temp.getPath(), fileid.toString() + ".csv");
 
-        String data = "AccX,AccY,AccZ,Speed,Latitude,Longitude\n";
+        String data = "AccX,AccY,AccZ,Speed,Latitude,Longitude,AbsoluteSpeed\n";
 
         try {
             out = new FileOutputStream(file, true);
@@ -437,7 +436,7 @@ public class LoggerService extends Service implements SensorEventListener {
 
     private void saveSquaredError(float[] squaredError, double[] latlng) {
         String data = floatArraytoString(squaredError) + String.valueOf(latlng[0]) + ","
-                + String.valueOf(latlng[1]) + "\n";
+                + String.valueOf(latlng[1]) + "," + String.valueOf(latlng[2]) + "\n";
         try {
             Log.d(TAG, "Writing " + data);
             out.write(data.getBytes());
@@ -453,6 +452,7 @@ public class LoggerService extends Service implements SensorEventListener {
         loggedData[3] = speed;
         loggedLatLng[0] = mCurrentLocation.getLatitude();
         loggedLatLng[1] = mCurrentLocation.getLongitude();
+        loggedLatLng[2] = mCurrentLocation.getSpeed();
     }
 
     public String floatArraytoString(float[] fa){

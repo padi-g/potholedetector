@@ -74,6 +74,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final int PAGE_SIZE_LIMIT = 100;
     private static final float LOWER_MSE_THRESHOLD = 6.49795f;
     private static final float UPPER_MSE_THRESHOLD = 13.0633f;
+    private static final float UPPER_SPEED_THRESHOLD = 2.7778f;
     private GoogleMap mMap;
     MapFragment mapFragment;
     private ArrayList<com.google.android.gms.maps.model.LatLng> latLngs = new ArrayList<>();
@@ -392,9 +393,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         readingSum += Float.valueOf(values[i]);
                     }
                     float meanSquaredError = readingSum/4.0f;
-                    float speed = Float.valueOf(values[3]);
-                    if (speed >= 2.7778) {
-                        // TODO: IMPLEMENT GEOHASHING THROUGH FILE WITH PRECISION = 7 TO AVOID FALSE POSITIVES
+                    float speed = Float.valueOf(values[values.length - 1]);
+                    if (speed >= UPPER_SPEED_THRESHOLD) {
                         // limits pothole recognition to speeds above 10 km/h
                         if (meanSquaredError >= LOWER_MSE_THRESHOLD && meanSquaredError <= UPPER_MSE_THRESHOLD) {
                             // recognised definite pothole
