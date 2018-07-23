@@ -18,7 +18,6 @@ import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -47,7 +46,6 @@ import org.reapbenefit.gautam.intern.potholedetectorbeta.UserPothole;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -422,6 +420,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     ++definitePotholeCount;
                 }
 
+                // finished processing error file, can delete it from device
+                file.delete();
 
             } catch (Exception exception) {
                 Log.e(TAG, exception.getMessage());

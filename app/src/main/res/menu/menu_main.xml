@@ -32,5 +32,6 @@
         android:title="Auto upload"
         android:orderInCategory="50"
         android:checkable="true"
-        android:checked="true"/>
+        android:checked="true"
+        android:visible="false"/>
 </menu>

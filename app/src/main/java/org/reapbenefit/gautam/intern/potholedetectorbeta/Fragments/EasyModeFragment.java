@@ -290,11 +290,11 @@ public class EasyModeFragment extends Fragment {
                         // Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
                         Toast.makeText(getActivity().getApplicationContext(), "Thanks for your contribution!", Toast.LENGTH_SHORT).show();
                         if (internetAvailable() && autoUploadOn()) {
-                            startUploadService();
+                            // startUploadService();
                         } else if (!internetAvailable()) {
-                            Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_SHORT).show();
+                            // Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_SHORT).show();
                         } else if (!autoUploadOn())
-                            Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_SHORT).show();
+                            // Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_SHORT).show();
                         openMap();
                     }
                     ////////// redundant

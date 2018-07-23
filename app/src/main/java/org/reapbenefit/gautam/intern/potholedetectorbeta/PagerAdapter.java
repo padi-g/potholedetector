@@ -36,11 +36,8 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
                 tab1.setArguments(bundle);
                 return tab1;
             case 1:
-                TriplistFragment tab2 = new TriplistFragment();
+                OverviewFragment tab2 = new OverviewFragment();
                 return tab2;
-            case 2:
-                OverviewFragment tab3 = new OverviewFragment();
-                return tab3;
             default:
                 return null;
         }
