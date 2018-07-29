@@ -287,14 +287,7 @@ public class EasyModeFragment extends Fragment {
                     if (uploadFileUri == null) {
                         Toast.makeText(getActivity().getApplicationContext(), "Sorry, we could not detect your location accurately", Toast.LENGTH_SHORT).show();
                     } else {
-                        // Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
                         Toast.makeText(getActivity().getApplicationContext(), "Thanks for your contribution!", Toast.LENGTH_SHORT).show();
-                        if (internetAvailable() && autoUploadOn()) {
-                            // startUploadService();
-                        } else if (!internetAvailable()) {
-                            // Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_SHORT).show();
-                        } else if (!autoUploadOn())
-                            // Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_SHORT).show();
                         openMap();
                     }
                     ////////// redundant

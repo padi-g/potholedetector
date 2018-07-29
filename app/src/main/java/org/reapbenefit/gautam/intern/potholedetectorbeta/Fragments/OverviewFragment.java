@@ -2,6 +2,7 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -55,6 +56,7 @@ import com.google.gson.Gson;
 import com.google.maps.android.clustering.ClusterManager;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
@@ -139,6 +141,39 @@ public class OverviewFragment extends Fragment implements
         }
     };
 
+    private BroadcastReceiver newTripReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "Broadcase received for newTrip");
+            if (tripViewModel != null) {
+                Trip newTrip = intent.getParcelableExtra("trip_object");
+                if (newTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG) {
+                    return;
+                }
+                tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
+                /*if (tripStatsPreferences == null) {
+                    tripStatsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+                }
+                int currentTrips = tripStatsPreferences.getInt("validTrips", 0);
+                tripStatsPreferences.edit().putInt("validTrips", currentTrips + 1).commit();*/
+            }
+        }
+    };
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser) {
+            definitePotholeCount = tripStatsPreferences.getInt("definitePotholes", 0);
+            probablePotholeCount = tripStatsPreferences.getInt("probablePotholes", 0);
+            int numberOfValidTrips = tripStatsPreferences.getInt("validTrips", 0);
+            String bottomSheetString = numberOfValidTrips + (numberOfValidTrips == 1 ? " trip" : " trips") + " taken" +
+                    "\n" + definitePotholeCount + " definite" + (definitePotholeCount == 1 ? " pothole" : " potholes") +
+                    "\n" + probablePotholeCount + " probable" + (probablePotholeCount == 1 ? " pothole" : " potholes");
+            bottomSheetText.setText(bottomSheetString);
+        }
+    }
+
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -150,6 +185,27 @@ public class OverviewFragment extends Fragment implements
                     OverviewFragment.this.localTripEntities = localTripEntities;
             }
         });
+
+        // initialising TripViewModel for making database operations
+        tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
+        tripViewModel.getOfflineTrips().observe(this, new Observer<List<LocalTripEntity>>() {
+            @Override
+            public void onChanged(@Nullable List<LocalTripEntity> localTripEntities) {
+                Set<Trip> tripSet = new HashSet<>();
+                for (LocalTripEntity offlineTripEntity: localTripEntities) {
+                    Trip offlineTrip = Trip.localTripEntityToTrip(offlineTripEntity);
+                    tripSet.add(offlineTrip);
+                }
+            }
+        });
+        SharedPreferences logoutPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+        boolean loggedOut = logoutPreferences.getBoolean("loggedOut", false);
+        if (loggedOut) {
+            if (tripViewModel == null) {
+                tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
+            }
+            tripViewModel.deleteAll();
+        }
     }
 
     @Override
@@ -175,7 +231,6 @@ public class OverviewFragment extends Fragment implements
         if (googleMap != null) {
             outState.putParcelable(CAMERA_POSITION, googleMap.getCameraPosition());
             outState.putParcelable(KEY_LOCATION, lastLocation);
-            // zoomFlag = true;
             super.onSaveInstanceState(outState);
         }
         if (mapView != null)
@@ -189,6 +244,8 @@ public class OverviewFragment extends Fragment implements
         View fragmentView = inflater.inflate(R.layout.fragment_overview, container, false);
         overviewCoordinator = (CoordinatorLayout) fragmentView.findViewById(R.id.overview_coordinator);
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(uniquePotholesLatLngReceiver, new IntentFilter(getString(R.string.global_unique_pothole_locations)));
+        // registering BroadcastReceivers
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(newTripReceiver, new IntentFilter(getString(R.string.new_trip_insert)));
         starButton = fragmentView.findViewById(R.id.personal_scores);
         groupButton = fragmentView.findViewById(R.id.group_scores);
         if (starButton.getVisibility() == View.VISIBLE)
@@ -468,6 +525,7 @@ public class OverviewFragment extends Fragment implements
     public void onDestroy() {
         super.onDestroy();
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(uniquePotholesLatLngReceiver);
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(newTripReceiver);
     }
 
     @Override

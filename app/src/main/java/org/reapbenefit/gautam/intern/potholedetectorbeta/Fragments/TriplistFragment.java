@@ -56,9 +56,6 @@ public class TriplistFragment extends Fragment {
     private SharedPreferences.Editor editor;
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
-    //TODO: CHECK IF TIMESCORE AND DISTANCESCORE NEED TO BE REIMPLEMENTED
-    private long timeScore = 0;  // calculated based on time logged
-    private long distanceScore = 0;  // calculated based on distance logged
     private CustomTripComparator comparator;
     ApplicationClass app;
     private boolean uploadStatus;
