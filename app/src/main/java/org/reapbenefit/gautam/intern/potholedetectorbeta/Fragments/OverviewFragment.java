@@ -1,5 +1,6 @@
 package org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
@@ -33,6 +34,7 @@ import android.view.ViewGroup;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -269,9 +271,9 @@ public class OverviewFragment extends Fragment implements
 
         bottomSheetText = fragmentView.findViewById(R.id.overview_sheet_text);
         int numberOfValidTrips = tripStatsPreferences.getInt("validTrips", 0);
-        String bottomSheetString = numberOfValidTrips + (numberOfValidTrips == 1?" trip":" trips") + " taken" +
-                "\n" + definitePotholeCount + " definite" + (definitePotholeCount==1?" pothole":" potholes") +
-                "\n" + probablePotholeCount + " probable" + (probablePotholeCount==1?" pothole":" potholes");
+        String bottomSheetString = numberOfValidTrips + (numberOfValidTrips == 1 ? " trip" : " trips") + " taken" +
+                "\n" + definitePotholeCount + " definite" + (definitePotholeCount == 1 ? " pothole" : " potholes") +
+                "\n" + probablePotholeCount + " probable" + (probablePotholeCount == 1 ? " pothole" : " potholes");
         bottomSheetText.setText(bottomSheetString);
 
         startTimeTextView = fragmentView.findViewById(R.id.start_time);
@@ -306,14 +308,14 @@ public class OverviewFragment extends Fragment implements
         Set<String> definitePotholeLocationSet = tripStatsPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
         if (probablePotholeLocationSet != null) {
             List<String> probablePotholeLocationArrayList = new ArrayList<>(probablePotholeLocationSet);
-            for (String potholeLocationString: probablePotholeLocationArrayList) {
+            for (String potholeLocationString : probablePotholeLocationArrayList) {
                 probableLatLngList.add(new Gson().fromJson(potholeLocationString, LatLng.class));
             }
         }
         // Log.d(getClass().getSimpleName(), probableLatLngList.toString());
         if (definitePotholeLocationSet != null) {
             List<String> definitePotholeLocationArrayList = new ArrayList<>(definitePotholeLocationSet);
-            for (String definitePotholeLocationString: definitePotholeLocationArrayList) {
+            for (String definitePotholeLocationString : definitePotholeLocationArrayList) {
                 definiteLatLngList.add(new Gson().fromJson(definitePotholeLocationString, LatLng.class));
             }
         }
@@ -325,8 +327,7 @@ public class OverviewFragment extends Fragment implements
     private void drawMarkers() {
         if (starButton.getVisibility() == View.VISIBLE) {
             populateGlobalMap();
-        }
-        else {
+        } else {
             populatePersonalMap();
         }
     }
@@ -339,7 +340,7 @@ public class OverviewFragment extends Fragment implements
         if (googleMap != null && uniquePotholeLatLng != null) {
             for (int i = 0; i < uniquePotholeLatLng.length; ++i) {
                 CustomClusterRenderer customClusterRenderer = new CustomClusterRenderer(getContext(), googleMap, definitePotholeClusterManager);
-                customClusterRenderer.setHitPercentage(((double)uniquePotholeHits[i]/(double)(totalUniqueHits)) * 100.0);
+                customClusterRenderer.setHitPercentage(((double) uniquePotholeHits[i] / (double) (totalUniqueHits)) * 100.0);
                 definitePotholeClusterManager.setRenderer(new CustomClusterRenderer(getContext(), googleMap, definitePotholeClusterManager));
                 definitePotholeClusterManager.addItem(new DefinitePotholeCluster(uniquePotholeLatLng[i]));
             }
@@ -401,15 +402,14 @@ public class OverviewFragment extends Fragment implements
         locationSettingsRequest = builder.build();
     }
 
-
-    @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap map) {
         this.googleMap = map;
         googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        googleMap.setMyLocationEnabled(true);
-        googleMap.getUiSettings().setMyLocationButtonEnabled(true);
-
+        if (!(ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            googleMap.setMyLocationEnabled(true);
+            googleMap.getUiSettings().setMyLocationButtonEnabled(true);
+        }
         //setting up cluster manager
         definitePotholeClusterManager = new ClusterManager<>(getContext(), googleMap);
         googleMap.setOnCameraIdleListener(definitePotholeClusterManager);

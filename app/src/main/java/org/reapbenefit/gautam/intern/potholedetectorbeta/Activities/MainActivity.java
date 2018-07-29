@@ -119,14 +119,6 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setTitle("Road Quality Audit");
 
         mAuth = FirebaseAuth.getInstance();
-        /*if (mAuth.getCurrentUser() == null) {
-            // Toast
-            Toast.makeText(this, "Please login to start using the app", Toast.LENGTH_LONG).show();
-            // open login activity
-
-            Intent i = new Intent(this, LoginActivity.class);
-            startActivity(i);
-        }*/
 
         settingsRequest();
         checkPermissions();
