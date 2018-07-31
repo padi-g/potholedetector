@@ -102,6 +102,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean didUserRateTrip;
     private GeoApiContext geoApiContext;
     private final String API_KEY = "***REMOVED***";
+    private Set<String> definitePotholeStringSet;
+    private Set<String> probablePotholeStringSet;
 
 
     @Override
@@ -203,11 +205,31 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void populatePotholeMarkerPoints() {
         if (mMap != null) {
-            Log.d(TAG, "adding marker from ppmp method");
-            if (definitePotholeLatLngs != null && !definitePotholeLatLngs.isEmpty()) {
-                for (LatLng pothole: definitePotholeLatLngs) {
-                    mMap.addMarker(new MarkerOptions().position(pothole));
+            //changing sets to read values of highest pothole trips
+            probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.highest_pothole_trip_probable_potholes), new HashSet<String>());
+            definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.highest_pothole_trip_definite_potholes), new HashSet<String>());
+            if (!probablePotholeLatLngs.isEmpty()) {
+                for (LatLng l : probablePotholeLatLngs) {
+                    probablePotholeStringSet.add(new Gson().toJson(l));
+                    updateUserPotholeTable(0, l);
                 }
+            }
+            if (!definitePotholeLatLngs.isEmpty()) {
+                for (LatLng l : definitePotholeLatLngs) {
+                    if (mMap != null) {
+                        mMap.addMarker(new MarkerOptions().position(l));
+                    }
+                    definitePotholeStringSet.add(new Gson().toJson(l));
+                    updateUserPotholeTable(1, l);
+                }
+                tripStatsEditor.putStringSet(getString(R.string.probable_pothole_location_set), probablePotholeStringSet);
+                tripStatsEditor.putStringSet(getString(R.string.definite_pothole_location_set), definitePotholeStringSet);
+                tripStatsEditor.commit();
+                //sending broadcast to TriplistFragment to confirm if location set belongs to highestPotholeTrip
+                Intent highestPotholeCheckIntent = new Intent(getString(R.string.highest_pothole_latlngs_check));
+                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_definite_potholes), (Serializable) definitePotholeStringSet);
+                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_probable_potholes), (Serializable) probablePotholeStringSet);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(highestPotholeCheckIntent);
             }
         }
     }
@@ -246,38 +268,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Log.e(TAG, "Could not show polyline");
                 logAnalytics("Could not show map polyline");
             }
-            Set<String> probablePotholeStringSet = new HashSet<>();
-            Set<String> definitePotholeStringSet = new HashSet<>();
+            probablePotholeStringSet = new HashSet<>();
+            definitePotholeStringSet = new HashSet<>();
             if (!isViewingHighestPotholeTrip) {
                 probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.probable_pothole_location_set), new HashSet<String>());
                 definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
-            } else {
-                //changing sets to read values of highest pothole trips
-                probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.highest_pothole_trip_probable_potholes), new HashSet<String>());
-                definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.highest_pothole_trip_definite_potholes), new HashSet<String>());
-            }
-            if (!probablePotholeLatLngs.isEmpty()) {
-                for (LatLng l : probablePotholeLatLngs) {
-                    probablePotholeStringSet.add(new Gson().toJson(l));
-                    updateUserPotholeTable(0, l);
-                }
-            }
-            if (!definitePotholeLatLngs.isEmpty()) {
-                for (LatLng l : definitePotholeLatLngs) {
-                    if (mMap != null) {
-                        mMap.addMarker(new MarkerOptions().position(l));
-                    }
-                    definitePotholeStringSet.add(new Gson().toJson(l));
-                    updateUserPotholeTable(1, l);
-                }
-                tripStatsEditor.putStringSet(getString(R.string.probable_pothole_location_set), probablePotholeStringSet);
-                tripStatsEditor.putStringSet(getString(R.string.definite_pothole_location_set), definitePotholeStringSet);
-                tripStatsEditor.commit();
-                //sending broadcast to TriplistFragment to confirm if location set belongs to highestPotholeTrip
-                Intent highestPotholeCheckIntent = new Intent(getString(R.string.highest_pothole_latlngs_check));
-                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_definite_potholes), (Serializable) definitePotholeStringSet);
-                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_probable_potholes), (Serializable) probablePotholeStringSet);
-                LocalBroadcastManager.getInstance(this).sendBroadcast(highestPotholeCheckIntent);
             }
         } else if (!isViewingHighestPotholeTrip) {
             textview.setText("No locations found");
@@ -413,6 +408,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             setDefinitePotholeCount(definitePotholeCount);
 
             drawInformationalUI(finishedTrip);
+            populatePotholeMarkerPoints();
 
             tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
             if (!tripIdSet.contains(finishedTrip.getTrip_id())) {
