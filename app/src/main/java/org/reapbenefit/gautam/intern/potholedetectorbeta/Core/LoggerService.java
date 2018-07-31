@@ -2,6 +2,8 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Core;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -220,7 +222,9 @@ public class LoggerService extends Service implements SensorEventListener {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
                 notificationIntent, 0);
 
-        Notification notification = new NotificationCompat.Builder(this)
+        createNotificationChannel();
+
+        Notification notification = new NotificationCompat.Builder(this, getString(R.string.logger_channel_id))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("Road Quality Audit")
                 .setContentText("Collecting sensor data")
@@ -248,6 +252,18 @@ public class LoggerService extends Service implements SensorEventListener {
                 saveSquaredError(readingSquaredError, loggedLatLng);
             }
         }, STANDARDISED_MILLISECONDS, STANDARDISED_MILLISECONDS);
+    }
+
+    private void createNotificationChannel() {
+        int importance = NotificationManager.IMPORTANCE_DEFAULT;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(getString(R.string.logger_channel_id),
+                    getString(R.string.logger_channel_id), importance);
+            channel.setDescription(getString(R.string.logger_channel_id));
+            // registering channel with Android system
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 
     @SuppressLint("RestrictedApi")
