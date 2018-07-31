@@ -266,6 +266,7 @@ public class OverviewFragment extends Fragment implements
                     definitePotholeClusterManager.clearItems();
                     definitePotholeClusterManager.cluster();
                     populatePersonalMap();
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12.0f));
                     // Log.d(TAG, "populating personal map");
                 }
                 groupButton.setVisibility(View.VISIBLE);
@@ -284,6 +285,7 @@ public class OverviewFragment extends Fragment implements
                     definitePotholeClusterManager.clearItems();
                     definitePotholeClusterManager.cluster();
                     populateGlobalMap();
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18.0f));
                 }
             }
         });
@@ -439,8 +441,10 @@ public class OverviewFragment extends Fragment implements
                         }
                     }
                 });
-                if (zoomFlag)
-                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18.0f));
+                if (zoomFlag) {
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng,
+                            floatingButton.equals(groupButton)?18.0f:12.0f));
+                }
             }
         };
     }
