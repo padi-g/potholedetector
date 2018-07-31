@@ -18,7 +18,6 @@ import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -39,7 +38,6 @@ import com.google.maps.model.SnappedPoint;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
-import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.SpeedWithLocation;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.UserPothole;
@@ -55,13 +53,10 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import ch.hsr.geohash.GeoHash;
@@ -208,6 +203,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void populatePotholeMarkerPoints() {
         if (mMap != null) {
+            Log.d(TAG, "adding marker from ppmp method");
             if (definitePotholeLatLngs != null && !definitePotholeLatLngs.isEmpty()) {
                 for (LatLng pothole: definitePotholeLatLngs) {
                     mMap.addMarker(new MarkerOptions().position(pothole));
@@ -268,7 +264,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
             if (!definitePotholeLatLngs.isEmpty()) {
                 for (LatLng l : definitePotholeLatLngs) {
-                    Toast.makeText(this, "Adding marker", Toast.LENGTH_SHORT);
+                    if (mMap != null) {
+                        mMap.addMarker(new MarkerOptions().position(l));
+                    }
                     definitePotholeStringSet.add(new Gson().toJson(l));
                     updateUserPotholeTable(1, l);
                 }
@@ -287,7 +285,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void updateUserPotholeTable(int classification, LatLng latLng) {
-        Log.d(TAG, "Updating user pothole table");
+        Log.d(TAG, "Updating user pothole table for classification " + classification);
         //updating table in RDS
         Intent addDefinitePotholeIntent = new Intent(this, APIService.class);
         addDefinitePotholeIntent.putExtra("request", "POST");
@@ -392,6 +390,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             GeoHash.fromGeohashString(geoHash).getPoint().getLongitude()));
                     ++definitePotholeCount;
                 }
+                definitePotholeLatLngs.add(new LatLng(28.0, 77.0));
 
                 // finished processing error file, can delete it from device
                 file.delete();
@@ -414,7 +413,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             setDefinitePotholeCount(definitePotholeCount);
 
             drawInformationalUI(finishedTrip);
-            populatePotholeMarkerPoints();
 
             tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
             if (!tripIdSet.contains(finishedTrip.getTrip_id())) {

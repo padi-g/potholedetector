@@ -76,8 +76,7 @@ public class LoggerService extends Service implements SensorEventListener {
     protected String TAG = "Logger_Service";
     private SensorManager mSensorManager;
     private Sensor mAccelerometer, mGyroscope, mProximity;
-    //1525 metre accuracy sensitive if in debug state, 25 in release
-    private static final int ACCURACY_REQUIRED = BuildConfig.DEBUG?1525:25;
+    private static final int ACCURACY_REQUIRED = BuildConfig.DEBUG?15250:25;
     private static final String INPUT_NODE = "input_1";
     private static final String OUTPUT_NODE = "output_node0";
 
