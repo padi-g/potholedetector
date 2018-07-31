@@ -441,7 +441,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             setDefinitePotholeCount(definitePotholeCount);
 
             drawInformationalUI(finishedTrip);
-            // populatePotholeMarkerPoints();
+            populatePotholeMarkerPoints();
+
             tripIdSet = tripStatsPreferences.getStringSet("tripIdSet", new HashSet<String>());
             if (!tripIdSet.contains(finishedTrip.getTrip_id())) {
                 // Log.d("MapsActivity", tripID + "");

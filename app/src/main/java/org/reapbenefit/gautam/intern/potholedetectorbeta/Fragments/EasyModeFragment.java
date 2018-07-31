@@ -299,38 +299,6 @@ public class EasyModeFragment extends Fragment {
         }
     };
 
-    private boolean internetAvailable(){
-        ConnectivityManager connMgr = (ConnectivityManager)
-                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        boolean isWifiConn = networkInfo.isConnected();
-        networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-        boolean isMobileConn = networkInfo.isConnected();
-        if(isMobileConn || isWifiConn)
-            return true;
-        else
-            return false;
-    }
-
-    private boolean autoUploadOn(){
-        SharedPreferences prefs = getActivity().getSharedPreferences("uploads", MODE_PRIVATE);
-        return prefs.getBoolean("auto_upload", true);
-    }
-
-    public void startUploadService(){
-        Intent intent = new Intent(getContext(), S3UploadService.class);
-        intent.setAction("upload_now");
-        List<Trip> tripList = new ArrayList<>();
-        tripList.add(newTrip);
-        intent.putExtra("trip_arrayList", (Serializable) tripList);
-        intent.putExtra("upload_uri", uploadFileUri);
-        this.getContext().startService(intent);
-        /*//notifying TriplistFragment that upload has started (required for starting progress bar on auto-upload)
-        Intent uploadStartNotifierIntent = new Intent(getString(R.string.upload_start_notifier_intent));
-        uploadStartNotifierIntent.putExtra("tripUploadingId", newTrip.getTrip_id());
-        LocalBroadcastManager.getInstance(getContext()).sendBroadcast(uploadStartNotifierIntent);*/
-    }
-
     private void openMap(){
         Intent i = new Intent(this.getActivity(), MapsActivity.class);
         // Log.d(getClass().getSimpleName(), tripDurationInSeconds + "");
