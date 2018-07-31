@@ -18,6 +18,7 @@ import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -88,20 +89,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private RatingBar accuracyRatingBar;
 
     private String tripID;
-    private int linesPerPeriod;
-    private float threshold;
-    private String axisOfInterest;
-    private int axisIndex, locIndex, speedIndex;
     private Trip finishedTrip;
-    private HashMap<Integer, String> probablePointsOfInterest = new HashMap<>();
-    private HashMap<Integer, String> definitePointsOfInterest = new HashMap<>();
     private int accuracy_result = 0;
     private GridLayout resultGrid;
     private TextView accuracyLowTime;
     private SharedPreferences tripStatsPreferences;
     private SharedPreferences.Editor tripStatsEditor;
     private Set<String> tripIdSet;
-    private TreeMap<Integer, SpeedWithLocation> speedWithLocationTreeMap = new TreeMap<>();
     private final String TAG = getClass().getSimpleName();
     private Trip highestPotholeTrip;
     private SharedPreferences dbPreferences;
@@ -147,14 +141,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         getSupportActionBar().setTitle("Trip Summary");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-
-        Map<Integer, SpeedWithLocation> simpleMap = (Map<Integer, SpeedWithLocation>) getIntent().getSerializableExtra(getString(R.string.speed_with_location_hashmap));
-        if (simpleMap != null) {
-            speedWithLocationTreeMap = new TreeMap<>(simpleMap);
-        } else {
-            speedWithLocationTreeMap = null;
-        }
-
         tripDurationInSeconds = getIntent().getLongExtra(getString(R.string.duration_in_seconds), 0);
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
@@ -167,9 +153,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         tripID = finishedTrip.getTrip_id();
-        linesPerPeriod = finishedTrip.getNo_of_lines() * 3;
-        threshold = finishedTrip.getThreshold() * 9;
-        axisOfInterest = finishedTrip.getAxis();
 
         resultGrid = (GridLayout) findViewById(R.id.map_result_grid);
         spinner = (ProgressBar) findViewById(R.id.indeterminateBar);
@@ -222,6 +205,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         geoApiContext = new GeoApiContext.Builder().apiKey(API_KEY).build();
     }
 
+
+    public void populatePotholeMarkerPoints() {
+        if (mMap != null) {
+            if (definitePotholeLatLngs != null && !definitePotholeLatLngs.isEmpty()) {
+                for (LatLng pothole: definitePotholeLatLngs) {
+                    mMap.addMarker(new MarkerOptions().position(pothole));
+                }
+            }
+        }
+    }
+
     private void drawInformationalUI(Trip trip) {
         spinner.setVisibility(View.GONE);
         duration.setText(trip.getDuration() + " minutes");
@@ -239,30 +233,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             probablePotholeCountTextView.setText(trip.getProbablePotholeCount() + "");
             definitePotholeCountTextView.setText(trip.getDefinitePotholeCount() + "");
         }
-    }
-
-
-    public void populatePotholeMarkerPoints() {
-
-        Iterator it = probablePointsOfInterest.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry) it.next();
-            probablePotholeLatLngs.add(extractLatLng((String) pair.getValue()));
-            it.remove(); // avoids a ConcurrentModificationException
-        }
-
-        it = definitePointsOfInterest.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry) it.next();
-            definitePotholeLatLngs.add(extractLatLng((String) pair.getValue()));
-            it.remove();
-        }
-    }
-
-    public com.google.android.gms.maps.model.LatLng extractLatLng(String line) {
-        String vals[] = line.split(",");
-        LatLng l = new LatLng(Double.valueOf(vals[locIndex]), Double.valueOf(vals[locIndex + 1]));
-        return l;
     }
 
     @Override
@@ -298,7 +268,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
             if (!definitePotholeLatLngs.isEmpty()) {
                 for (LatLng l : definitePotholeLatLngs) {
-                    mMap.addMarker(new MarkerOptions().position(l).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+                    Toast.makeText(this, "Adding marker", Toast.LENGTH_SHORT);
                     definitePotholeStringSet.add(new Gson().toJson(l));
                     updateUserPotholeTable(1, l);
                 }
@@ -317,7 +287,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void updateUserPotholeTable(int classification, LatLng latLng) {
-        // Log.d(TAG, "Called once");
+        Log.d(TAG, "Updating user pothole table");
         //updating table in RDS
         Intent addDefinitePotholeIntent = new Intent(this, APIService.class);
         addDefinitePotholeIntent.putExtra("request", "POST");
@@ -390,6 +360,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     for (int i = 0; i < 4; ++i) {
                         readingSum += Float.valueOf(values[i]);
                     }
+                    double latitude = Double.valueOf(values[4]);
+                    double longitude = Double.valueOf(values[5]);
+                    latLngs.add(new LatLng(latitude, longitude));
                     float meanSquaredError = readingSum/4.0f;
                     float speed = Float.valueOf(values[values.length - 1]);
                     if (speed >= UPPER_SPEED_THRESHOLD) {
