@@ -66,7 +66,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final int PAGINATION_OVERLAP = 5;
     public static final int GEOHASH_LENGTH = 8;
     private static final int PAGE_SIZE_LIMIT = 100;
-    private static final float LOWER_MSE_THRESHOLD = 6.49795f;
+    private static final float LOWER_MSE_THRESHOLD = 6.6f;
     private static final float UPPER_MSE_THRESHOLD = 13.0633f;
     private static final float UPPER_SPEED_THRESHOLD = 2.7778f;
     private GoogleMap mMap;
