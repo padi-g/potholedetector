@@ -280,7 +280,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void updateUserPotholeTable(int classification, LatLng latLng) {
-        Log.d(TAG, "Updating user pothole table for classification " + classification);
+        // Log.d(TAG, "Updating user pothole table for classification " + classification);
         //updating table in RDS
         Intent addDefinitePotholeIntent = new Intent(this, APIService.class);
         addDefinitePotholeIntent.putExtra("request", "POST");
@@ -367,7 +367,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 geoHashSet.add(GeoHash.geoHashStringWithCharacterPrecision(Double.valueOf(values[4]), Double.valueOf(values[5]), 7));
                             } catch (Exception e) {
                                 // in case the set's uniqueness constraint forces a crash
-                                Log.e(TAG, e.getMessage());
+                                // Log.e(TAG, e.getMessage());
                             }
                         } else if (meanSquaredError >= UPPER_MSE_THRESHOLD) {
                             // could be a serious pothole, needs cross-validation from other people
@@ -390,7 +390,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 file.delete();
 
             } catch (Exception exception) {
-                Log.e(TAG, exception.getMessage());
+                // Log.e(TAG, exception.getMessage());
             }
             return definitePotholeCount + " " + probablePotholeCount;
         }

@@ -456,10 +456,10 @@ public class LoggerService extends Service implements SensorEventListener {
         String data = floatArraytoString(squaredError) + String.valueOf(latlng[0]) + ","
                 + String.valueOf(latlng[1]) + "," + String.valueOf(latlng[2]) + "\n";
         try {
-            Log.d(TAG, "Writing " + data);
+            // Log.d(TAG, "Writing " + data);
             out.write(data.getBytes());
         } catch(IOException ioException) {
-            Log.e(TAG, ioException.getStackTrace().toString());
+            // Log.e(TAG, ioException.getStackTrace().toString());
         }
     }
 

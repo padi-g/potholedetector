@@ -144,7 +144,7 @@ public class OverviewFragment extends Fragment implements
     private BroadcastReceiver newTripReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "Broadcase received for newTrip");
+            // Log.d(TAG, "Broadcase received for newTrip");
             if (tripViewModel != null) {
                 Trip newTrip = intent.getParcelableExtra("trip_object");
                 if (newTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG) {
