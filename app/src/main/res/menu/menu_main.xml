@@ -28,10 +28,10 @@
         android:orderInCategory="400"
         ></item>
     <item
-        android:id="@+id/actions_settings"
-        android:title="Settings"
-        android:orderInCategory="500">
-
-    </item>
-
+        android:id="@+id/in_menu_checkbox"
+        android:title="Auto upload"
+        android:orderInCategory="50"
+        android:checkable="true"
+        android:checked="true"
+        android:visible="false"/>
 </menu>

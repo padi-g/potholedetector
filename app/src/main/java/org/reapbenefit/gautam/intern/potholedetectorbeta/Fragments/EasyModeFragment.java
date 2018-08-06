@@ -22,7 +22,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +30,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
-import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MapsActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
@@ -279,72 +277,35 @@ public class EasyModeFragment extends Fragment {
     private final BroadcastReceiver b = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            newTrip = intent.getParcelableExtra("trip_object");
-            tripStatus = intent.getBooleanExtra("LoggingStatus", false);
-            speedWithLocationTreeMap = (TreeMap<Integer, SpeedWithLocation>) intent.getSerializableExtra(getString(R.string.speed_with_location_hashmap));
-            tripDurationInSeconds = intent.getLongExtra(getString(R.string.duration_in_seconds), 0);
-            if(!tripStatus){
-                uploadFileUri = intent.getParcelableExtra("filename");
-                if(uploadFileUri == null){
-                    Toast.makeText(getActivity().getApplicationContext(), "Sorry, we could not detect your location accurately", Toast.LENGTH_SHORT).show();
-                }else {
-                    // Log.d("Upload", "file received is" + String.valueOf(uploadFileUri));
-                    Toast.makeText(getActivity().getApplicationContext(), "Thanks for your contribution!", Toast.LENGTH_SHORT).show();
-                    if(internetAvailable() && autoUploadOn()) {
-                        startUploadService();
-                    }else if(!internetAvailable()){
-                        Toast.makeText(getActivity().getApplicationContext(), "Internet not available. You can upload manually later", Toast.LENGTH_SHORT).show();
-                    }else if(!autoUploadOn())
-                        Toast.makeText(getActivity().getApplicationContext(), "Auto Upload is turned off. You can upload manually later", Toast.LENGTH_SHORT).show();
-                    openMap();
+            if (intent.getAction() != null && intent.getAction().equals("tripstatus")) {
+                newTrip = intent.getParcelableExtra("trip_object");
+                tripStatus = intent.getBooleanExtra("LoggingStatus", false);
+                speedWithLocationTreeMap = (TreeMap<Integer, SpeedWithLocation>) intent.getSerializableExtra(getString(R.string.speed_with_location_hashmap));
+                tripDurationInSeconds = intent.getLongExtra(getString(R.string.duration_in_seconds), 0);
+                if (!tripStatus) {
+                    uploadFileUri = intent.getParcelableExtra("filename");
+                    if (uploadFileUri == null) {
+                        Toast.makeText(getActivity().getApplicationContext(), "Sorry, we could not detect your location accurately", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getActivity().getApplicationContext(), "Thanks for your contribution!", Toast.LENGTH_SHORT).show();
+                        openMap();
+                    }
+                    ////////// redundant
+                    startFloatingActionButton.setVisibility(View.VISIBLE);
+                    stopFloatingActionButton.setVisibility(View.GONE);
+                    ////////// redundant
                 }
-                ////////// redundant
-                startFloatingActionButton.setVisibility(View.VISIBLE);
-                stopFloatingActionButton.setVisibility(View.GONE);
-                ////////// redundant
             }
         }
     };
 
-    private boolean internetAvailable(){
-        ConnectivityManager connMgr = (ConnectivityManager)
-                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        boolean isWifiConn = networkInfo.isConnected();
-        networkInfo = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-        boolean isMobileConn = networkInfo.isConnected();
-        if(isMobileConn || isWifiConn)
-            return true;
-        else
-            return false;
-    }
-
-    private boolean autoUploadOn(){
-        SharedPreferences prefs = getActivity().getSharedPreferences("uploads", MODE_PRIVATE);
-        return prefs.getBoolean("auto_upload", true);
-    }
-
-    public void startUploadService(){
-        Intent intent = new Intent(getContext(), S3UploadService.class);
-        intent.setAction("upload_now");
-        List<Trip> tripList = new ArrayList<>();
-        tripList.add(newTrip);
-        intent.putExtra("trip_arrayList", (Serializable) tripList);
-        intent.putExtra("upload_uri", uploadFileUri);
-        this.getContext().startService(intent);
-        /*//notifying TriplistFragment that upload has started (required for starting progress bar on auto-upload)
-        Intent uploadStartNotifierIntent = new Intent(getString(R.string.upload_start_notifier_intent));
-        uploadStartNotifierIntent.putExtra("tripUploadingId", newTrip.getTrip_id());
-        LocalBroadcastManager.getInstance(getContext()).sendBroadcast(uploadStartNotifierIntent);*/
-    }
-
     private void openMap(){
         Intent i = new Intent(this.getActivity(), MapsActivity.class);
-        Log.d(getClass().getSimpleName(), tripDurationInSeconds + "");
+        // Log.d(getClass().getSimpleName(), tripDurationInSeconds + "");
         i.putExtra("duration_in_seconds", tripDurationInSeconds);
         i.putExtra(getString(R.string.is_viewing_highest_pothole_trip), false);
         i.putExtra(getString(R.string.speed_with_location_hashmap), speedWithLocationTreeMap);
-        Log.d(getClass().getSimpleName(), new Gson().toJson(speedWithLocationTreeMap));
+        // Log.d(getClass().getSimpleName(), new Gson().toJson(speedWithLocationTreeMap));
         startActivity(i);
     }
 
@@ -456,9 +417,15 @@ public class EasyModeFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        super.onDestroyView();
         LocalBroadcastManager l = LocalBroadcastManager.getInstance(getActivity());
         l.unregisterReceiver(b);
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onDestroy() {
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(b);
+        super.onDestroy();
     }
 
     // TODO: Rename method, update argument and hook method into UI event

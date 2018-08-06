@@ -4,21 +4,29 @@ package org.reapbenefit.gautam.intern.potholedetectorbeta.Activities;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.os.StatFs;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -27,7 +35,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.appsee.Appsee;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.CommonStatusCodes;
@@ -50,11 +57,20 @@ import com.google.firebase.auth.FirebaseAuth;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.BuildConfig;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TransitionAlarm;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.EasyModeFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.OverviewFragment;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.LocalDatabase.LocalTripEntity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.PagerAdapter;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.R;
+import org.reapbenefit.gautam.intern.potholedetectorbeta.Trip;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener,
@@ -86,6 +102,10 @@ public class MainActivity extends AppCompatActivity
     private Context context;
     private boolean inCar;
     private SharedPreferences onboardingPreferences;
+    private SharedPreferences settingsPreferences;
+    private SharedPreferences.Editor settingsPreferencesEditor;
+
+    private TripViewModel tripViewModel;
 
     @Override
     public void onBackPressed() {
@@ -114,30 +134,16 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setTitle("Road Quality Audit");
 
         mAuth = FirebaseAuth.getInstance();
-        /*if (mAuth.getCurrentUser() == null) {
-            // Toast
-            Toast.makeText(this, "Please login to start using the app", Toast.LENGTH_LONG).show();
-            // open login activity
-
-            Intent i = new Intent(this, LoginActivity.class);
-            startActivity(i);
-        }*/
 
         settingsRequest();
         checkPermissions();
 
-        if (!BuildConfig.DEBUG) {
-            Appsee.start();
-            String userId = getSharedPreferences("uploads", MODE_PRIVATE).getString("FIREBASE_USER_ID", null);
-            if (userId != null)
-                Appsee.setUserId(userId);
-        }
         //Initializing the tablayout
         tabLayout = (TabLayout) findViewById(R.id.tabLayout);
 
         //Adding the tabs using addTab() method
         tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_action_home));
-        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_list));
+        // tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_list));
         tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ic_map_black_24dp));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
@@ -157,8 +163,23 @@ public class MainActivity extends AppCompatActivity
         if (!prefs.contains("file_delete"))
             prefs.edit().putBoolean("file_delete", false);
 
+        // checking current storage and notifying user if app is likely to cause problems
+        long bytesAvailable = getAvailableInternalMemorySize();
+        if (bytesAvailable < 786432000) {
+            Snackbar.make(findViewById(R.id.main_activity_container), "The app may face problems because of low storage space on your phone.", Snackbar.LENGTH_LONG).setAction("Settings", new OnStorageLowListener()).show();
+            // Log.d(TAG, "Creating snackbar");
+        }
+        // Log.d(TAG, String.valueOf(bytesAvailable));
         //setting TransitionAlarm
         setAlarm(5000);
+    }
+
+    public static long getAvailableInternalMemorySize() {
+        File path = Environment.getDataDirectory();
+        StatFs stat = new StatFs(path.getPath());
+        long blockSize = stat.getBlockSizeLong();
+        long availableBlocks = stat.getAvailableBlocksLong();
+        return availableBlocks * blockSize;
     }
 
     private void setAlarm(long timeinMillis) {
@@ -375,6 +396,8 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        settingsPreferences = getSharedPreferences("uploads",MODE_PRIVATE);
+        settingsPreferencesEditor = settingsPreferences.edit();
         return true;
     }
 
@@ -399,16 +422,24 @@ public class MainActivity extends AppCompatActivity
             intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
         }
-        if(id == R.id.actions_settings){
-            intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-        }
         if (id == R.id.actions_invite) {
             intent = new Intent();
             //intent.setAction(Intent.ACTION_SEND);
             intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.invite_message));
             intent.setType("text/plain");
             startActivity(intent.createChooser(intent, "Help your friends map potholes"));
+        }
+        if (id == R.id.in_menu_checkbox) {
+            if (item.isChecked()) {
+                // disable auto-upload
+                settingsPreferencesEditor.putBoolean(getString(R.string.auto_upload_setting), false).commit();
+                item.setChecked(false);
+            }
+            else {
+                // enable auto-upload
+                settingsPreferencesEditor.putBoolean(getString(R.string.auto_upload_setting), true).commit();
+                item.setChecked(true);
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -450,6 +481,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    private class OnStorageLowListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            startActivityForResult(new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS), 0);
+        }
     }
 
     /*

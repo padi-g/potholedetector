@@ -4,4 +4,9 @@
     <color name="colorPrimaryDark">#00695C</color>
     <color name="colorAccent">#FFA000</color>
     <color name="icons">#FFA000</color>
+    <color name="RED_100">#440000</color>
+    <color name="RED_80">#660000</color>
+    <color name="RED_60">#880000</color>
+    <color name="RED_40">#CC0000</color>
+    <color name="RED_20">#FF0000</color>
 </resources>

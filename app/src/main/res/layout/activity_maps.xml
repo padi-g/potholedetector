@@ -2,7 +2,8 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:orientation="vertical"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/maps_linear_layout">
 
     <include
         layout="@layout/toolbar_main"
@@ -201,26 +202,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingBottom="5dp">
+        android:paddingBottom="5dp"
+        android:gravity="center">
 
-        <SeekBar
+        <RatingBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_gravity="center"
             android:id="@+id/accuracy_seek"
-            android:thumb="@drawable/right_arrow"
-            android:layout_weight="90"
-            android:max="9" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="10"
-            android:text="Submit"
-            android:fontFamily="sans-serif-condensed"
-            android:textStyle="bold"
-            android:id="@+id/submit_button"/>
+            android:numStars="5" />
 
     </LinearLayout>
 

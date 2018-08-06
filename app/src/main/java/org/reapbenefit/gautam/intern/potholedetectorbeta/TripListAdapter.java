@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.TripViewModel;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.Serializable;
@@ -49,6 +50,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
     ImageButton uploadedTick;
     TextView date, time, size, distance;
     ProgressBar uploadProgressBar;
+    TextView allUploadsDone;
 
 
     /*
@@ -67,7 +69,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             super(itemView);
             uploadButton = (ImageButton) itemView.findViewById(R.id.upload_button);
             uploadedTick = (ImageButton) itemView.findViewById(R.id.upload_tick);
-            date = (TextView) itemView.findViewById(R.id.count);
+            date = (TextView) itemView.findViewById(R.id.date);
             time = (TextView) itemView.findViewById(R.id.start_time);
             size = (TextView) itemView.findViewById(R.id.size);
             distance = (TextView) itemView.findViewById(R.id.distance_view);
@@ -88,7 +90,6 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
 
     @Override
     public TripListViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-
         dbPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
 
         LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -102,7 +103,7 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             if (!trips.isEmpty()) {
                 uploadButton = rowView.findViewById(R.id.upload_button);
                 uploadedTick = rowView.findViewById(R.id.upload_tick);
-                date = (TextView) rowView.findViewById(R.id.count);
+                date = (TextView) rowView.findViewById(R.id.hits);
                 time = (TextView) rowView.findViewById(R.id.start_time);
                 size = (TextView) rowView.findViewById(R.id.size);
                 distance = (TextView) rowView.findViewById(R.id.distance_view);
@@ -111,6 +112,10 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
             }
             else {
                 Toast.makeText(context.getApplicationContext(), "No trips made yet", Toast.LENGTH_SHORT).show();
+                allUploadsDone.setVisibility(View.VISIBLE);
+            }
+            if (getItemCount() == 0) {
+                allUploadsDone.setVisibility(View.VISIBLE);
             }
         }
         catch (NullPointerException nullPointerException) {
@@ -162,8 +167,8 @@ public class TripListAdapter extends RecyclerView.Adapter<TripListAdapter.TripLi
                 uploadButton.setVisibility(View.GONE);
             }
 
-            Log.d("TripListAdapter1", trip.getTrip_id());
-            Log.d("TripListAdapter2", tripUploadingId + "");
+            // Log.d("TripListAdapter1", trip.getTrip_id());
+            // Log.d("TripListAdapter2", tripUploadingId + "");
 
             if (tripUploadingId != null) {
                 if ((uploadStatus && trip.getTrip_id().equals(tripUploadingId)) || batchUpload) {

@@ -5,35 +5,18 @@ import android.animation.ObjectAnimator;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-
 import android.support.v4.view.ViewPager;
-import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.View;
-
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.NetworkResponse;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.HttpHeaderParser;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -42,37 +25,18 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.MainActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Activities.OnboardingActivity;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.APIService;
 import org.reapbenefit.gautam.intern.potholedetectorbeta.Core.ApplicationClass;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.reapbenefit.gautam.intern.potholedetectorbeta.HTTPHandler.getAllUsers;
 
 public class SplashActivity extends AppCompatActivity {
 
@@ -94,6 +58,7 @@ public class SplashActivity extends AppCompatActivity {
     private SharedPreferences onboardingPreferences;
     private SharedPreferences.Editor onboardingPreferencesEditor;
     private String userId;
+    private FirebaseAnalytics firebaseAnalytics;
     private String responseJson;
     private UserData[] userData;
     private final String url = "https://990rl1xx1d.execute-api.ap-south-1.amazonaws.com/Beta/users/";
@@ -200,6 +165,7 @@ public class SplashActivity extends AppCompatActivity {
                 dialog.show();
             }
         });
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this);
     }
 
     @Override
@@ -224,12 +190,14 @@ public class SplashActivity extends AppCompatActivity {
                                 onboardingPreferencesEditor.putBoolean("onboarding", false).commit();
                                 uploadEditor.putString("FIREBASE_USER_ID", firebaseAuth.getCurrentUser().getUid()).commit();
                                 userId = firebaseAuth.getCurrentUser().getUid();
-                                //starting service to access API and retrieve users
+                                // starting service to access API and retrieve users
                                 Intent apiServiceIntent = new Intent(SplashActivity.this, APIService.class);
                                 apiServiceIntent.putExtra("table", getString(R.string.user_data_table));
                                 apiServiceIntent.putExtra("request", "GET");
                                 apiServiceIntent.putExtra("FIREBASE_USER_ID", userId);
                                 SplashActivity.this.startService(apiServiceIntent);
+                                // logging userID with Firebase Analytics
+                                firebaseAnalytics.setUserId(userId);
                                 Intent intent = new Intent(SplashActivity.this, MainActivity.class);
                                 startActivity(intent);
                             }

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:backgroundTint="@color/colorPrimary"
+    android:background="@color/colorPrimary"
     tools:context="org.reapbenefit.gautam.intern.potholedetectorbeta.Fragments.TriplistFragment">
 
     <GridLayout
@@ -29,7 +29,7 @@
             android:paddingBottom="10dp"
             android:text="Trips not yet uploaded"
             android:textColor="#fff"
-            android:textSize="23sp"
+            android:textSize="20dp"
             android:layout_row="0"
             android:layout_column="0"
             android:layout_columnWeight="5"
@@ -57,5 +57,20 @@
         android:scrollbars="vertical"
         android:visibility="visible">
     </android.support.v7.widget.RecyclerView>
+
+    <TextView
+        android:id="@+id/uploads_done_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:paddingBottom="10dp"
+        android:textColor="@android:color/white"
+        android:textSize="20dp"
+        android:fontFamily="sans-serif-condensed"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="10dp"
+        android:text="Yay! All your trips have been uploaded."
+        android:visibility="invisible" />
 
 </LinearLayout>

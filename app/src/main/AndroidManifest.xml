@@ -30,9 +30,6 @@
             android:value="@integer/google_play_services_version" />
 
         <service
-            android:name=".ActivityRecognizedService"
-            android:exported="false" />
-        <service
             android:name=".Activities.TransitionsReceiver"
             android:enabled="true"
             android:exported="false" />
@@ -167,6 +164,9 @@
         <service
             android:name=".Core.APIService"
             android:exported="false" />
+        <service
+            android:name=".Core.BlobUploader"
+            android:exported="false"></service>
     </application>
 
 </manifest>

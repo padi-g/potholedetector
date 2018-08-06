@@ -1,3 +1,4 @@
+/.settings/
 /.idea/caches/build_file_checksums.ser
 /.idea/libraries/
 /.idea/gradle.xml
@@ -5,6 +6,7 @@
 /.idea/modules.xml
 /.idea/vcs.xml
 /.idea/workspaces.xml
+/.idea/
 /local.properties
 *.jar
 /.gradle
