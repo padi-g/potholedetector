@@ -384,6 +384,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             GeoHash.fromGeohashString(geoHash).getPoint().getLongitude()));
                     ++definitePotholeCount;
                 }
+                definitePotholeLatLngs.add(new LatLng(28, 77));
+                ++definitePotholeCount;
 
                 // finished processing error file, can delete it from device
                 file.delete();

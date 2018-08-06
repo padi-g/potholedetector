@@ -159,6 +159,7 @@ public class OverviewFragment extends Fragment implements
                         maxPotholeCount = newTrip.getProbablePotholeCount() + newTrip.getDefinitePotholeCount();
                         tripStatsPreferences.edit().putString("highestPotholeTrip", new Gson().toJson(newTrip)).apply();
                         tripStatsPreferences.edit().putInt("maxPotholeTrip", maxPotholeCount).apply();
+                        updateHPTData();
                     } catch (IllegalArgumentException illegal) {
                         // catches a crash in case a user hits zero potholes and creates a NaN trip
                     }
@@ -172,7 +173,6 @@ public class OverviewFragment extends Fragment implements
         public void onReceive(Context context, Intent intent) {
             Set<String> definitePotholeSet = new HashSet<>();
             Set<String> probablePotholeSet = new HashSet<>();
-            Log.d(TAG, "DPLR received");
             definitePotholeSet = intent.getParcelableExtra(getString(R.string.highest_pothole_trip_definite_potholes));
             probablePotholeSet = intent.getParcelableExtra(getString(R.string.highest_pothole_trip_probable_potholes));
             if (((definitePotholeSet != null && !definitePotholeSet.isEmpty())) || (probablePotholeSet != null &&
@@ -411,6 +411,34 @@ public class OverviewFragment extends Fragment implements
         drawMarkers();
         // Log.d(getClass().getSimpleName(), definiteLatLngList.toString());
         return fragmentView;
+    }
+
+    private void updateHPTData() {
+        if (highestPotholeTrip != null) {
+            try {
+                //adding details of highestPotholeTrip to GridLayout
+                String startTime = highestPotholeTrip.getStartTime();
+                startTime = startTime.substring(4, startTime.indexOf("GMT") - 4);
+                startTimeTextView.setText(startTime);
+                countTextView.setText(highestPotholeTrip.getProbablePotholeCount() +
+                        highestPotholeTrip.getDefinitePotholeCount() + " potholes");
+                distanceTextView.setText(TripListAdapter.roundTwoDecimals(highestPotholeTrip.getDistanceInKM()) + "km");
+                sizeTextView.setText(TripListAdapter.humanReadableByteCount(highestPotholeTrip.getFilesize(), true));
+
+                mostPotholesGrid.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent i = new Intent(getContext(), MapsActivity.class);
+                        i.putExtra("trip", highestPotholeTrip);
+                        i.putExtra(getString(R.string.is_viewing_highest_pothole_trip), true);
+                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        getContext().startActivity(i);
+                    }
+                });
+            } catch (NullPointerException nullPointerException) {
+                // catches an NPE in case the broadcast is received and trip updated before view is created
+            }
+        }
     }
 
     private void drawMarkers() {
