@@ -206,8 +206,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void populatePotholeMarkerPoints() {
         if (mMap != null) {
             //changing sets to read values of highest pothole trips
-            probablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.highest_pothole_trip_probable_potholes), new HashSet<String>());
-            definitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.highest_pothole_trip_definite_potholes), new HashSet<String>());
+            probablePotholeStringSet = new HashSet<String>();
+            definitePotholeStringSet = new HashSet<String>();
             if (!probablePotholeLatLngs.isEmpty()) {
                 for (LatLng l : probablePotholeLatLngs) {
                     probablePotholeStringSet.add(new Gson().toJson(l));
@@ -222,14 +222,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     definitePotholeStringSet.add(new Gson().toJson(l));
                     updateUserPotholeTable(1, l);
                 }
-                tripStatsEditor.putStringSet(getString(R.string.probable_pothole_location_set), probablePotholeStringSet);
-                tripStatsEditor.putStringSet(getString(R.string.definite_pothole_location_set), definitePotholeStringSet);
-                tripStatsEditor.commit();
-                //sending broadcast to TriplistFragment to confirm if location set belongs to highestPotholeTrip
-                Intent highestPotholeCheckIntent = new Intent(getString(R.string.highest_pothole_latlngs_check));
-                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_definite_potholes), (Serializable) definitePotholeStringSet);
-                highestPotholeCheckIntent.putExtra(getString(R.string.highest_pothole_trip_probable_potholes), (Serializable) probablePotholeStringSet);
-                LocalBroadcastManager.getInstance(this).sendBroadcast(highestPotholeCheckIntent);
+                Set<String> highestDefinitePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.definite_pothole_location_set), new HashSet<String>());
+                Set<String> highestProbablePotholeStringSet = tripStatsPreferences.getStringSet(getString(R.string.probable_pothole_location_set), new HashSet<String>());
+                if (probablePotholeStringSet.size() + definitePotholeStringSet.size() >= highestDefinitePotholeStringSet.size() + highestProbablePotholeStringSet.size()) {
+                    // need to update highest pothole trip data
+                    tripStatsEditor.putStringSet(getString(R.string.definite_pothole_location_set), definitePotholeStringSet).apply();
+                    tripStatsEditor.putStringSet(getString(R.string.probable_pothole_location_set), probablePotholeStringSet).apply();
+                }
             }
         }
     }

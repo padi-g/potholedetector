@@ -126,6 +126,7 @@ public class OverviewFragment extends Fragment implements
     private final String TAG = getClass().getSimpleName();
     private ClusterManager<DefinitePotholeCluster> definitePotholeClusterManager;
     private CoordinatorLayout overviewCoordinator;
+    private int maxPotholeCount;
 
     private BroadcastReceiver uniquePotholesLatLngReceiver = new BroadcastReceiver() {
         @Override
@@ -144,21 +145,48 @@ public class OverviewFragment extends Fragment implements
     private BroadcastReceiver newTripReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            // Log.d(TAG, "Broadcase received for newTrip");
+            // Log.d(TAG, "Broadcast received for newTrip");
             if (tripViewModel != null) {
                 Trip newTrip = intent.getParcelableExtra("trip_object");
                 if (newTrip.getDistanceInKM() < 0.5 && !BuildConfig.DEBUG) {
                     return;
                 }
                 tripViewModel.insert(Trip.tripToLocalTripEntity(newTrip));
-                /*if (tripStatsPreferences == null) {
-                    tripStatsPreferences = PreferenceManager.getDefaultSharedPreferences(ApplicationClass.getInstance());
+                maxPotholeCount = tripStatsPreferences.getInt("maxPotholeCount", 0);
+                if (newTrip.getProbablePotholeCount() + newTrip.getDefinitePotholeCount() >= maxPotholeCount) {
+                    try {
+                        highestPotholeTrip = newTrip;
+                        maxPotholeCount = newTrip.getProbablePotholeCount() + newTrip.getDefinitePotholeCount();
+                        tripStatsPreferences.edit().putString("highestPotholeTrip", new Gson().toJson(newTrip)).apply();
+                        tripStatsPreferences.edit().putInt("maxPotholeTrip", maxPotholeCount).apply();
+                    } catch (IllegalArgumentException illegal) {
+                        // catches a crash in case a user hits zero potholes and creates a NaN trip
+                    }
                 }
-                int currentTrips = tripStatsPreferences.getInt("validTrips", 0);
-                tripStatsPreferences.edit().putInt("validTrips", currentTrips + 1).commit();*/
             }
         }
     };
+
+    private BroadcastReceiver definitePotholeLocationReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Set<String> definitePotholeSet = new HashSet<>();
+            Set<String> probablePotholeSet = new HashSet<>();
+            Log.d(TAG, "DPLR received");
+            definitePotholeSet = intent.getParcelableExtra(getString(R.string.highest_pothole_trip_definite_potholes));
+            probablePotholeSet = intent.getParcelableExtra(getString(R.string.highest_pothole_trip_probable_potholes));
+            if (((definitePotholeSet != null && !definitePotholeSet.isEmpty())) || (probablePotholeSet != null &&
+                    !probablePotholeSet.isEmpty())) {
+                if (definitePotholeSet.size() + probablePotholeSet.size() >= tripStatsPreferences.getStringSet(getString(R.string.definite_pothole_location_set),
+                        new HashSet<String>()).size() + tripStatsPreferences.getStringSet(getString(R.string.probable_pothole_location_set), new HashSet<String>()).size()) {
+                    //definitePotholeSet represents location set of highestPotholeTrip
+                    tripStatsPreferences.edit().putStringSet(getString(R.string.highest_pothole_trip_definite_potholes),
+                            definitePotholeSet).apply();
+                }
+            }
+        }
+    };
+
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
@@ -177,6 +205,7 @@ public class OverviewFragment extends Fragment implements
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
         tripViewModel = ViewModelProviders.of(this).get(TripViewModel.class);
         tripViewModel.getAllTrips().observe(getActivity(), new android.arch.lifecycle.Observer<List<LocalTripEntity>>() {
             @Override
@@ -206,6 +235,7 @@ public class OverviewFragment extends Fragment implements
             }
             tripViewModel.deleteAll();
         }
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(definitePotholeLocationReceiver, new IntentFilter(getString(R.string.highest_pothole_latlngs_check)));
     }
 
     @Override
@@ -530,6 +560,7 @@ public class OverviewFragment extends Fragment implements
         super.onDestroy();
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(uniquePotholesLatLngReceiver);
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(newTripReceiver);
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(definitePotholeLocationReceiver);
     }
 
     @Override
