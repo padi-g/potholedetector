@@ -69,7 +69,7 @@
         -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="***REMOVED***" />
+            android:value="" />
 
         <activity
             android:name=".Activities.MapsActivity"
@@ -145,7 +145,7 @@
 
         <meta-data
             android:name="com.appsee.ApiKey"
-            android:value="***REMOVED***" />
+            android:value="" />
 
         <activity
             android:name=".SplashActivity"
