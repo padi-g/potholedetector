@@ -25,7 +25,7 @@ public class BlobClientProvider {
      * @throws InvalidKeyException
      */
     private static final String TAG = "BlobClientProvider";
-    private static final String connectionString = "***REMOVED***";
+    private static final String connectionString = "";
 
     public static CloudBlobClient getBlobClientReference() throws RuntimeException, IOException, IllegalArgumentException,
             URISyntaxException, InvalidKeyException {

@@ -39,7 +39,7 @@ public class Util {
         if (sCredProvider == null) {
             sCredProvider = new CognitoCachingCredentialsProvider(
                     context.getApplicationContext(),
-                    "***REMOVED***",
+                    "",
                     Regions.fromName("us-east-1")
             );
         }
@@ -62,7 +62,7 @@ public class Util {
             sTransferUtility = TransferUtility.builder()
                     .context(context.getApplicationContext())
                     .s3Client(getsS3Client(context.getApplicationContext()))
-                    .defaultBucket("***REMOVED***")
+                    .defaultBucket("")
                     .build();
         }
         return sTransferUtility;

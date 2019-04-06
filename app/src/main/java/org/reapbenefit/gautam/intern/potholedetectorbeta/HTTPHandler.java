@@ -23,17 +23,17 @@ import static com.amazonaws.http.HttpHeader.USER_AGENT;
 
 public class HTTPHandler {
 
-    private static final String key = "***REMOVED***";
+    private static final String key = "function_key";
 
-    private static final String specificUserGetUrl = "http://***REMOVED***/getuserdata";
-    private static final String specificUserPostUrl = "http://***REMOVED***/insertuserdata";
-    private static final String specificUserUpdateUrl = "http://***REMOVED***/updateuserdata";
-    private static final String highestPotholeTripGetUrl = "http://***REMOVED***/gethighestpotholetripdata";
-    private static final String tripPostUrl = "http://***REMOVED***/inserttripdata";
-    private static final String tripUpdateUrl = "http://***REMOVED***/updatetripdata";
-    private static final String userPotholePostUrl = "http://***REMOVED***/insertuserpothole";
-    private static final String userPotholeGetUrl = "http://***REMOVED***/getuserpotholes";
-    private static final String uniquePotholesGetUrl = "http://***REMOVED***/getuniquepotholes";
+    private static final String specificUserGetUrl = "http://server_url/getuserdata";
+    private static final String specificUserPostUrl = "http://server_url/insertuserdata";
+    private static final String specificUserUpdateUrl = "http://server_url/updateuserdata";
+    private static final String highestPotholeTripGetUrl = "http://server_url/gethighestpotholetripdata";
+    private static final String tripPostUrl = "http://server_url/inserttripdata";
+    private static final String tripUpdateUrl = "http://server_url/updatetripdata";
+    private static final String userPotholePostUrl = "http://server_url/insertuserpothole";
+    private static final String userPotholeGetUrl = "http://server_url/getuserpotholes";
+    private static final String uniquePotholesGetUrl = "http://server_url/getuniquepotholes";
     private static final String TAG = "HTTPHandler";
 
     private static SharedPreferences userPotholePreferences;
