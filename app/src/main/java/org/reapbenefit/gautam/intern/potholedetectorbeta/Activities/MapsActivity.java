@@ -101,7 +101,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Snackbar tweetSnackbar;
     private boolean didUserRateTrip;
     private GeoApiContext geoApiContext;
-    private final String API_KEY = "***REMOVED***";
+    private final String API_KEY = "";
     private Set<String> definitePotholeStringSet;
     private Set<String> probablePotholeStringSet;
 

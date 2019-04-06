@@ -52,10 +52,10 @@
     <string name="carmodel">Car Model</string>
 
     <string-array name="debugging_ids">
-        <item>bgWUREt57xcWBvHSUw6rtw78EXX2</item> <!--Kanishk-->
-        <item>y0xSs7IhheUuKxckviuVnOxf9Ac2</item> <!--Kanishk-->
+        <item></item> <!--Kanishk-->
+        <item></item> <!--Kanishk-->
     </string-array>
-    <string name="s3bucketname">***REMOVED***</string>
+    <string name="s3bucketname">p</string>
     <string name="notification_channel_id">PotholeNotifier</string>
     <string name="invite_message">Hi! Check out this app to map potholes on Indian streets and help make our roads safer. Download it at: https://play.google.com/store/apps/details?id=org.reapbenefit.gautam.intern.potholedetectorbeta</string>
     <string name="db_update_from_maps_activity">DB_UPDATE_FROM_MAPS</string>
